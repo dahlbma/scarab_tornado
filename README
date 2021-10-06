@@ -1,2 +1,11 @@
 Tornado service for import of data into scarab database.
 Backend for angular-application.
+
+
+Add a local file nameed config.py with content:
+
+database = dict(
+    host = 'hostname',
+    user = 'username',
+    password = 'password'
+)
