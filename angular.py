@@ -80,7 +80,14 @@ class GetCompound(BaseHandler):
         if self.request.headers.get('auth'):
             self.write('ok')
 
-class getLogin(BaseHandler): 
+@jwtauth
+class GetChemists(BaseHandler):
+    def get(self):
+        # Contains user found in previous auth
+        if self.request.headers.get('auth'):
+            self.write('ok')
+
+class getLogin(BaseHandler):
     def post(self):
         error, username, password = getArgs(self.request.body)
         try:
@@ -129,7 +136,8 @@ class login(tornado.web.RequestHandler):
         
 def make_app():
     return tornado.web.Application([
-        (r"/login", login),        
+        (r"/login", login),
+        (r"/api/getChemists", GetChemists),
         (r"/api/getCompound", GetCompound),
         (r"/api/auth/signin", getLogin),
         (r"/getCompound", GetCompound),

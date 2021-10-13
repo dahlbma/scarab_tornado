@@ -4,6 +4,8 @@
 import jwt
 import config
 import logging
+import json
+import re
 
 AUTHORIZATION_HEADER = 'Authorization'
 AUTHORIZATION_METHOD = 'bearer'
@@ -56,33 +58,35 @@ def jwtauth(handler_class):
     def wrap_execute(handler_execute):
         def require_auth(handler, kwargs):
 
-            auth = handler.request.headers.get(AUTHORIZATION_HEADER)
-            if auth:
-                parts = auth.split()
-
-                if not is_valid_header(parts):
-                     return_header_error(handler)
-
-                token = parts[1]
-                try:
-                    jwt.decode(
-                        token,
+            #auth = handler.request.headers.get(AUTHORIZATION_HEADER)
+            auth = handler.request.headers.get('token')
+            parts = auth.split()
+            try:
+                if len(parts) == 2 and parts[0] == '{"token":':
+                
+                    x = re.match('^\"(.+)\"}', parts[1])
+                    payload = x.groups()[0]
+                    s = jwt.decode(
+                        payload,
                         SECRET_KEY, algorithms=[JWT_ALGORITHM],
                         options=jwt_options
-                    )                
-                except Exception as err:
-                    logging.error(str(err))
-                    return_auth_error(handler, str(err))
+                    )
 
-            else:
+                    name = s['username']
+                else:
+                    handler._transforms = []
+                    handler.write("Missing authorization")
+                    handler.finish()
+            except Exception as e:
                 handler._transforms = []
-                handler.write(MISSING_AUTHORIZATION_KEY)
+                handler.set_status(401)
+                handler.write(e.message)
                 handler.finish()
+                logging.error(str(err))
 
             return True
 
         def _execute(self, transforms, *args, **kwargs):
-
             try:
                 require_auth(self, kwargs)
             except Exception:
