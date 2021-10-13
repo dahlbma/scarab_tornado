@@ -4,7 +4,6 @@ import tornado.web
 from tornado.escape import json_decode
 import os
 import re
-from urllib.parse import urlparse, parse_qs
 from datetime import datetime, timedelta
 import MySQLdb
 import jwt
@@ -22,8 +21,8 @@ db_connection = MySQLdb.connect(
     user=config.database['user'],
     passwd=config.database['password']
 )
-
 cur = db_connection.cursor()
+
 root = os.path.dirname(__file__)
 settings = {
     #"static_path": os.path.join(os.path.dirname(__file__), "angular-tour-of-heroes"),
@@ -83,9 +82,10 @@ class GetCompound(BaseHandler):
 @jwtauth
 class GetChemists(BaseHandler):
     def get(self):
-        # Contains user found in previous auth
-        if self.request.headers.get('auth'):
-            self.write('ok')
+        sSql = "select fullname from hive.user_details where ORGANIZATION = 'chemistry'"
+        cur.execute(sSql)
+        res = [list(i) for i in cur.fetchall()]
+        self.write(json.dumps(res))
 
 class getLogin(BaseHandler):
     def post(self):
