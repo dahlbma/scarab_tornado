@@ -6,8 +6,9 @@ import mysql
 from mysql.connector import connect, Error
 import requests
 
+jwt_token = ''
+
 class LoginScreen(QDialog):
-    jwt_token = ''
     def __init__(self):
         super(LoginScreen, self).__init__()
         loadUi("welcomescreen.ui", self)
@@ -23,30 +24,35 @@ class LoginScreen(QDialog):
         else:
             self.errorlabel.setText("")
 
-        r = requests.post('http://esox3.scilifelab.se:8082/login', data = {'username':user, 'password':password})
+        r = requests.post('http://esox3.scilifelab.se:8082/login',
+                          data = {'username':user, 'password':password})
         if r.status_code != 200:
             self.errorlabel.setText("Wrong username/password")
             return
-        self.token = r.content
-        self.gotoReg()
+        self.jwt_token = r.content
+        self.gotoReg(self.jwt_token)
 
-    def gotoReg(self):
-        reg = RegScreen()
+    def gotoReg(self, token):
+        reg = RegScreen(token)
         widget.addWidget(reg)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
-    def gotoSearch(self):
+    def gotoSearch(self, token):
         search = SearchScreen()
         widget.addWidget(search)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
 
 class RegScreen(QMainWindow):
-    def __init__(self):
+    def __init__(self, token):
         super(RegScreen, self).__init__()
         loadUi("regchem.ui", self)
+        self.token = token
         self.gotosearch_btn.clicked.connect(self.gotoSearch)
-        self.setWindowTitle("Register new compound");
+        self.setWindowTitle("Register new compound")
+        print(self.token)
+        r = requests.get('http://esox3.scilifelab.se:8082/api/getChemists',
+                         headers={'token': self.token})
 
     def gotoSearch(self):
         search = SearchScreen()
@@ -59,7 +65,7 @@ class SearchScreen(QMainWindow):
         super(SearchScreen, self).__init__()
         loadUi("searchchem.ui", self)
         self.gotoreg_btn.clicked.connect(self.gotoReg)
-        self.setWindowTitle("Search");
+        self.setWindowTitle("Search")
         self.regno_eb.setText('regno')
 
     def gotoReg(self):
@@ -80,4 +86,3 @@ try:
     sys.exit(app.exec_())
 except:
     print("Exiting")
-
