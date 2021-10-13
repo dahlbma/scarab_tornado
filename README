@@ -9,3 +9,5 @@ database = dict(
     user = 'username',
     password = 'password'
 )
+
+secret_key = 'Some random string'
