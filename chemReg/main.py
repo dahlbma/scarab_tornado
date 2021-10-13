@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QDialog, QApplication, QWidget, QMainWindow
 import mysql
 from mysql.connector import connect, Error
 import requests
+import json
 
 jwt_token = ''
 
@@ -50,9 +51,15 @@ class RegScreen(QMainWindow):
         self.token = token
         self.gotosearch_btn.clicked.connect(self.gotoSearch)
         self.setWindowTitle("Register new compound")
-        print(self.token)
         r = requests.get('http://esox3.scilifelab.se:8082/api/getChemists',
                          headers={'token': self.token})
+        res = r.content.decode()
+        res = json.loads(res)
+        cleanList = list()
+        for i in res:
+            cleanList.append(i[0])
+        self.submitter_cb.addItems(cleanList)
+
 
     def gotoSearch(self):
         search = SearchScreen()
