@@ -4,28 +4,24 @@ import tornado.web
 from tornado.escape import json_decode
 import os
 import re
-from datetime import datetime, timedelta
 import MySQLdb
+from datetime import datetime, timedelta
 import jwt
 import tornado.autoreload
 from tornado.log import enable_pretty_logging
+import logging
+import dbInterface
 from auth import jwtauth
 
 # Secret stuff in config file
 import config
 
+logger = logging.getLogger(__name__)
 enable_pretty_logging()
 
-db_connection = MySQLdb.connect(
-    host=config.database['host'],
-    user=config.database['user'],
-    passwd=config.database['password']
-)
-cur = db_connection.cursor()
 
 root = os.path.dirname(__file__)
 settings = {
-    #"static_path": os.path.join(os.path.dirname(__file__), "angular-tour-of-heroes"),
     "cookie_secret": config.secret_key,
 }
 
@@ -64,72 +60,6 @@ class BaseHandler(tornado.web.RequestHandler):
         # `*args` is for route with `path arguments` supports
         self.set_status(204)
         self.finish()
-
-@jwtauth
-class RegCompound(tornado.web.RequestHandler):
-    def get(self):
-        # Contains user found in previous auth
-        if self.request.headers.get('auth'):
-            self.write('ok')
-
-@jwtauth
-class GetCompound(BaseHandler):
-    def get(self):
-        # Contains user found in previous auth
-        if self.request.headers.get('auth'):
-            self.write('ok')
-
-@jwtauth
-class GetChemists(BaseHandler):
-    def get(self):
-        sSql = "select fullname from hive.user_details where ORGANIZATION = 'chemistry'"
-        cur.execute(sSql)
-        res = [list(i) for i in cur.fetchall()]
-        self.write(json.dumps(res))
-
-@jwtauth
-class GetProjects(BaseHandler):
-    def get(self):
-        sSql = "select fullname from hive.user_details where ORGANIZATION = 'chemistry'"
-        cur.execute(sSql)
-        res = [list(i) for i in cur.fetchall()]
-        self.write(json.dumps(res))
-
-@jwtauth
-class GetCompoundTypes(BaseHandler):
-    def get(self):
-        sSql = "select fullname from hive.user_details where ORGANIZATION = 'chemistry'"
-        cur.execute(sSql)
-        res = [list(i) for i in cur.fetchall()]
-        self.write(json.dumps(res))
-
-@jwtauth
-class GetProductTypes(BaseHandler):
-    def get(self):
-        sSql = "select fullname from hive.user_details where ORGANIZATION = 'chemistry'"
-        cur.execute(sSql)
-        res = [list(i) for i in cur.fetchall()]
-        self.write(json.dumps(res))
-
-@jwtauth
-class GetLibraries(BaseHandler):
-    def get(self):
-        sSql = "select fullname from hive.user_details where ORGANIZATION = 'chemistry'"
-        cur.execute(sSql)
-        res = [list(i) for i in cur.fetchall()]
-        self.write(json.dumps(res))
-
-
-@jwtauth
-class GetNextRegno(BaseHandler):
-    def get(self):
-        sSql = "select id from chemspec.regno_sequence"
-        cur.execute(sSql)
-        id = cur.fetchall()[0][0] +1
-        sSql = "update chemspec.regno_sequence set id=" + str(id)
-        cur.execute(sSql)
-        self.write(json.dumps(id))
-
         
 class getLogin(BaseHandler):
     def post(self):
@@ -163,7 +93,9 @@ class login(tornado.web.RequestHandler):
                 user=username,
                 passwd=password
             )
-        except:
+            db_connection2.close()
+        except Exception as ex:
+            logger.error(str(ex))
             self.set_status(400)
             self.write({'message': 'Wrong username password'})
             self.finish()
@@ -181,14 +113,14 @@ class login(tornado.web.RequestHandler):
 def make_app():
     return tornado.web.Application([
         (r"/login", login),
-        (r"/api/getChemists", GetChemists),
-        (r"/api/getProjects", GetProjects),
-        (r"/api/getCompoundTypes", GetCompoundTypes),
-        (r"/api/getProductTypes", GetProductTypes),
-        (r"/api/getLibraries", GetLibraries),
-        (r"/api/getNextRegno", GetNextRegno),
+        (r"/api/getChemists", dbInterface.GetChemists),
+        (r"/api/getProjects", dbInterface.GetProjects),
+        (r"/api/getCompoundTypes", dbInterface.GetCompoundTypes),
+        (r"/api/getProductTypes", dbInterface.GetProductTypes),
+        (r"/api/getLibraries", dbInterface.GetLibraries),
+        (r"/api/getNextRegno", dbInterface.GetNextRegno),
+        (r"/getCompound", dbInterface.GetCompound),
         (r"/api/auth/signin", getLogin),
-        (r"/getCompound", GetCompound),
     ], **settings)
 
 if __name__ == "__main__":
