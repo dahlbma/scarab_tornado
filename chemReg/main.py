@@ -51,26 +51,23 @@ class RegScreen(QMainWindow):
         self.gotosearch_btn.clicked.connect(self.gotoSearch)
         self.setWindowTitle("Register new compound")
 
-        r = requests.get('http://esox3.scilifelab.se:8082/api/getNextRegno',
-                         headers={'token': token})
-        res = r.content.decode()
-        print(res)
+        regno = dbInterface.getNextRegno(self.token)
+        self.regno_lab.setText(regno)
 
+        submitters = dbInterface.getSubmitters(self.token)
+        self.submitter_cb.addItems(submitters)
 
-        cleanList = dbInterface.getSubmitters(self.token)
-        self.submitter_cb.addItems(cleanList)
-
-        cleanList = dbInterface.getProjects(self.token)
-        self.submitter_cb.addItems(cleanList)
+        projects = dbInterface.getProjects(self.token)
+        self.project_cb.addItems(projects)
         
-        cleanList = dbInterface.getCompoundTypes(self.token)
-        self.compoundtype_cb.addItems(cleanList)
+        compoundTypes = dbInterface.getCompoundTypes(self.token)
+        self.compoundtype_cb.addItems(compoundTypes)
         
-        cleanList = dbInterface.getProductTypes(self.token)
-        self.product_cb.addItems(cleanList)
+        productTypes = dbInterface.getProductTypes(self.token)
+        self.product_cb.addItems(productTypes)
         
-        cleanList = dbInterface.getProjects(self.token)
-        self.project_cb.addItems(cleanList)
+        projects = dbInterface.getProjects(self.token)
+        self.project_cb.addItems(projects)
 
     def gotoSearch(self):
         search = SearchScreen(self.token)
