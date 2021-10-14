@@ -15,6 +15,11 @@ db_connection = MySQLdb.connect(
 db_connection.autocommit(True)
 cur = db_connection.cursor()
 
+def sqlExec(sSql):
+    cur.execute(sSql)
+    res = [list(i) for i in cur.fetchall()]
+    return json.dumps(res)
+
 @jwtauth
 class RegCompound(tornado.web.RequestHandler):
     def get(self):
@@ -33,43 +38,37 @@ class GetCompound(tornado.web.RequestHandler):
 class GetChemists(tornado.web.RequestHandler):
     def get(self):
         sSql = "select fullname from hive.user_details where ORGANIZATION = 'chemistry'"
-        cur.execute(sSql)
-        res = [list(i) for i in cur.fetchall()]
-        self.write(json.dumps(res))
+        res = sqlExec(sSql)
+        self.write(res)
 
 @jwtauth
 class GetProjects(tornado.web.RequestHandler):
     def get(self):
         sSql = """select project_name from hive.project_details
                   order by created_date desc"""
-        cur.execute(sSql)
-        res = [list(i) for i in cur.fetchall()]
-        self.write(json.dumps(res))
+        res = sqlExec(sSql)
+        self.write(res)
 
 @jwtauth
 class GetCompoundTypes(tornado.web.RequestHandler):
     def get(self):
         sSql = "select type from bcpvs.compound_type order by type"
-        cur.execute(sSql)
-        res = [list(i) for i in cur.fetchall()]
-        self.write(json.dumps(res))
+        res = sqlExec(sSql)
+        self.write(res)
 
 @jwtauth
 class GetProductTypes(tornado.web.RequestHandler):
     def get(self):
         sSql = "SELECT type FROM bcpvs.product_type order by type"
-        cur.execute(sSql)
-        res = [list(i) for i in cur.fetchall()]
-        self.write(json.dumps(res))
+        res = sqlExec(sSql)
+        self.write(res)
 
 @jwtauth
 class GetLibraries(tornado.web.RequestHandler):
     def get(self):
         sSql = "select fullname from hive.user_details where ORGANIZATION = 'chemistry'"
-        cur.execute(sSql)
-        res = [list(i) for i in cur.fetchall()]
-        self.write(json.dumps(res))
-
+        res = sqlExec(sSql)
+        self.write(res)
 
 @jwtauth
 class GetNextRegno(tornado.web.RequestHandler):
