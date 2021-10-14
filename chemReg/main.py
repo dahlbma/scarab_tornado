@@ -6,8 +6,7 @@ import mysql
 from mysql.connector import connect, Error
 import requests
 import json
-
-jwt_token = ''
+import dbInterface
 
 class LoginScreen(QDialog):
     def __init__(self):
@@ -39,7 +38,7 @@ class LoginScreen(QDialog):
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
     def gotoSearch(self, token):
-        search = SearchScreen()
+        search = SearchScreen(token)
         widget.addWidget(search)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
@@ -51,32 +50,45 @@ class RegScreen(QMainWindow):
         self.token = token
         self.gotosearch_btn.clicked.connect(self.gotoSearch)
         self.setWindowTitle("Register new compound")
-        r = requests.get('http://esox3.scilifelab.se:8082/api/getChemists',
-                         headers={'token': self.token})
+
+        r = requests.get('http://esox3.scilifelab.se:8082/api/getNextRegno',
+                         headers={'token': token})
         res = r.content.decode()
-        res = json.loads(res)
-        cleanList = list()
-        for i in res:
-            cleanList.append(i[0])
+        print(res)
+
+
+        cleanList = dbInterface.getSubmitters(self.token)
         self.submitter_cb.addItems(cleanList)
 
+        cleanList = dbInterface.getProjects(self.token)
+        self.submitter_cb.addItems(cleanList)
+        
+        cleanList = dbInterface.getCompoundTypes(self.token)
+        self.compoundtype_cb.addItems(cleanList)
+        
+        cleanList = dbInterface.getProductTypes(self.token)
+        self.product_cb.addItems(cleanList)
+        
+        cleanList = dbInterface.getProjects(self.token)
+        self.project_cb.addItems(cleanList)
 
     def gotoSearch(self):
-        search = SearchScreen()
+        search = SearchScreen(self.token)
         widget.addWidget(search)
         widget.setCurrentIndex(widget.currentIndex() + 1)
     
 
 class SearchScreen(QMainWindow):
-    def __init__(self):
+    def __init__(self, token):
         super(SearchScreen, self).__init__()
+        self.token = token
         loadUi("searchchem.ui", self)
         self.gotoreg_btn.clicked.connect(self.gotoReg)
         self.setWindowTitle("Search")
         self.regno_eb.setText('regno')
 
     def gotoReg(self):
-        reg = RegScreen()
+        reg = RegScreen(self.token)
         widget.addWidget(reg)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
