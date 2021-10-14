@@ -87,6 +87,50 @@ class GetChemists(BaseHandler):
         res = [list(i) for i in cur.fetchall()]
         self.write(json.dumps(res))
 
+@jwtauth
+class GetProjects(BaseHandler):
+    def get(self):
+        sSql = "select fullname from hive.user_details where ORGANIZATION = 'chemistry'"
+        cur.execute(sSql)
+        res = [list(i) for i in cur.fetchall()]
+        self.write(json.dumps(res))
+
+@jwtauth
+class GetCompoundTypes(BaseHandler):
+    def get(self):
+        sSql = "select fullname from hive.user_details where ORGANIZATION = 'chemistry'"
+        cur.execute(sSql)
+        res = [list(i) for i in cur.fetchall()]
+        self.write(json.dumps(res))
+
+@jwtauth
+class GetProductTypes(BaseHandler):
+    def get(self):
+        sSql = "select fullname from hive.user_details where ORGANIZATION = 'chemistry'"
+        cur.execute(sSql)
+        res = [list(i) for i in cur.fetchall()]
+        self.write(json.dumps(res))
+
+@jwtauth
+class GetLibraries(BaseHandler):
+    def get(self):
+        sSql = "select fullname from hive.user_details where ORGANIZATION = 'chemistry'"
+        cur.execute(sSql)
+        res = [list(i) for i in cur.fetchall()]
+        self.write(json.dumps(res))
+
+
+@jwtauth
+class GetNextRegno(BaseHandler):
+    def get(self):
+        sSql = "select id from chemspec.regno_sequence"
+        cur.execute(sSql)
+        id = cur.fetchall()[0][0] +1
+        sSql = "update chemspec.regno_sequence set id=" + str(id)
+        cur.execute(sSql)
+        self.write(json.dumps(id))
+
+        
 class getLogin(BaseHandler):
     def post(self):
         error, username, password = getArgs(self.request.body)
@@ -138,7 +182,11 @@ def make_app():
     return tornado.web.Application([
         (r"/login", login),
         (r"/api/getChemists", GetChemists),
-        (r"/api/getCompound", GetCompound),
+        (r"/api/getProjects", GetProjects),
+        (r"/api/getCompoundTypes", GetCompoundTypes),
+        (r"/api/getProductTypes", GetProductTypes),
+        (r"/api/getLibraries", GetLibraries),
+        (r"/api/getNextRegno", GetNextRegno),
         (r"/api/auth/signin", getLogin),
         (r"/getCompound", GetCompound),
     ], **settings)
