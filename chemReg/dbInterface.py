@@ -4,7 +4,7 @@ import json
 def listify(data):
     res = data.content.decode()
     res = json.loads(res)
-    cleanList = list()
+    cleanList = list(' ', )
     for i in res:
         cleanList.append(i[0])
     return cleanList
@@ -13,13 +13,21 @@ def updateValue(target, value, token, regno):
     r = requests.put('http://esox3.scilifelab.se:8082/api/update',
                      params={'column': target, 'value': value, 'regno': regno},
                      headers={'token': token})
+
+def createNewRegno(regno, token):
+    r = requests.put('http://esox3.scilifelab.se:8082/api/createRegno',
+                     params={'regno': regno},
+                     headers={'token': token})
     
+def deleteRegno(regno, token):
+    r = requests.put('http://esox3.scilifelab.se:8082/api/deleteRegno',
+                     params={'regno': regno},
+                     headers={'token': token})
 
 def getSubmitters(token):
     r = requests.get('http://esox3.scilifelab.se:8082/api/getChemists',
                      headers={'token': token})
     cleanList = listify(r)
-    print(cleanList)
     return cleanList
 
 def getProjects(token):

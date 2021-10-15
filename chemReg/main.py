@@ -48,31 +48,33 @@ class RegScreen(QMainWindow):
         super(RegScreen, self).__init__()
         loadUi("regchem.ui", self)
         self.token = token
+        self.dirty = False
         self.gotosearch_btn.clicked.connect(self.gotoSearch)
         self.setWindowTitle("Register new compound")
 
         self.regno = dbInterface.getNextRegno(self.token)
         self.regno_lab.setText(self.regno)
-
+        dbInterface.createNewRegno(self.regno, self.token)
+        
         submitters = dbInterface.getSubmitters(self.token)
         self.submitter_cb.addItems(submitters)
         self.submitter_cb.currentTextChanged.connect(
-            lambda x: self.changeEvent(x, 'updateSubmitter'))
+            lambda x: self.changeEvent(x, 'submitter'))
         
         projects = dbInterface.getProjects(self.token)
         self.project_cb.addItems(projects)
         self.project_cb.currentTextChanged.connect(
-            lambda x: self.changeEvent(x, 'updateProject'))
+            lambda x: self.changeEvent(x, 'project'))
         
         compoundTypes = dbInterface.getCompoundTypes(self.token)
         self.compoundtype_cb.addItems(compoundTypes)
         self.compoundtype_cb.currentTextChanged.connect(
-            lambda x: self.changeEvent(x, 'updateCompoundType'))
+            lambda x: self.changeEvent(x, 'compound_type'))
         
         productTypes = dbInterface.getProductTypes(self.token)
         self.product_cb.addItems(productTypes)
         self.product_cb.currentTextChanged.connect(
-            lambda x: self.changeEvent(x, 'updateProducTtype'))
+            lambda x: self.changeEvent(x, 'produc'))
         
         #projects = dbInterface.getProjects(self.token)
         #self.project_cb.addItems(projects)
@@ -82,9 +84,12 @@ class RegScreen(QMainWindow):
     def changeEvent(self, value='', action='doNothing'):
         if action == 'doNothing':
             return
+        self.dirty = True
         dbInterface.updateValue(action, value, self.token, self.regno)
 
     def gotoSearch(self):
+        if self.dirty == False:
+            dbInterface.deleteRegno(self.regno, self.token)
         search = SearchScreen(self.token)
         widget.addWidget(search)
         widget.setCurrentIndex(widget.currentIndex() + 1)
