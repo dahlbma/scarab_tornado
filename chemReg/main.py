@@ -51,23 +51,38 @@ class RegScreen(QMainWindow):
         self.gotosearch_btn.clicked.connect(self.gotoSearch)
         self.setWindowTitle("Register new compound")
 
-        regno = dbInterface.getNextRegno(self.token)
-        self.regno_lab.setText(regno)
+        self.regno = dbInterface.getNextRegno(self.token)
+        self.regno_lab.setText(self.regno)
 
         submitters = dbInterface.getSubmitters(self.token)
         self.submitter_cb.addItems(submitters)
-
+        self.submitter_cb.currentTextChanged.connect(
+            lambda x: self.changeEvent(x, 'updateSubmitter'))
+        
         projects = dbInterface.getProjects(self.token)
         self.project_cb.addItems(projects)
+        self.project_cb.currentTextChanged.connect(
+            lambda x: self.changeEvent(x, 'updateProject'))
         
         compoundTypes = dbInterface.getCompoundTypes(self.token)
         self.compoundtype_cb.addItems(compoundTypes)
+        self.compoundtype_cb.currentTextChanged.connect(
+            lambda x: self.changeEvent(x, 'updateCompoundType'))
         
         productTypes = dbInterface.getProductTypes(self.token)
         self.product_cb.addItems(productTypes)
+        self.product_cb.currentTextChanged.connect(
+            lambda x: self.changeEvent(x, 'updateProducTtype'))
         
-        projects = dbInterface.getProjects(self.token)
-        self.project_cb.addItems(projects)
+        #projects = dbInterface.getProjects(self.token)
+        #self.project_cb.addItems(projects)
+        #self.project_cb.currentTextChanged.connect(
+        #    lambda x: self.changeEvent(x, 'updateProject'))
+
+    def changeEvent(self, value='', action='doNothing'):
+        if action == 'doNothing':
+            return
+        dbInterface.updateValue(action, value, self.token, self.regno)
 
     def gotoSearch(self):
         search = SearchScreen(self.token)
