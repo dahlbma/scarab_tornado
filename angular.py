@@ -113,6 +113,7 @@ class login(tornado.web.RequestHandler):
 def make_app():
     return tornado.web.Application([
         (r"/login", login),
+        (r"/api/update", dbInterface.UpdateColumn),
         (r"/api/getChemists", dbInterface.GetChemists),
         (r"/api/getProjects", dbInterface.GetProjects),
         (r"/api/getCompoundTypes", dbInterface.GetCompoundTypes),
@@ -129,6 +130,7 @@ if __name__ == "__main__":
     tornado.autoreload.start()
     
     for dir, _, files in os.walk('static'):
-        [tornado.autoreload.watch(dir + '/' + f) for f in files if not f.startswith('.')]
+        [tornado.autoreload.watch(dir + '/' + f) \
+         for f in files if not f.startswith('.')]
 
     tornado.ioloop.IOLoop.current().start()

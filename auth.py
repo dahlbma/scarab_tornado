@@ -57,11 +57,17 @@ def jwtauth(handler_class):
     """
     def wrap_execute(handler_execute):
         def require_auth(handler, kwargs):
+            head = str(handler.request.headers)
+            if head.find('token') == -1:
+                handler._transforms = []
+                handler.write("Missing authorization")
+                handler.finish()
+                return False
 
             #auth = handler.request.headers.get(AUTHORIZATION_HEADER)
-            auth = handler.request.headers.get('token')
-            parts = auth.split()
-            try:
+            try:                    
+                auth = handler.request.headers.get('token')
+                parts = auth.split()
                 if len(parts) == 2 and parts[0] == '{"token":':
                 
                     x = re.match('^\"(.+)\"}', parts[1])
@@ -79,10 +85,10 @@ def jwtauth(handler_class):
                     handler.finish()
             except Exception as e:
                 handler._transforms = []
+                logging.error(str(err))
                 handler.set_status(401)
                 handler.write(e.message)
                 handler.finish()
-                logging.error(str(err))
 
             return True
 

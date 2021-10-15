@@ -21,11 +21,20 @@ def sqlExec(sSql):
     return json.dumps(res)
 
 @jwtauth
+class UpdateColumn(tornado.web.RequestHandler):
+    def put(self):
+        column = self.get_argument("column")
+        value = self.get_argument("value")
+        regno = self.get_argument("regno")
+        print(column, value, regno)
+
+@jwtauth
 class RegCompound(tornado.web.RequestHandler):
     def get(self):
         # Contains user found in previous auth
         if self.request.headers.get('auth'):
             self.write('ok')
+
 
 @jwtauth
 class GetCompound(tornado.web.RequestHandler):
@@ -37,15 +46,18 @@ class GetCompound(tornado.web.RequestHandler):
 @jwtauth
 class GetChemists(tornado.web.RequestHandler):
     def get(self):
-        sSql = "select fullname from hive.user_details where ORGANIZATION = 'chemistry'"
+        sSql = """select fullname from hive.user_details
+                  where ORGANIZATION = 'chemistry'"""
         res = sqlExec(sSql)
         self.write(res)
 
 @jwtauth
 class GetProjects(tornado.web.RequestHandler):
     def get(self):
+        #sSql = """select project_name from hive.project_details
+        #          order by created_date desc"""
         sSql = """select project_name from hive.project_details
-                  order by created_date desc"""
+                  order by project_name"""
         res = sqlExec(sSql)
         self.write(res)
 
