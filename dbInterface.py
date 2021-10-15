@@ -21,6 +21,31 @@ def sqlExec(sSql):
     return json.dumps(res)
 
 @jwtauth
+class CreateRegno(tornado.web.RequestHandler):
+    def put(self):
+        regno = self.get_argument("regno")
+        sSql = """insert into chem_reg.chem_info (regno) values (%s)"""
+        val = (regno, )
+        cur.execute(sSql, val)
+
+@jwtauth
+class DeleteRegno(tornado.web.RequestHandler):
+    def put(self):
+        regno = self.get_argument("regno")
+        val = (regno, )
+        sSql = """select regno, c_mf, chemist from chem_reg.chem_info
+                  where c_mf is null and chemist is null and
+                  regno=%s"""
+        cur.execute(sSql, val)
+        res = cur.fetchall()
+        print(res)
+        print(len(res))
+        if len(res) > 0:
+            sSql = """delete from chem_reg.chem_info
+                      where regno = %s"""
+            cur.execute(sSql, val)
+
+@jwtauth
 class UpdateColumn(tornado.web.RequestHandler):
     def put(self):
         column = self.get_argument("column")
