@@ -74,12 +74,28 @@ class RegScreen(QMainWindow):
         productTypes = dbInterface.getProductTypes(self.token)
         self.product_cb.addItems(productTypes)
         self.product_cb.currentTextChanged.connect(
-            lambda x: self.changeEvent(x, 'produc'))
-        
-        #projects = dbInterface.getProjects(self.token)
-        #self.project_cb.addItems(projects)
-        #self.project_cb.currentTextChanged.connect(
-        #    lambda x: self.changeEvent(x, 'updateProject'))
+            lambda x: self.changeEvent(x, 'product'))
+
+        self.externalid_eb.editingFinished.connect(
+            lambda: self.changeEvent(self.externalid_eb.text(), 'external_id'))
+
+        self.externalbatch_eb.editingFinished.connect(
+            lambda: self.changeEvent(self.externalbatch_eb.text(), 'external_batch'))
+
+        self.externalbatch_eb.editingFinished.connect(
+            lambda: self.changeEvent(self.externalbatch_eb.text(), 'external_batch'))
+
+        self.batch_eb.editingFinished.connect(
+            lambda: self.changeEvent(self.batch_eb.text(), 'batch'))
+
+        self.chrom_text.textChanged.connect(
+            lambda: self.changeEvent(self.chrom_text.toPlainText(), 'chrom_text'))
+
+        self.nmr_text.textChanged.connect(
+            lambda: self.changeEvent(self.nmr_text.toPlainText(), 'chrom_text'))
+
+        self.ms_text.textChanged.connect(
+            lambda: self.changeEvent(self.ms_text.toPlainText(), 'chrom_text'))
 
     def changeEvent(self, value='', action='doNothing'):
         if action == 'doNothing':
