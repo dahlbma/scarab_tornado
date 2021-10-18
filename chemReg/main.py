@@ -1,7 +1,8 @@
 import sys
 from PyQt5.uic import loadUi
+from PyQt5.QtGui import QIntValidator
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QDialog, QApplication, QWidget, QMainWindow
+from PyQt5.QtWidgets import QDialog, QApplication, QWidget, QMainWindow, QFileDialog
 import mysql
 from mysql.connector import connect, Error
 import requests
@@ -51,6 +52,7 @@ class RegScreen(QMainWindow):
         self.dirty = False
         self.gotosearch_btn.clicked.connect(self.gotoSearch)
         self.setWindowTitle("Register new compound")
+        self.onlyInt = QIntValidator()
 
         self.regno = dbInterface.getNextRegno(self.token)
         self.regno_lab.setText(self.regno)
@@ -59,7 +61,7 @@ class RegScreen(QMainWindow):
         submitters = dbInterface.getSubmitters(self.token)
         self.submitter_cb.addItems(submitters)
         self.submitter_cb.currentTextChanged.connect(
-            lambda x: self.changeEvent(x, 'submitter'))
+            lambda x: self.changeEvent(x, 'CHEMIST'))
         
         projects = dbInterface.getProjects(self.token)
         self.project_cb.addItems(projects)
@@ -77,26 +79,47 @@ class RegScreen(QMainWindow):
             lambda x: self.changeEvent(x, 'product'))
 
         self.externalid_eb.editingFinished.connect(
-            lambda: self.changeEvent(self.externalid_eb.text(), 'external_id'))
+            lambda: self.changeEvent(self.externalid_eb.text(), 'EXTERNAL_ID'))
 
         self.externalbatch_eb.editingFinished.connect(
-            lambda: self.changeEvent(self.externalbatch_eb.text(), 'external_batch'))
-
-        self.externalbatch_eb.editingFinished.connect(
-            lambda: self.changeEvent(self.externalbatch_eb.text(), 'external_batch'))
+            lambda: self.changeEvent(self.externalbatch_eb.text(), 'SUPPLIER_BATCH'))
 
         self.batch_eb.editingFinished.connect(
-            lambda: self.changeEvent(self.batch_eb.text(), 'batch'))
+            lambda: self.changeEvent(self.batch_eb.text(), 'JPAGE'))
 
         self.chrom_text.textChanged.connect(
-            lambda: self.changeEvent(self.chrom_text.toPlainText(), 'chrom_text'))
-
+            lambda: self.changeEvent(self.chrom_text.toPlainText(), 'CHROM_TEXT'))
+        self.chrompurity_eb.textChanged.connect(
+            lambda: self.changeEvent(self.chrompurity_eb.text(), 'CHROM_PURITY'))
+        self.chrompurity_eb.setValidator(self.onlyInt)
+        
         self.nmr_text.textChanged.connect(
-            lambda: self.changeEvent(self.nmr_text.toPlainText(), 'chrom_text'))
-
+            lambda: self.changeEvent(self.nmr_text.toPlainText(), 'NMR_TEXT'))
+        self.nmrpurity_eb.textChanged.connect(
+            lambda: self.changeEvent(self.nmrpurity_eb.text(), 'NMR_PURITY'))
+        self.nmrpurity_eb.setValidator(self.onlyInt)
+        
         self.ms_text.textChanged.connect(
-            lambda: self.changeEvent(self.ms_text.toPlainText(), 'chrom_text'))
+            lambda: self.changeEvent(self.ms_text.toPlainText(), 'MS_TEXT'))
+        self.mspurity_eb.textChanged.connect(
+            lambda: self.changeEvent(self.mspurity_eb.text(), 'MS_PURITY'))
+        self.mspurity_eb.setValidator(self.onlyInt)
+        
+        self.comments_text.textChanged.connect(
+            lambda: self.changeEvent(self.comments_text.toPlainText(), 'COMMENTS'))
 
+        self.loadmol_btn.clicked.connect(self.getMolFile)
+
+    def getMolFile(self):
+        fname = QFileDialog.getOpenFileName(self, 'Open file', 
+                                                '.', "Molfiles (*.mol)")
+        if fname[0] != '':
+            f = {'file': open(fname[0], 'rb'),
+                 'regno': self.regno}
+            r = requests.post('http://esox3.scilifelab.se:8082/api/loadMolfile',
+                              headers={'token': self.token}, files=f)
+
+        
     def changeEvent(self, value='', action='doNothing'):
         if action == 'doNothing':
             return
