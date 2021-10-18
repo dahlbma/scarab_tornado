@@ -113,14 +113,11 @@ class RegScreen(QMainWindow):
     def getMolFile(self):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 
                                                 '.', "Molfiles (*.mol)")
-        print(fname[0])
-        files = {'regno': self.regno, 'file': open(fname[0], 'rb')}
-        #r = requests.post('http://esox3.scilifelab.se:8082/api/loadMolfile',
-        #                  params={'column': target, 'value': value, 'regno': regno},
-        #                  headers={'token': token}, files=files)
-        r = requests.post('http://esox3.scilifelab.se:8082/api/loadMolfile',
-                          headers={'token': self.token}, files=files)
-
+        if fname[0] != '':
+            f = {'file': open(fname[0], 'rb'),
+                 'regno': self.regno}
+            r = requests.post('http://esox3.scilifelab.se:8082/api/loadMolfile',
+                              headers={'token': self.token}, files=f)
 
         
     def changeEvent(self, value='', action='doNothing'):
