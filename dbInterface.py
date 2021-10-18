@@ -3,9 +3,10 @@ import json
 #import jwt
 import MySQLdb
 from auth import jwtauth
-# Secret stuff in config file
 import config
+import logging
 
+logger = logging.getLogger(__name__)
 
 db_connection = MySQLdb.connect(
     host=config.database['host'],
@@ -21,10 +22,22 @@ def sqlExec(sSql):
     return json.dumps(res)
 
 @jwtauth
+class LoadMolfile(tornado.web.RequestHandler):
+    def post(self):
+        fBody = self.request.files['file'][0]
+        regnoBody = self.request.files['regno'][0]
+        molfile = tornado.escape.xhtml_unescape(fBody.body)
+        regno = tornado.escape.xhtml_unescape(regnoBody.body)
+        sSql = """update chem_reg.chem_info set `molfile` = %s
+                  where regno = %s"""
+        values = (molfile, regno, )
+        cur.execute(sSql, values)        
+        
+@jwtauth
 class CreateRegno(tornado.web.RequestHandler):
     def put(self):
         regno = self.get_argument("regno")
-        sSql = """insert into chem_reg.chem_info (regno) values (%s)"""
+        sSql = """insert into chem_reg.chem_info (regno, rdate) values (%s, now())"""
         val = (regno, )
         cur.execute(sSql, val)
 
@@ -38,8 +51,9 @@ class DeleteRegno(tornado.web.RequestHandler):
                   regno=%s"""
         cur.execute(sSql, val)
         res = cur.fetchall()
-        print(res)
-        print(len(res))
+        logger.info('Deleting ' + str(res))
+        #print('Deleting')
+        #print(res)
         if len(res) > 0:
             sSql = """delete from chem_reg.chem_info
                       where regno = %s"""
@@ -51,7 +65,10 @@ class UpdateColumn(tornado.web.RequestHandler):
         column = self.get_argument("column")
         value = self.get_argument("value")
         regno = self.get_argument("regno")
-        print(column, value, regno)
+        values = (value, regno, )
+        sSql = "update chem_reg.chem_info set " + column
+        sSql += """= %s where regno = %s"""
+        cur.execute(sSql, values)
 
 @jwtauth
 class RegCompound(tornado.web.RequestHandler):

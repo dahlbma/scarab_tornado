@@ -113,6 +113,7 @@ class login(tornado.web.RequestHandler):
 def make_app():
     return tornado.web.Application([
         (r"/login", login),
+        (r"/api/loadMolfile", dbInterface.LoadMolfile),
         (r"/api/update", dbInterface.UpdateColumn),
         (r"/api/createRegno", dbInterface.CreateRegno),
         (r"/api/deleteRegno", dbInterface.DeleteRegno),
