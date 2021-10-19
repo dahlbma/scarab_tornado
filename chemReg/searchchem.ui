@@ -13,14 +13,17 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLabel" name="label_17">
+   <widget class="QLabel" name="structure_lab">
     <property name="geometry">
      <rect>
       <x>850</x>
       <y>30</y>
-      <width>301</width>
-      <height>201</height>
+      <width>280</width>
+      <height>280</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -30,11 +33,24 @@
      <string/>
     </property>
    </widget>
+   <widget class="QPushButton" name="search_btn">
+    <property name="geometry">
+     <rect>
+      <x>250</x>
+      <y>650</y>
+      <width>181</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Search</string>
+    </property>
+   </widget>
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>500</y>
+      <y>540</y>
       <width>581</width>
       <height>91</height>
      </rect>
@@ -55,7 +71,7 @@
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>470</x>
+      <x>440</x>
       <y>30</y>
       <width>351</width>
       <height>106</height>
@@ -99,7 +115,7 @@
        <item>
         <widget class="QLabel" name="date_lab">
          <property name="text">
-          <string> </string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -112,7 +128,7 @@
        <item>
         <widget class="QLabel" name="monoisomass_lab">
          <property name="text">
-          <string> </string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -125,8 +141,8 @@
      <rect>
       <x>20</x>
       <y>30</y>
-      <width>421</width>
-      <height>128</height>
+      <width>401</width>
+      <height>136</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_6">
@@ -178,23 +194,19 @@
         <widget class="QLineEdit" name="regno_eb"/>
        </item>
        <item>
-        <widget class="QLabel" name="compoundid_lab">
-         <property name="text">
-          <string> </string>
-         </property>
-        </widget>
+        <widget class="QLineEdit" name="compoundid_eb"/>
        </item>
        <item>
         <widget class="QLabel" name="avgmolmass_lab">
          <property name="text">
-          <string> </string>
+          <string/>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QLabel" name="mf_eb">
          <property name="text">
-          <string> </string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -341,7 +353,7 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>360</y>
+      <y>380</y>
       <width>335</width>
       <height>122</height>
      </rect>
@@ -381,7 +393,7 @@
     <property name="geometry">
      <rect>
       <x>370</x>
-      <y>360</y>
+      <y>380</y>
       <width>310</width>
       <height>122</height>
      </rect>
@@ -421,7 +433,7 @@
     <property name="geometry">
      <rect>
       <x>700</x>
-      <y>360</y>
+      <y>380</y>
       <width>310</width>
       <height>122</height>
      </rect>
@@ -457,17 +469,17 @@
      </item>
     </layout>
    </widget>
-   <widget class="QPushButton" name="search_btn">
+   <widget class="QPushButton" name="loadmol_btn">
     <property name="geometry">
      <rect>
-      <x>250</x>
-      <y>620</y>
-      <width>181</width>
-      <height>51</height>
+      <x>940</x>
+      <y>320</y>
+      <width>93</width>
+      <height>28</height>
      </rect>
     </property>
     <property name="text">
-     <string>Search</string>
+     <string>Load molfile</string>
     </property>
    </widget>
    <widget class="QGroupBox" name="groupBox">
@@ -482,12 +494,12 @@
     <property name="title">
      <string>Navigation</string>
     </property>
-    <widget class="QWidget" name="layoutWidget_2">
+    <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
       <rect>
        <x>40</x>
        <y>30</y>
-       <width>95</width>
+       <width>104</width>
        <height>100</height>
       </rect>
      </property>

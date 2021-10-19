@@ -9,6 +9,11 @@ def listify(data):
         cleanList.append(i[0])
     return cleanList
 
+def searchValue(target, value, token):
+    r = requests.put('http://esox3.scilifelab.se:8082/api/search',
+                     params={'column': target, 'value': value},
+                     headers={'token': token})
+
 def updateValue(target, value, token, regno):
     r = requests.put('http://esox3.scilifelab.se:8082/api/update',
                      params={'column': target, 'value': value, 'regno': regno},

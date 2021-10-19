@@ -148,6 +148,24 @@ class SearchScreen(QMainWindow):
         self.setWindowTitle("Search")
         self.regno_eb.setText('regno')
 
+        submitters = dbInterface.getSubmitters(self.token)
+        self.submitter_cb.addItems(submitters)
+        self.submitter_cb.currentTextChanged.connect(
+            lambda x: self.searchEvent(x, 'CHEMIST'))
+
+        self.compoundid_eb.textChanged.connect(
+            lambda: self.searchEvent(self.compoundid_eb.text(), 'COMPOUND_ID'))
+
+        self.batch_eb.textChanged.connect(
+            lambda: self.searchEvent(self.batch_eb.text(), 'BATCH'))
+
+
+    def searchEvent(self, value='', action='doNothing'):
+        if action == 'doNothing':
+            return
+        # Call search here
+        dbInterface.searchValue(action, value, self.token)
+
     def gotoReg(self):
         reg = RegScreen(self.token)
         widget.addWidget(reg)
