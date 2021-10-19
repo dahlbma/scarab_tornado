@@ -1,6 +1,6 @@
 import sys
 from PyQt5.uic import loadUi
-from PyQt5.QtGui import QIntValidator
+from PyQt5.QtGui import QIntValidator, QImage, QPixmap
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QDialog, QApplication, QWidget, QMainWindow, QFileDialog
 import mysql
@@ -118,7 +118,12 @@ class RegScreen(QMainWindow):
                  'regno': self.regno}
             r = requests.post('http://esox3.scilifelab.se:8082/api/loadMolfile',
                               headers={'token': self.token}, files=f)
-
+            
+            sFile = "http://esox3.scilifelab.se:8082/mols/" + self.regno + ".png"
+            image = QImage()
+            self.structure_lab.setScaledContents(True)
+            image.loadFromData(requests.get(sFile).content)
+            self.structure_lab.setPixmap(QPixmap(image))
         
     def changeEvent(self, value='', action='doNothing'):
         if action == 'doNothing':
