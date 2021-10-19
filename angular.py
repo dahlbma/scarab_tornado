@@ -7,6 +7,7 @@ import re
 import MySQLdb
 from datetime import datetime, timedelta
 import jwt
+from tornado import web
 import tornado.autoreload
 from tornado.log import enable_pretty_logging
 import logging
@@ -125,6 +126,7 @@ def make_app():
         (r"/api/getNextRegno", dbInterface.GetNextRegno),
         (r"/getCompound", dbInterface.GetCompound),
         (r"/api/auth/signin", getLogin),
+        (r"/mols/(.*)", web.StaticFileHandler, {"path": "mols/"}),
     ], **settings)
 
 if __name__ == "__main__":

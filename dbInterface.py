@@ -1,10 +1,11 @@
 import tornado.web
 import json
-#import jwt
 import MySQLdb
 from auth import jwtauth
 import config
 import logging
+from rdkit import Chem
+from rdkit.Chem import Draw
 
 logger = logging.getLogger(__name__)
 
@@ -31,13 +32,21 @@ class LoadMolfile(tornado.web.RequestHandler):
         sSql = """update chem_reg.chem_info set `molfile` = %s
                   where regno = %s"""
         values = (molfile, regno, )
-        cur.execute(sSql, values)        
+        cur.execute(sSql, values)
+        fileName = "mols/" + regno + ".mol"
+        fileHandle = open(fileName, "w")
+        fileHandle.write(molfile)
+        fileHandle.close()
+        m = Chem.MolFromMolFile(fileName)
+        Draw.MolToFile(m,'mols/' + regno + '.png')
+
         
 @jwtauth
 class CreateRegno(tornado.web.RequestHandler):
     def put(self):
         regno = self.get_argument("regno")
-        sSql = """insert into chem_reg.chem_info (regno, rdate) values (%s, now())"""
+        sSql = """insert into chem_reg.chem_info
+        (regno, rdate) values (%s, now())"""
         val = (regno, )
         cur.execute(sSql, val)
 
