@@ -17,10 +17,37 @@ db_connection = MySQLdb.connect(
 db_connection.autocommit(True)
 cur = db_connection.cursor()
 
-def sqlExec(sSql):
-    cur.execute(sSql)
-    res = [list(i) for i in cur.fetchall()]
-    return json.dumps(res)
+def sqlExec(sSql, values=None):
+    if values == None:
+        cur.execute(sSql)
+    else:
+        cur.execute(sSql, values)
+    result = [list(i) for i in cur.fetchall()]
+    return json.dumps(result)
+
+@jwtauth
+class Search(tornado.web.RequestHandler):
+    def get(self):
+        column = self.get_argument("column")
+        value = self.get_argument("value")
+        values = (value, )
+
+        sSql = "select regno from chem_reg.chem_info where " + column +" = %s"
+        res = sqlExec(sSql, values)
+        self.write(res)
+
+
+@jwtauth
+class GetRegnoData(tornado.web.RequestHandler):
+    def get(self):
+        column = self.get_argument("column")
+        regno = self.get_argument("regno")
+        values = (regno, )
+
+        sSql = "select " + column + " from chem_reg.chem_info where regno = %s"
+        res = sqlExec(sSql, values)
+        self.write(res)
+
 
 @jwtauth
 class LoadMolfile(tornado.web.RequestHandler):
@@ -93,6 +120,33 @@ class GetCompound(tornado.web.RequestHandler):
         # Contains user found in previous auth
         if self.request.headers.get('auth'):
             self.write('ok')
+
+
+@jwtauth
+class GetTextColumn(tornado.web.RequestHandler):
+    def get(self):
+        column = self.get_argument("column")
+        regno = self.get_argument("regno")
+        sSql = "select " + column + " from chem_reg.chem_info where regno = %s"
+        values = (regno, )        
+        res = sqlExec(sSql, values)
+        self.write(res)
+
+
+@jwtauth
+class GetColComboData(tornado.web.RequestHandler):
+    def get(self):
+        column = self.get_argument("column")
+        sSql = ''
+        if column == 'project':
+            sSql = """select project_name from hive.project_details
+                      order by project_name"""
+        elif column == "":
+            pass
+            
+        res = sqlExec(sSql)
+        self.write(res)
+
 
 @jwtauth
 class GetChemists(tornado.web.RequestHandler):

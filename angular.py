@@ -114,10 +114,14 @@ class login(tornado.web.RequestHandler):
 def make_app():
     return tornado.web.Application([
         (r"/login", login),
+        (r"/api/search", dbInterface.Search),
         (r"/api/loadMolfile", dbInterface.LoadMolfile),
         (r"/api/update", dbInterface.UpdateColumn),
+        (r"/api/getRegnoData", dbInterface.GetRegnoData),
         (r"/api/createRegno", dbInterface.CreateRegno),
         (r"/api/deleteRegno", dbInterface.DeleteRegno),
+        (r"/api/getColComboData", dbInterface.GetColComboData),
+        (r"/api/getTextColumn", dbInterface.GetTextColumn),
         (r"/api/getChemists", dbInterface.GetChemists),
         (r"/api/getProjects", dbInterface.GetProjects),
         (r"/api/getCompoundTypes", dbInterface.GetCompoundTypes),
