@@ -42,8 +42,7 @@ class GetRegnoData(tornado.web.RequestHandler):
     def get(self):
         column = self.get_argument("column")
         regno = self.get_argument("regno")
-        values = (regno, )
-
+        values = (regno, )        
         sSql = "select " + column + " from chem_reg.chem_info where regno = %s"
         res = sqlExec(sSql, values)
         self.write(res)
@@ -128,7 +127,7 @@ class GetTextColumn(tornado.web.RequestHandler):
         column = self.get_argument("column")
         regno = self.get_argument("regno")
         sSql = "select " + column + " from chem_reg.chem_info where regno = %s"
-        values = (regno, )        
+        values = (regno, )
         res = sqlExec(sSql, values)
         self.write(res)
 
@@ -141,43 +140,28 @@ class GetColComboData(tornado.web.RequestHandler):
         if column == 'project':
             sSql = """select project_name from hive.project_details
                       order by project_name"""
-        elif column == "":
-            pass
-            
-        res = sqlExec(sSql)
-        self.write(res)
+        elif column == 'chemist':
+            sSql = """select fullname from hive.user_details
+            where ORGANIZATION = 'chemistry'"""
+        elif column == 'compound_type':
+            sSql = "select type from bcpvs.compound_type order by type"
+        elif column == 'product':
+            sSql = "SELECT type FROM bcpvs.product_type order by type"
+        elif column == 'library_id':
+            sSql = """SELECT library_name FROM bcpvs.compound_library
+                      order by library_name"""
 
-
-@jwtauth
-class GetChemists(tornado.web.RequestHandler):
-    def get(self):
-        sSql = """select fullname from hive.user_details
-                  where ORGANIZATION = 'chemistry'"""
-        res = sqlExec(sSql)
-        self.write(res)
-
-@jwtauth
-class GetProjects(tornado.web.RequestHandler):
-    def get(self):
-        #sSql = """select project_name from hive.project_details
-        #          order by created_date desc"""
-        sSql = """select project_name from hive.project_details
-                  order by project_name"""
         res = sqlExec(sSql)
         self.write(res)
 
 @jwtauth
-class GetCompoundTypes(tornado.web.RequestHandler):
+class GetLibraryName(tornado.web.RequestHandler):
     def get(self):
-        sSql = "select type from bcpvs.compound_type order by type"
-        res = sqlExec(sSql)
-        self.write(res)
-
-@jwtauth
-class GetProductTypes(tornado.web.RequestHandler):
-    def get(self):
-        sSql = "SELECT type FROM bcpvs.product_type order by type"
-        res = sqlExec(sSql)
+        library_id = self.get_argument("library_id")
+        values = (library_id, )
+        sSql = """SELECT description FROM bcpvs.compound_library
+                  where library_name = %s"""
+        res = sqlExec(sSql, values)
         self.write(res)
 
 @jwtauth
