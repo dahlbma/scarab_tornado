@@ -45,7 +45,7 @@ class LoginScreen(QDialog):
 
 
 class RegScreen(QMainWindow):
-    def __init__(self, token):
+    def __init__(self, token, regnos=None):
         super(RegScreen, self).__init__()
         loadUi("regchem.ui", self)
         self.token = token
@@ -54,16 +54,21 @@ class RegScreen(QMainWindow):
         self.setWindowTitle("Register new compound")
         self.onlyInt = QIntValidator()
 
-        self.regno = dbInterface.getNextRegno(self.token)
+        if regnos == None:
+            self.regno = dbInterface.getNextRegno(self.token)
+            dbInterface.createNewRegno(self.regno, self.token)
+        else:
+            self.regno = regnos[0]
         self.regno_lab.setText(self.regno)
-        dbInterface.createNewRegno(self.regno, self.token)
-        
+            
         submitters = dbInterface.getSubmitters(self.token)
         self.submitter_cb.addItems(submitters)
         self.submitter_cb.currentTextChanged.connect(
             lambda x: self.changeEvent(x, 'CHEMIST'))
         
-        projects = dbInterface.getProjects(self.token)
+        projects = dbInterface.getColComboData(self.token,
+                                               self.regno,
+                                               'project')
         self.project_cb.addItems(projects)
         self.project_cb.currentTextChanged.connect(
             lambda x: self.changeEvent(x, 'project'))
@@ -86,6 +91,8 @@ class RegScreen(QMainWindow):
 
         self.batch_eb.editingFinished.connect(
             lambda: self.changeEvent(self.batch_eb.text(), 'JPAGE'))
+        currentBatch = dbInterface.getTextColumn(self.token, 'JPAGE', self.regno)
+        self.batch_eb.setText(currentBatch)
 
         self.chrom_text.textChanged.connect(
             lambda: self.changeEvent(self.chrom_text.toPlainText(), 'CHROM_TEXT'))
@@ -157,14 +164,18 @@ class SearchScreen(QMainWindow):
             lambda: self.searchEvent(self.compoundid_eb.text(), 'COMPOUND_ID'))
 
         self.batch_eb.textChanged.connect(
-            lambda: self.searchEvent(self.batch_eb.text(), 'BATCH'))
+            lambda: self.searchEvent(self.batch_eb.text(), 'JPAGE'))
 
 
     def searchEvent(self, value='', action='doNothing'):
         if action == 'doNothing':
             return
         # Call search here
-        dbInterface.searchValue(action, value, self.token)
+        regnos = dbInterface.searchValue(action, value, self.token)
+        if len(regnos) > 0:
+            reg = RegScreen(self.token, regnos)
+            widget.addWidget(reg)
+            widget.setCurrentIndex(widget.currentIndex() + 1)
 
     def gotoReg(self):
         reg = RegScreen(self.token)
