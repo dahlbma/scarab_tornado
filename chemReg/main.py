@@ -61,7 +61,9 @@ class RegScreen(QMainWindow):
             self.regno = regnos[0]
         self.regno_lab.setText(self.regno)
             
-        submitters = dbInterface.getSubmitters(self.token)
+        submitters = dbInterface.getColComboData(self.token,
+                                                 self.regno,
+                                                 'chemist')
         self.submitter_cb.addItems(submitters)
         self.submitter_cb.currentTextChanged.connect(
             lambda x: self.changeEvent(x, 'CHEMIST'))
@@ -73,16 +75,31 @@ class RegScreen(QMainWindow):
         self.project_cb.currentTextChanged.connect(
             lambda x: self.changeEvent(x, 'project'))
         
-        compoundTypes = dbInterface.getCompoundTypes(self.token)
+        compoundTypes = dbInterface.getColComboData(self.token,
+                                                    self.regno,
+                                                    'compound_type')
         self.compoundtype_cb.addItems(compoundTypes)
         self.compoundtype_cb.currentTextChanged.connect(
             lambda x: self.changeEvent(x, 'compound_type'))
         
-        productTypes = dbInterface.getProductTypes(self.token)
+        productTypes = dbInterface.getColComboData(self.token,
+                                                   self.regno,
+                                                   'product')
         self.product_cb.addItems(productTypes)
         self.product_cb.currentTextChanged.connect(
             lambda x: self.changeEvent(x, 'product'))
 
+
+        self.libraryid_cb.currentTextChanged.connect(self.changeLibraryName)
+        libraryIds = dbInterface.getColComboData(self.token,
+                                                 self.regno,
+                                                 'library_id')
+        self.libraryid_cb.addItems(libraryIds)
+        self.libraryid_cb.currentTextChanged.connect(
+            lambda x: self.changeEvent(x, 'library_id'))
+
+        
+        
         self.externalid_eb.editingFinished.connect(
             lambda: self.changeEvent(self.externalid_eb.text(), 'EXTERNAL_ID'))
 
@@ -116,6 +133,12 @@ class RegScreen(QMainWindow):
             lambda: self.changeEvent(self.comments_text.toPlainText(), 'COMMENTS'))
 
         self.loadmol_btn.clicked.connect(self.getMolFile)
+
+    def changeLibraryName(self):
+        library_name = dbInterface.getLibraryName(self.token,
+                                                  self.libraryid_cb.currentText())
+        self.librarydesc_eb.setText(library_name)
+
 
     def getMolFile(self):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 
@@ -155,7 +178,9 @@ class SearchScreen(QMainWindow):
         self.setWindowTitle("Search")
         self.regno_eb.setText('regno')
 
-        submitters = dbInterface.getSubmitters(self.token)
+        submitters = dbInterface.getColComboData(self.token,
+                                                 None,
+                                                 'chemist')
         self.submitter_cb.addItems(submitters)
         self.submitter_cb.currentTextChanged.connect(
             lambda x: self.searchEvent(x, 'CHEMIST'))

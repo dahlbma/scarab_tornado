@@ -33,11 +33,6 @@ def deleteRegno(regno, token):
                      params={'regno': regno},
                      headers={'token': token})
 
-def getSubmitters(token):
-    r = requests.get('http://esox3.scilifelab.se:8082/api/getChemists',
-                     headers={'token': token})
-    cleanList = listify(r)
-    return cleanList
 
 def getTextColumn(token, column, regno):
     r = requests.get('http://esox3.scilifelab.se:8082/api/getTextColumn',
@@ -51,39 +46,26 @@ def getColComboData(token, regno, column):
                      params={'column': column},
                      headers={'token': token})
     cleanList = listify(r)
-    r = requests.get('http://esox3.scilifelab.se:8082/api/getRegnoData',
-                     params={'regno': regno, 'column': column},
-                     headers={'token': token})
-    currentValue = listify(r, False)[0]
-    if currentValue != None:
-        cleanList.remove(currentValue)
-        cleanList.insert(0, currentValue)
+    if regno != None:
+        r = requests.get('http://esox3.scilifelab.se:8082/api/getRegnoData',
+                         params={'regno': regno, 'column': column},
+                         headers={'token': token})
+        currentValue = listify(r, False)[0]
+        if currentValue != None:
+            cleanList.remove(currentValue)
+            cleanList.insert(0, currentValue)
     return cleanList
 
 
-def getProjects(token, regno):
-    r = requests.get('http://esox3.scilifelab.se:8082/api/getProjects',
+def getLibraryName(token, library_id):
+    r = requests.get('http://esox3.scilifelab.se:8082/api/getLibraryName',
+                     params={'library_id': library_id},
                      headers={'token': token})
-    cleanList = listify(r)
-    r = requests.get('http://esox3.scilifelab.se:8082/api/getRegnoData',
-                     params={'regno': regno, 'column': 'project'},
-                     headers={'token': token})
-    currentValue = listify(r, False)[0]
-    if currentValue != None:
-        cleanList.remove(currentValue)
-        cleanList.insert(0, currentValue)
-    return cleanList
-
-def getCompoundTypes(token):
-    r = requests.get('http://esox3.scilifelab.se:8082/api/getCompoundTypes',
-                     headers={'token': token})
-    cleanList = listify(r)
-    return cleanList
-
-def getProductTypes(token):
-    r = requests.get('http://esox3.scilifelab.se:8082/api/getProductTypes',
-                     headers={'token': token})
-    cleanList = listify(r)
+    cleanList = listify(r, False)
+    if cleanList == []:
+        cleanList = ' '
+    else:
+        cleanList = cleanList[0]
     return cleanList
 
 def getNextRegno(token):
