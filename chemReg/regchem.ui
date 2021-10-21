@@ -142,7 +142,7 @@
       <x>20</x>
       <y>30</y>
       <width>401</width>
-      <height>128</height>
+      <height>129</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_6">
@@ -191,9 +191,12 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QLabel" name="regno_lab">
-         <property name="text">
-          <string/>
+        <widget class="QLineEdit" name="regno_eb">
+         <property name="styleSheet">
+          <string notr="true">background-color:&quot;transparent&quot;</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -219,7 +222,14 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="chns_eb"/>
+        <widget class="QLineEdit" name="chns_eb">
+         <property name="styleSheet">
+          <string notr="true">background-color:&quot;transparent&quot;</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
@@ -351,7 +361,14 @@
         <widget class="QComboBox" name="libraryid_cb"/>
        </item>
        <item>
-        <widget class="QLineEdit" name="librarydesc_eb"/>
+        <widget class="QLineEdit" name="librarydesc_eb">
+         <property name="styleSheet">
+          <string notr="true">background-color:&quot;transparent&quot;</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
@@ -388,7 +405,13 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_13">
        <item>
-        <widget class="QPlainTextEdit" name="chrom_text"/>
+        <widget class="QPlainTextEdit" name="chrom_text">
+         <property name="font">
+          <font>
+           <pointsize>9</pointsize>
+          </font>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QLineEdit" name="chrompurity_eb"/>
@@ -428,7 +451,13 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_14">
        <item>
-        <widget class="QPlainTextEdit" name="nmr_text"/>
+        <widget class="QPlainTextEdit" name="nmr_text">
+         <property name="font">
+          <font>
+           <pointsize>9</pointsize>
+          </font>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QLineEdit" name="nmrpurity_eb"/>
@@ -468,7 +497,13 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_15">
        <item>
-        <widget class="QPlainTextEdit" name="ms_text"/>
+        <widget class="QPlainTextEdit" name="ms_text">
+         <property name="font">
+          <font>
+           <pointsize>9</pointsize>
+          </font>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QLineEdit" name="mspurity_eb"/>

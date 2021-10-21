@@ -9,6 +9,35 @@ import requests
 import json
 import dbInterface
 
+def updateScreen(self):
+    #self.regno_eb.textChanged.connect(self.getMolfile)
+    if self.populated == False:
+        self.regno_eb.setText(self.regno)
+        submitters = dbInterface.getColComboData(self.token,
+                                                 'chemist')
+        self.submitter_cb.addItems(submitters)
+        projects = dbInterface.getColComboData(self.token,
+                                               'project')
+        self.project_cb.addItems(projects)
+        compoundTypes = dbInterface.getColComboData(self.token,
+                                                    'compound_type')
+        self.compoundtype_cb.addItems(compoundTypes)
+        productTypes = dbInterface.getColComboData(self.token,
+                                                   'product')
+        self.product_cb.addItems(productTypes)
+        libraryIds = dbInterface.getColComboData(self.token,
+                                                 'library_id')
+        self.libraryid_cb.addItems(libraryIds)
+    
+    # Set current values for this regno
+    if self.regno != None:
+        currentBatch = dbInterface.getTextColumn(self.token, 'JPAGE', self.regno)
+        self.batch_eb.setText(currentBatch)
+
+        submitter = dbInterface.getTextColumn(self.token, 'chemist', self.regno)
+        self.submitter_cb.setCurrentText(submitter)
+
+
 class LoginScreen(QDialog):
     def __init__(self):
         super(LoginScreen, self).__init__()
@@ -53,63 +82,71 @@ class RegScreen(QMainWindow):
         self.gotosearch_btn.clicked.connect(self.gotoSearch)
         self.setWindowTitle("Register new compound")
         self.onlyInt = QIntValidator()
+        self.populated = False
 
+        #### Regno
         if regnos == None:
             self.regno = dbInterface.getNextRegno(self.token)
             dbInterface.createNewRegno(self.regno, self.token)
         else:
             self.regno = regnos[0]
-        self.regno_lab.setText(self.regno)
-            
-        submitters = dbInterface.getColComboData(self.token,
-                                                 self.regno,
-                                                 'chemist')
-        self.submitter_cb.addItems(submitters)
+        self.regno_eb.textChanged.connect(self.getMolfile)
+        self.regno_eb.setText(self.regno)
+
+        updateScreen(self)
+        self.populated = True
+        #### Chemist
+        #submitters = dbInterface.getColComboData(self.token,
+        #                                         self.regno,
+        #                                         'chemist')
+        #self.submitter_cb.addItems(submitters)
         self.submitter_cb.currentTextChanged.connect(
             lambda x: self.changeEvent(x, 'CHEMIST'))
-        
-        projects = dbInterface.getColComboData(self.token,
-                                               self.regno,
-                                               'project')
-        self.project_cb.addItems(projects)
+
+        #### Projects
+        #projects = dbInterface.getColComboData(self.token,
+        #                                       self.regno,
+        #                                       'project')
+        #self.project_cb.addItems(projects)
         self.project_cb.currentTextChanged.connect(
             lambda x: self.changeEvent(x, 'project'))
-        
-        compoundTypes = dbInterface.getColComboData(self.token,
-                                                    self.regno,
-                                                    'compound_type')
-        self.compoundtype_cb.addItems(compoundTypes)
+
+        #### CompoundTypes
+        #compoundTypes = dbInterface.getColComboData(self.token,
+        #                                            self.regno,
+        #                                            'compound_type')
+        #self.compoundtype_cb.addItems(compoundTypes)
         self.compoundtype_cb.currentTextChanged.connect(
             lambda x: self.changeEvent(x, 'compound_type'))
-        
-        productTypes = dbInterface.getColComboData(self.token,
-                                                   self.regno,
-                                                   'product')
-        self.product_cb.addItems(productTypes)
+
+        #### ProductTypes
+        #productTypes = dbInterface.getColComboData(self.token,
+        #                                           self.regno,
+        #                                           'product')
+        #self.product_cb.addItems(productTypes)
         self.product_cb.currentTextChanged.connect(
             lambda x: self.changeEvent(x, 'product'))
 
-
+        #### Libraries and LibraryName
         self.libraryid_cb.currentTextChanged.connect(self.changeLibraryName)
-        libraryIds = dbInterface.getColComboData(self.token,
-                                                 self.regno,
-                                                 'library_id')
-        self.libraryid_cb.addItems(libraryIds)
+        #libraryIds = dbInterface.getColComboData(self.token,
+        #                                         self.regno,
+        #                                         'library_id')
+        #self.libraryid_cb.addItems(libraryIds)
         self.libraryid_cb.currentTextChanged.connect(
             lambda x: self.changeEvent(x, 'library_id'))
 
-        
-        
+        #### ExternalId
         self.externalid_eb.editingFinished.connect(
             lambda: self.changeEvent(self.externalid_eb.text(), 'EXTERNAL_ID'))
 
+        #### ExternalBatch
         self.externalbatch_eb.editingFinished.connect(
             lambda: self.changeEvent(self.externalbatch_eb.text(), 'SUPPLIER_BATCH'))
 
+        #### Batch
         self.batch_eb.editingFinished.connect(
             lambda: self.changeEvent(self.batch_eb.text(), 'JPAGE'))
-        currentBatch = dbInterface.getTextColumn(self.token, 'JPAGE', self.regno)
-        self.batch_eb.setText(currentBatch)
 
         self.chrom_text.textChanged.connect(
             lambda: self.changeEvent(self.chrom_text.toPlainText(), 'CHROM_TEXT'))
@@ -132,7 +169,7 @@ class RegScreen(QMainWindow):
         self.comments_text.textChanged.connect(
             lambda: self.changeEvent(self.comments_text.toPlainText(), 'COMMENTS'))
 
-        self.loadmol_btn.clicked.connect(self.getMolFile)
+        self.loadmol_btn.clicked.connect(self.uploadMolfile)
 
     def changeLibraryName(self):
         library_name = dbInterface.getLibraryName(self.token,
@@ -140,7 +177,14 @@ class RegScreen(QMainWindow):
         self.librarydesc_eb.setText(library_name)
 
 
-    def getMolFile(self):
+    def getMolfile(self):
+        sFile = "http://esox3.scilifelab.se:8082/mols/" + self.regno + ".png"
+        image = QImage()
+        self.structure_lab.setScaledContents(True)
+        image.loadFromData(requests.get(sFile).content)
+        self.structure_lab.setPixmap(QPixmap(image))
+    
+    def uploadMolfile(self):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 
                                                 '.', "Molfiles (*.mol)")
         if fname[0] != '':
@@ -176,12 +220,17 @@ class SearchScreen(QMainWindow):
         loadUi("searchchem.ui", self)
         self.gotoreg_btn.clicked.connect(self.gotoReg)
         self.setWindowTitle("Search")
-        self.regno_eb.setText('regno')
+        self.populated = False
+        self.regno = None
+        self.regno_eb.textChanged.connect(
+            lambda: self.searchEvent(self.regno_eb.text(), 'regno'))
 
-        submitters = dbInterface.getColComboData(self.token,
-                                                 None,
-                                                 'chemist')
-        self.submitter_cb.addItems(submitters)
+        updateScreen(self)
+        self.populated = True
+        #submitters = dbInterface.getColComboData(self.token,
+        #                                         None,
+        #                                         'chemist')
+        #self.submitter_cb.addItems(submitters)
         self.submitter_cb.currentTextChanged.connect(
             lambda x: self.searchEvent(x, 'CHEMIST'))
 
@@ -198,9 +247,11 @@ class SearchScreen(QMainWindow):
         # Call search here
         regnos = dbInterface.searchValue(action, value, self.token)
         if len(regnos) > 0:
-            reg = RegScreen(self.token, regnos)
-            widget.addWidget(reg)
-            widget.setCurrentIndex(widget.currentIndex() + 1)
+            self.regno = regnos[0]
+            updateScreen(self)
+            #reg = RegScreen(self.token, regnos)
+            #widget.addWidget(reg)
+            #widget.setCurrentIndex(widget.currentIndex() + 1)
 
     def gotoReg(self):
         reg = RegScreen(self.token)

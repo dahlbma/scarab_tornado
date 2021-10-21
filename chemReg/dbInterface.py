@@ -35,27 +35,28 @@ def deleteRegno(regno, token):
 
 
 def getTextColumn(token, column, regno):
+    print(column)
+    print(regno)
     r = requests.get('http://esox3.scilifelab.se:8082/api/getTextColumn',
                      params={'column': column, 'regno': regno},
                      headers={'token': token})
     cleanList = listify(r, False)
     return cleanList[0]
     
-def getColComboData(token, regno, column):
+def getColComboData(token, column):
     r = requests.get('http://esox3.scilifelab.se:8082/api/getColComboData',
                      params={'column': column},
                      headers={'token': token})
     cleanList = listify(r)
-    if regno != None:
-        r = requests.get('http://esox3.scilifelab.se:8082/api/getRegnoData',
-                         params={'regno': regno, 'column': column},
-                         headers={'token': token})
-        currentValue = listify(r, False)[0]
-        if currentValue != None:
-            cleanList.remove(currentValue)
-            cleanList.insert(0, currentValue)
+    #if regno != None:
+    #    r = requests.get('http://esox3.scilifelab.se:8082/api/getRegnoData',
+    #                     params={'regno': regno, 'column': column},
+    #                     headers={'token': token})
+    #    currentValue = listify(r, False)[0]
+    #    if currentValue != None:
+    #        cleanList.remove(currentValue)
+    #        cleanList.insert(0, currentValue)
     return cleanList
-
 
 def getLibraryName(token, library_id):
     r = requests.get('http://esox3.scilifelab.se:8082/api/getLibraryName',
