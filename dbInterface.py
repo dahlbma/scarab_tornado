@@ -34,9 +34,6 @@ class Search(tornado.web.RequestHandler):
 
         sSql = "select regno from chem_reg.chem_info where " + column +" = %s"
         res = sqlExec(sSql, values)
-        print(res)
-        print(column)
-        print(value)
         self.write(res)
 
 
@@ -90,8 +87,6 @@ class DeleteRegno(tornado.web.RequestHandler):
         cur.execute(sSql, val)
         res = cur.fetchall()
         logger.info('Deleting ' + str(res))
-        #print('Deleting')
-        #print(res)
         if len(res) > 0:
             sSql = """delete from chem_reg.chem_info
                       where regno = %s"""
@@ -129,7 +124,8 @@ class GetTextColumn(tornado.web.RequestHandler):
     def get(self):
         column = self.get_argument("column")
         regno = self.get_argument("regno")
-        sSql = "select " + column + " from chem_reg.chem_info where regno = %s"
+        sSql = "select cast(" + column + """ as char)
+                from chem_reg.chem_info where regno = %s"""
         values = (regno, )
         res = sqlExec(sSql, values)
         self.write(res)
