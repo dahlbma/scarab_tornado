@@ -30,22 +30,6 @@ JWT_SECRET = config.secret_key
 JWT_ALGORITHM = 'HS256'
 JWT_EXP_DELTA_SECONDS = 99999
 
-def getArgs(sBody):
-    error = False
-    username = ''
-    password = ''
-    
-    data = tornado.escape.xhtml_unescape(sBody)
-    x = re.match("^{username=(.+)&password=(.+)}$", data)
-
-    if len(x.groups()) != 2:
-        error = True
-        
-    if error != True:
-        username = x.groups()[0]
-        password = x.groups()[1]
-    return (error, username, password)
-
 class BaseHandler(tornado.web.RequestHandler):
     def set_default_headers(self):
         pass
@@ -61,28 +45,6 @@ class BaseHandler(tornado.web.RequestHandler):
         # `*args` is for route with `path arguments` supports
         self.set_status(204)
         self.finish()
-        
-class getLogin(BaseHandler):
-    def post(self):
-        error, username, password = getArgs(self.request.body)
-        try:
-            db_connection2 = MySQLdb.connect(
-                host="esox3",
-                user=username,
-                passwd=password
-            )
-        except:
-            self.set_status(400)
-            self.write({'message': 'Wrong username password'})
-            self.finish()
-            return
-        payload = {
-            'username': username,
-            'exp': datetime.utcnow() + timedelta(seconds=JWT_EXP_DELTA_SECONDS)
-        }
-        jwt_token = jwt.encode(payload, JWT_SECRET, JWT_ALGORITHM)
-        self.write({'token': jwt_token})
-
 
 class login(tornado.web.RequestHandler):
     def post(self, *args):
@@ -126,7 +88,6 @@ def make_app():
         (r"/api/getLibraries", dbInterface.GetLibraries),
         (r"/api/getNextRegno", dbInterface.GetNextRegno),
         (r"/getCompound", dbInterface.GetCompound),
-        (r"/api/auth/signin", getLogin),
         (r"/mols/(.*)", web.StaticFileHandler, {"path": "mols/"}),
     ], **settings)
 
