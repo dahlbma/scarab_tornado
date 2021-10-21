@@ -34,6 +34,9 @@ class Search(tornado.web.RequestHandler):
 
         sSql = "select regno from chem_reg.chem_info where " + column +" = %s"
         res = sqlExec(sSql, values)
+        print(res)
+        print(column)
+        print(value)
         self.write(res)
 
 
