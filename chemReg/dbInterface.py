@@ -35,8 +35,6 @@ def deleteRegno(regno, token):
 
 
 def getTextColumn(token, column, regno):
-    print(column)
-    print(regno)
     r = requests.get('http://esox3.scilifelab.se:8082/api/getTextColumn',
                      params={'column': column, 'regno': regno},
                      headers={'token': token})
@@ -48,14 +46,6 @@ def getColComboData(token, column):
                      params={'column': column},
                      headers={'token': token})
     cleanList = listify(r)
-    #if regno != None:
-    #    r = requests.get('http://esox3.scilifelab.se:8082/api/getRegnoData',
-    #                     params={'regno': regno, 'column': column},
-    #                     headers={'token': token})
-    #    currentValue = listify(r, False)[0]
-    #    if currentValue != None:
-    #        cleanList.remove(currentValue)
-    #        cleanList.insert(0, currentValue)
     return cleanList
 
 def getLibraryName(token, library_id):
