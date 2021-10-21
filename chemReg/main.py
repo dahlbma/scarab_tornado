@@ -71,6 +71,13 @@ def updateScreen(self):
         msText = dbInterface.getTextColumn(self.token, 'ms_text', self.regno)
         self.ms_text.setPlainText(msText)
 
+        chromPurity = dbInterface.getTextColumn(self.token, 'chrom_purity', self.regno)
+        self.chrompurity_eb.setText(chromPurity)
+        nmrPurity = dbInterface.getTextColumn(self.token, 'nmr_purity', self.regno)
+        self.nmrpurity_eb.setText(chromPurity)
+        msPurity = dbInterface.getTextColumn(self.token, 'ms_purity', self.regno)
+        self.mspurity_eb.setText(msPurity)
+
         displayMolfile(self)
     else:
         self.regno_eb.setText(None)
