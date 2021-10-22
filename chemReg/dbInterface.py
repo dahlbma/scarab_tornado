@@ -33,7 +33,6 @@ def deleteRegno(regno, token):
                      params={'regno': regno},
                      headers={'token': token})
 
-
 def getTextColumn(token, column, regno):
     r = requests.get('http://esox3.scilifelab.se:8082/api/getTextColumn',
                      params={'column': column, 'regno': regno},

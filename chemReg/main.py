@@ -1,7 +1,7 @@
 import sys
 from PyQt5.uic import loadUi
 from PyQt5.QtGui import QIntValidator, QImage, QPixmap
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QDialog, QApplication, QWidget, QMainWindow, QFileDialog
 import mysql
 from mysql.connector import connect, Error
@@ -16,7 +16,6 @@ def displayMolfile(self):
     self.structure_lab.setScaledContents(True)
     image.loadFromData(requests.get(sFile).content)
     self.structure_lab.setPixmap(QPixmap(image))
-
 
 def updateScreen(self):
     #self.regno_eb.textChanged.connect(self.getMolfile)
@@ -44,6 +43,16 @@ def updateScreen(self):
         createdDate = dbInterface.getTextColumn(self.token, 'rdate', self.regno)
         self.date_lab.setText(createdDate)
         
+        externalCompoundId = dbInterface.getTextColumn(self.token,
+                                                       'EXTERNAL_ID',
+                                                       self.regno)
+        self.externalid_eb.setText(externalCompoundId)
+
+        externalBatch = dbInterface.getTextColumn(self.token,
+                                                  'SUPPLIER_BATCH',
+                                                  self.regno)
+        self.externalbatch_eb.setText(externalBatch)
+
         currentBatch = dbInterface.getTextColumn(self.token, 'JPAGE', self.regno)
         self.batch_eb.setText(currentBatch)
 
@@ -56,7 +65,9 @@ def updateScreen(self):
         product = dbInterface.getTextColumn(self.token, 'product', self.regno)
         self.product_cb.setCurrentText(product)
 
-        compoundType = dbInterface.getTextColumn(self.token, 'compound_type', self.regno)
+        compoundType = dbInterface.getTextColumn(self.token,
+                                                 'compound_type',
+                                                 self.regno)
         self.compoundtype_cb.setCurrentText(compoundType)
 
         libraryId = dbInterface.getTextColumn(self.token, 'library_id', self.regno)
@@ -124,7 +135,7 @@ class LoginScreen(QDialog):
             self.errorlabel.setText("Wrong username/password")
             return
         self.jwt_token = r.content
-        self.gotoReg(self.jwt_token)
+        self.gotoSearch(self.jwt_token)
 
     def gotoReg(self, token):
         reg = RegScreen(token)
@@ -138,7 +149,7 @@ class LoginScreen(QDialog):
 
 
 class RegScreen(QMainWindow):
-    def __init__(self, token, regnos=None):
+    def __init__(self, token, regno=None):
         super(RegScreen, self).__init__()
         loadUi("regchem.ui", self)
         self.token = token
@@ -149,11 +160,11 @@ class RegScreen(QMainWindow):
         self.populated = False
 
         #### Regno
-        if regnos == None:
+        if regno == None:
             self.regno = dbInterface.getNextRegno(self.token)
             dbInterface.createNewRegno(self.regno, self.token)
         else:
-            self.regno = regnos[0]
+            self.regno = regno
         self.regno_eb.textChanged.connect(self.getMolfile)
         self.regno_eb.setText(self.regno)
 
@@ -181,11 +192,11 @@ class RegScreen(QMainWindow):
             lambda x: self.changeEvent(x, 'library_id'))
 
         #### ExternalId
-        self.externalid_eb.editingFinished.connect(
+        self.externalid_eb.textChanged.connect(
             lambda: self.changeEvent(self.externalid_eb.text(), 'EXTERNAL_ID'))
 
         #### ExternalBatch
-        self.externalbatch_eb.editingFinished.connect(
+        self.externalbatch_eb.textChanged.connect(
             lambda: self.changeEvent(self.externalbatch_eb.text(), 'SUPPLIER_BATCH'))
 
         #### Batch
@@ -262,8 +273,13 @@ class SearchScreen(QMainWindow):
         self.populated = False
         self.searchingInProgress = False
         self.regno = None
+        self.regnos = None
+        self.editregno_btn.clicked.connect(self.gotoEditRegno)
         self.regno_eb.editingFinished.connect(
             lambda: self.searchEvent(self.regno_eb.text(), 'regno'))
+
+        self.back_btn.clicked.connect(self.previousRegno)
+        self.forward_btn.clicked.connect(self.nextRegno)
 
         updateScreen(self)
         self.populated = True
@@ -276,29 +292,55 @@ class SearchScreen(QMainWindow):
         self.batch_eb.editingFinished.connect(
             lambda: self.searchEvent(self.batch_eb.text(), 'JPAGE'))
 
+    def previousRegno(self):
+        if self.regno == None:
+            return
+        newIndex = self.regnos.index(self.regno) -1
+        if newIndex > -1:
+            self.regno = self.regnos[newIndex]
+            self.numberOfHits_lab.setText(str(newIndex +1) + " of " + str(len(self.regnos)))
+            updateScreen(self)
+        
+    def nextRegno(self):
+        if self.regno == None:
+            return
+        newIndex = self.regnos.index(self.regno) +1
+        if newIndex < len(self.regnos):
+            self.numberOfHits_lab.setText(str(newIndex +1) + " of " + str(len(self.regnos)))
+            self.regno = self.regnos[newIndex]
+            updateScreen(self)
 
+    def gotoEditRegno(self):
+        reg = RegScreen(self.token, self.regno)
+        widget.addWidget(reg)
+        widget.setCurrentIndex(widget.currentIndex() + 1)
+        
     def searchEvent(self, value='', action='doNothing'):
         if action == 'doNothing':
             return
         # Call search here
         if self.searchingInProgress == False:
             self.searchingInProgress = True
-            regnos = dbInterface.searchValue(action, value, self.token)
-            if len(regnos) > 0:
-                self.regno = regnos[0]
+            self.regnos = dbInterface.searchValue(action, value, self.token)
+            self.numberOfHits_lab.setText("1 of " + str(len(self.regnos)))
+            if len(self.regnos) > 0:
+                self.regno = self.regnos[0]
             else:
                 self.regno = None
             updateScreen(self)
             self.searchingInProgress = False
-                #reg = RegScreen(self.token, regnos)
-                #widget.addWidget(reg)
-                #widget.setCurrentIndex(widget.currentIndex() + 1)
 
     def gotoReg(self):
         reg = RegScreen(self.token)
         widget.addWidget(reg)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
+
+# Handle high resolution displays:
+if hasattr(QtCore.Qt, 'AA_EnableHighDpiScaling'):
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+if hasattr(QtCore.Qt, 'AA_UseHighDpiPixmaps'):
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
         
 app = QApplication(sys.argv)
 welcome = LoginScreen()

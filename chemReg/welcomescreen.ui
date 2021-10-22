@@ -86,7 +86,7 @@ font: 18pt &quot;MS Shell Dlg 2&quot;;
     <property name="geometry">
      <rect>
       <x>460</x>
-      <y>390</y>
+      <y>400</y>
       <width>241</width>
       <height>41</height>
      </rect>
@@ -100,7 +100,7 @@ font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
     <property name="geometry">
      <rect>
       <x>460</x>
-      <y>470</y>
+      <y>480</y>
       <width>241</width>
       <height>41</height>
      </rect>
@@ -128,7 +128,7 @@ font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
      <rect>
       <x>460</x>
       <y>450</y>
-      <width>55</width>
+      <width>71</width>
       <height>16</height>
      </rect>
     </property>
