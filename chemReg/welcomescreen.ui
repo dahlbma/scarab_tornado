@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>20</y>
+     <y>0</y>
      <width>1201</width>
      <height>801</height>
     </rect>
@@ -30,8 +30,8 @@ background-color: qlineargradient(spread:pad, x1:0.437811, y1:0.369, x2:0.9, y2:
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>480</x>
-      <y>190</y>
+      <x>470</x>
+      <y>150</y>
       <width>201</width>
       <height>101</height>
      </rect>
@@ -51,8 +51,8 @@ background-color: qlineargradient(spread:pad, x1:0.437811, y1:0.369, x2:0.9, y2:
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>520</x>
-      <y>310</y>
+      <x>510</x>
+      <y>290</y>
       <width>171</width>
       <height>41</height>
      </rect>
@@ -69,8 +69,8 @@ font: 18pt &quot;MS Shell Dlg 2&quot;;
    <widget class="QPushButton" name="login">
     <property name="geometry">
      <rect>
-      <x>480</x>
-      <y>610</y>
+      <x>470</x>
+      <y>560</y>
       <width>211</width>
       <height>71</height>
      </rect>
@@ -86,7 +86,7 @@ font: 18pt &quot;MS Shell Dlg 2&quot;;
     <property name="geometry">
      <rect>
       <x>460</x>
-      <y>400</y>
+      <y>380</y>
       <width>241</width>
       <height>41</height>
      </rect>
@@ -100,7 +100,7 @@ font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
     <property name="geometry">
      <rect>
       <x>460</x>
-      <y>480</y>
+      <y>460</y>
       <width>241</width>
       <height>41</height>
      </rect>
@@ -114,7 +114,7 @@ font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
     <property name="geometry">
      <rect>
       <x>460</x>
-      <y>370</y>
+      <y>350</y>
       <width>81</width>
       <height>16</height>
      </rect>
@@ -127,7 +127,7 @@ font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
     <property name="geometry">
      <rect>
       <x>460</x>
-      <y>450</y>
+      <y>430</y>
       <width>71</width>
       <height>16</height>
      </rect>

@@ -8,7 +8,7 @@ from mysql.connector import connect, Error
 import requests
 import json
 import dbInterface
-
+import os
 
 def displayMolfile(self):
     sFile = "http://esox3.scilifelab.se:8082/mols/" + self.regno + ".png"
@@ -18,7 +18,6 @@ def displayMolfile(self):
     self.structure_lab.setPixmap(QPixmap(image))
 
 def updateScreen(self):
-    #self.regno_eb.textChanged.connect(self.getMolfile)
     if self.populated == False:
         self.regno_eb.setText(self.regno)
         submitters = dbInterface.getColComboData(self.token, 'chemist')
@@ -72,6 +71,10 @@ def updateScreen(self):
 
         libraryId = dbInterface.getTextColumn(self.token, 'library_id', self.regno)
         self.libraryid_cb.setCurrentText(libraryId)
+
+        library_name = dbInterface.getLibraryName(self.token,
+                                                  self.libraryid_cb.currentText())
+        self.librarydesc_eb.setText(library_name)
 
         chromText = dbInterface.getTextColumn(self.token, 'chrom_text', self.regno)
         self.chrom_text.setPlainText(chromText)
@@ -341,8 +344,12 @@ if hasattr(QtCore.Qt, 'AA_EnableHighDpiScaling'):
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
 if hasattr(QtCore.Qt, 'AA_UseHighDpiPixmaps'):
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
-        
+
+os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+
 app = QApplication(sys.argv)
+app.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+
 welcome = LoginScreen()
 widget = QtWidgets.QStackedWidget()
 widget.addWidget(welcome)
