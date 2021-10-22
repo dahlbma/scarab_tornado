@@ -1,8 +1,8 @@
-Tornado service for import of data into scarab database.
-Backend for angular-application.
+Backend for chemical registration application is using rdkit for chemical functions.
+Frontend in python using pyqt5.
 
 
-Add a local file nameed config.py with content:
+The backend needs a config file config.py with content:
 
 database = dict(
     host = 'hostname',
