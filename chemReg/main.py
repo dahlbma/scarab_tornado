@@ -288,6 +288,7 @@ class LoadSDF(QDialog):
     def __init__(self, token):
         super(LoadSDF, self).__init__()
         self.token = token
+        self.iMolCount = 0
         loadUi("sdfReg.ui", self)
         submitters = dbInterface.getColComboData(self.token, 'chemist')
         self.submitter_cb.addItems(submitters)
@@ -309,19 +310,42 @@ class LoadSDF(QDialog):
         libraryIds = dbInterface.getColComboData(self.token, 'library_id')
         self.library_cb.addItems(libraryIds)
 
-        self.upload_eb.textChanged.connect(self.getSDFile)
+        self.upload_btn.clicked.connect(self.uploadSDFile)
+        self.selectsdf_btn.clicked.connect(self.getSDFile)
+        self.cancel_btn.clicked.connect(self.closeWindow)
 
+        
+        #self.nrofelnids_lab
+        #self.sdfname_lab
+        #self.cmpidfield_cb
+        #self.batchfield_cb
+        #self.purity_cb
+        #self.elnids_text
+        
         self.exec_()
         self.show()
 
+    def uploadSDFile(self):
+        pass
+    
+    def closeWindow(self):
+        self.close()
+    
     def getSDFile(self):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 
                                                 '.', "SDFiles (*.sdf)")
         if fname[0] != '':
             f = open(fname[0], "r")
-        
-
-
+            iMolCount = 0
+            for line in f:
+                if "$$$$" in line:
+                    iMolCount += 1
+                    self.iMolCount = iMolCount
+                    self.compoundcount_lab.setText(str(iMolCount))
+                    iNrElnIds = int((iMolCount / 1000) + 1)
+                    self.nrofelnids_lab.setText(str(iNrElnIds))
+                    
+                    
 class SearchScreen(QMainWindow):
     def __init__(self, token):
         super(SearchScreen, self).__init__()
