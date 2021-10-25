@@ -37,6 +37,10 @@ def updateScreen(self):
     
     # Set current values for this regno
     if self.regno != None:
+        try:
+            self.editregno_btn.setEnabled(True)
+        except:
+            pass
         self.regno_eb.setText(self.regno)
         
         createdDate = dbInterface.getTextColumn(self.token, 'rdate', self.regno)
@@ -94,6 +98,7 @@ def updateScreen(self):
 
         displayMolfile(self)
     else:
+        self.editregno_btn.setEnabled(False)
         self.regno_eb.setText(None)
         self.compoundid_eb.setText(None)
         self.batch_eb.setText(None)
@@ -277,6 +282,7 @@ class SearchScreen(QMainWindow):
         self.searchingInProgress = False
         self.regno = None
         self.regnos = None
+        self.editregno_btn.setEnabled(False)
         self.editregno_btn.clicked.connect(self.gotoEditRegno)
         self.regno_eb.editingFinished.connect(
             lambda: self.searchEvent(self.regno_eb.text(), 'regno'))
@@ -298,20 +304,24 @@ class SearchScreen(QMainWindow):
     def previousRegno(self):
         if self.regno == None:
             return
+        self.searchingInProgress = True
         newIndex = self.regnos.index(self.regno) -1
         if newIndex > -1:
             self.regno = self.regnos[newIndex]
             self.numberOfHits_lab.setText(str(newIndex +1) + " of " + str(len(self.regnos)))
             updateScreen(self)
+        self.searchingInProgress = False
         
     def nextRegno(self):
         if self.regno == None:
             return
+        self.searchingInProgress = True
         newIndex = self.regnos.index(self.regno) +1
         if newIndex < len(self.regnos):
             self.numberOfHits_lab.setText(str(newIndex +1) + " of " + str(len(self.regnos)))
             self.regno = self.regnos[newIndex]
             updateScreen(self)
+        self.searchingInProgress = False
 
     def gotoEditRegno(self):
         reg = RegScreen(self.token, self.regno)
@@ -324,12 +334,18 @@ class SearchScreen(QMainWindow):
         # Call search here
         if self.searchingInProgress == False:
             self.searchingInProgress = True
+            self.searchCol = action
+            self.searchValue = value
+            self.searchStr = action + ' = ' + value
+            self.searchStr_lab.setText(self.searchStr)
             self.regnos = dbInterface.searchValue(action, value, self.token)
             if len(self.regnos) > 0:
-                self.numberOfHits_lab.setText("1 of " + str(len(self.regnos)))
+                sString = "1 of " + str(len(self.regnos))
+                self.numberOfHits_lab.setText(sString)
                 self.regno = self.regnos[0]
             else:
-                self.numberOfHits_lab.setText("0 of " + str(len(self.regnos)))
+                sString = "0 of " + str(len(self.regnos))
+                self.numberOfHits_lab.setText(sString)
                 self.regno = None
             updateScreen(self)
             self.searchingInProgress = False
