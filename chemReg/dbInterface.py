@@ -27,7 +27,7 @@ def createNewRegno(regno, token):
     r = requests.put('http://esox3.scilifelab.se:8082/api/createRegno',
                      params={'regno': regno},
                      headers={'token': token})
-    
+
 def deleteRegno(regno, token):
     r = requests.put('http://esox3.scilifelab.se:8082/api/deleteRegno',
                      params={'regno': regno},
