@@ -30,7 +30,7 @@ def updateScreen(self):
         self.regno_eb.setText(self.regno)
         submitters = dbInterface.getColComboData(self.token, 'chemist')
         self.submitter_cb.addItems(submitters)
-
+        
         projects = dbInterface.getColComboData(self.token, 'project')
         self.project_cb.addItems(projects)
 
@@ -333,10 +333,11 @@ class SearchScreen(QMainWindow):
         if self.searchingInProgress == False:
             self.searchingInProgress = True
             self.regnos = dbInterface.searchValue(action, value, self.token)
-            self.numberOfHits_lab.setText("1 of " + str(len(self.regnos)))
             if len(self.regnos) > 0:
+                self.numberOfHits_lab.setText("1 of " + str(len(self.regnos)))
                 self.regno = self.regnos[0]
             else:
+                self.numberOfHits_lab.setText("0 of " + str(len(self.regnos)))
                 self.regno = None
             updateScreen(self)
             self.searchingInProgress = False
