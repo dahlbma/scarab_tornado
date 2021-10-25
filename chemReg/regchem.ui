@@ -404,7 +404,7 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_21">
           <item>
-           <widget class="QLabel" name="structure_lab_2">
+           <widget class="QLabel" name="structure_lab">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
               <horstretch>0</horstretch>
@@ -462,7 +462,7 @@
              </spacer>
             </item>
             <item>
-             <widget class="QPushButton" name="loadmol_btn_2">
+             <widget class="QPushButton" name="loadmol_btn">
               <property name="text">
                <string>Load molfile</string>
               </property>
@@ -866,7 +866,7 @@
      <x>0</x>
      <y>0</y>
      <width>1218</width>
-     <height>22</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>
