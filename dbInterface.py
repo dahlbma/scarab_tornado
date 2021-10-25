@@ -146,6 +146,10 @@ class GetColComboData(tornado.web.RequestHandler):
             sSql = "select type from bcpvs.compound_type order by type"
         elif column == 'product':
             sSql = "SELECT type FROM bcpvs.product_type order by type"
+        elif column == 'supplier':
+            sSql = "SELECT name FROM bcpvs.compound_suppliers order by name"
+        elif column == 'solvent':
+            sSql = "SELECT solvent FROM chemspec.solvent_tbl order by solvent"
         elif column == 'library_id':
             sSql = """SELECT library_name FROM bcpvs.compound_library
                       order by library_name"""
