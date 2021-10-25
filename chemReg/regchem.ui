@@ -263,7 +263,7 @@
       <x>20</x>
       <y>220</y>
       <width>321</width>
-      <height>91</height>
+      <height>122</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -290,6 +290,13 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Initial purity</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>
@@ -302,6 +309,9 @@
        </item>
        <item>
         <widget class="QComboBox" name="project_cb"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="purity_eb"/>
        </item>
       </layout>
      </item>
