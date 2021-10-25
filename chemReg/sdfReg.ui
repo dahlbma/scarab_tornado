@@ -17,9 +17,9 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>200</y>
+     <y>220</y>
      <width>431</width>
-     <height>122</height>
+     <height>101</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -61,18 +61,6 @@
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QLabel" name="label_11">
-        <property name="font">
-         <font>
-          <pointsize>9</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Library field</string>
-        </property>
-       </widget>
-      </item>
      </layout>
     </item>
     <item>
@@ -97,15 +85,6 @@
       </item>
       <item>
        <widget class="QComboBox" name="purity_cb">
-        <property name="font">
-         <font>
-          <pointsize>9</pointsize>
-         </font>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QComboBox" name="libraryname_cb">
         <property name="font">
          <font>
           <pointsize>9</pointsize>
