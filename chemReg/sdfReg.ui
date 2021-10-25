@@ -78,7 +78,7 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_6">
       <item>
-       <widget class="QComboBox" name="cpdidfield_cb">
+       <widget class="QComboBox" name="cmpidfield_cb">
         <property name="font">
          <font>
           <pointsize>9</pointsize>
@@ -105,7 +105,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QComboBox" name="library_cb_2">
+       <widget class="QComboBox" name="libraryname_cb">
         <property name="font">
          <font>
           <pointsize>9</pointsize>
