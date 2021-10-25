@@ -248,7 +248,6 @@ class RegScreen(QMainWindow):
                                                   self.libraryid_cb.currentText())
         self.librarydesc_eb.setText(library_name)
 
-
     def getMolfile(self):
         sFile = "http://esox3.scilifelab.se:8082/mols/" + self.regno + ".png"
         image = QImage()
@@ -309,9 +308,18 @@ class LoadSDF(QDialog):
         
         libraryIds = dbInterface.getColComboData(self.token, 'library_id')
         self.library_cb.addItems(libraryIds)
-        
+
+        self.upload_eb.textChanged.connect(self.getSDFile)
+
         self.exec_()
         self.show()
+
+    def getSDFile(self):
+        fname = QFileDialog.getOpenFileName(self, 'Open file', 
+                                                '.', "SDFiles (*.sdf)")
+        if fname[0] != '':
+            f = open(fname[0], "r")
+        
 
 
 class SearchScreen(QMainWindow):
