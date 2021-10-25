@@ -170,6 +170,7 @@ class RegScreen(QMainWindow):
         loadUi("regchem.ui", self)
         self.token = token
         self.dirty = False
+        self.loadsdf_btn.clicked.connect(self.gotoLoadSdf)
         self.gotosearch_btn.clicked.connect(self.gotoSearch)
         self.setWindowTitle("Register new compound")
         self.onlyInt = QIntValidator()
@@ -277,7 +278,41 @@ class RegScreen(QMainWindow):
         search = SearchScreen(self.token)
         widget.addWidget(search)
         widget.setCurrentIndex(widget.currentIndex() + 1)
-    
+
+    def gotoLoadSdf(self):
+        if self.dirty == False:
+            dbInterface.deleteRegno(self.regno, self.token)
+        loadSDF = LoadSDF(self.token)
+
+
+class LoadSDF(QDialog):
+    def __init__(self, token):
+        super(LoadSDF, self).__init__()
+        self.token = token
+        loadUi("sdfReg.ui", self)
+        submitters = dbInterface.getColComboData(self.token, 'chemist')
+        self.submitter_cb.addItems(submitters)
+        compoundTypes = dbInterface.getColComboData(self.token, 'compound_type')
+        self.compoundtype_cb.addItems(compoundTypes)
+
+        projects = dbInterface.getColComboData(self.token, 'project')
+        self.project_cb.addItems(projects)
+
+        suppliers = dbInterface.getColComboData(self.token, 'supplier')
+        self.supplier_cb.addItems(suppliers)
+        
+        solvents = dbInterface.getColComboData(self.token, 'solvent')
+        self.solvent_cb.addItems(solvents)
+        
+        productTypes = dbInterface.getColComboData(self.token, 'product')
+        self.producttype_cb.addItems(productTypes)
+        
+        libraryIds = dbInterface.getColComboData(self.token, 'library_id')
+        self.library_cb.addItems(libraryIds)
+        
+        self.exec_()
+        self.show()
+
 
 class SearchScreen(QMainWindow):
     def __init__(self, token):
@@ -286,6 +321,7 @@ class SearchScreen(QMainWindow):
         loadUi("searchchem.ui", self)
         self.gotoreg_btn.clicked.connect(self.gotoReg)
         self.setWindowTitle("Search")
+        self.dirty = False
         self.populated = False
         self.searchingInProgress = False
         self.regno = None
@@ -295,6 +331,7 @@ class SearchScreen(QMainWindow):
         self.regno_eb.editingFinished.connect(
             lambda: self.searchEvent(self.regno_eb.text(), 'regno'))
 
+        self.loadsdf_btn.clicked.connect(self.gotoLoadSdf)
         self.back_btn.clicked.connect(self.previousRegno)
         self.forward_btn.clicked.connect(self.nextRegno)
 
@@ -308,6 +345,11 @@ class SearchScreen(QMainWindow):
 
         self.batch_eb.editingFinished.connect(
             lambda: self.searchEvent(self.batch_eb.text(), 'JPAGE'))
+
+    def gotoLoadSdf(self):
+        if self.dirty == False:
+            dbInterface.deleteRegno(self.regno, self.token)
+        loadSDF = LoadSDF(self.token)
 
     def previousRegno(self):
         if self.regno == None:
