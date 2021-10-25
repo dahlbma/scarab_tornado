@@ -562,9 +562,9 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="myunregged_btn">
+       <widget class="QPushButton" name="loadsdf_btn">
         <property name="text">
-         <string>My unregged</string>
+         <string>Load SDF</string>
         </property>
        </widget>
       </item>
@@ -578,7 +578,7 @@
      <x>0</x>
      <y>0</y>
      <width>1200</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

@@ -601,9 +601,9 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="myunregged_btn">
+       <widget class="QPushButton" name="loadsdf_btn">
         <property name="text">
-         <string>My unregged</string>
+         <string>Load SDF</string>
         </property>
        </widget>
       </item>
