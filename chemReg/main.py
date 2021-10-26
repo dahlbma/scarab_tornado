@@ -9,6 +9,7 @@ import requests
 import json
 import dbInterface
 import os
+import re
 
 from PyQt5 import QtGui, uic
 
@@ -289,6 +290,8 @@ class LoadSDF(QDialog):
         super(LoadSDF, self).__init__()
         self.token = token
         self.iMolCount = 0
+        self.iElnIdsFound = 0
+        self.iNrElnIds = None
         loadUi("sdfReg.ui", self)
         submitters = dbInterface.getColComboData(self.token, 'chemist')
         self.submitter_cb.addItems(submitters)
@@ -310,21 +313,30 @@ class LoadSDF(QDialog):
         libraryIds = dbInterface.getColComboData(self.token, 'library_id')
         self.library_cb.addItems(libraryIds)
 
+        self.upload_btn.setEnabled(False)
         self.upload_btn.clicked.connect(self.uploadSDFile)
         self.selectsdf_btn.clicked.connect(self.getSDFile)
         self.cancel_btn.clicked.connect(self.closeWindow)
 
-        
-        #self.nrofelnids_lab
-        #self.sdfname_lab
-        #self.cmpidfield_cb
-        #self.batchfield_cb
-        #self.purity_cb
-        #self.elnids_text
-        
+        self.elnids_text.textChanged.connect(self.parseElnIds)
+
         self.exec_()
         self.show()
 
+    def parseElnIds(self):
+        sIds = self.elnids_text.toPlainText()
+        saStrings = sIds.split(' ')
+        self.iElnIdsFound = 0
+        pattern = '^[a-zA-Z0-9]{9}$'
+        for sId in saStrings:
+            if len(re.findall(pattern, sId)) == 1:
+                self.iElnIdsFound += 1
+                if self.iElnIdsFound == self.iNrElnIds and \
+                   len(saStrings) == self.iNrElnIds:
+                    self.upload_btn.setEnabled(True)
+                else:    
+                    self.upload_btn.setEnabled(False)
+                
     def uploadSDFile(self):
         pass
     
@@ -334,18 +346,37 @@ class LoadSDF(QDialog):
     def getSDFile(self):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 
                                                 '.', "SDFiles (*.sdf)")
-        if fname[0] != '':
-            f = open(fname[0], "r")
-            iMolCount = 0
-            for line in f:
-                if "$$$$" in line:
-                    iMolCount += 1
-                    self.iMolCount = iMolCount
-                    self.compoundcount_lab.setText(str(iMolCount))
-                    iNrElnIds = int((iMolCount / 1000) + 1)
-                    self.nrofelnids_lab.setText(str(iNrElnIds))
-                    
-                    
+        if fname[0] == '':
+            return
+
+        f = open(fname[0], "rb")
+        iMolCount = 0
+        for line in f:
+            if b'$$$$' in line:
+                iMolCount += 1
+                self.iMolCount = iMolCount
+                self.compoundcount_lab.setText(str(iMolCount))
+                self.iNrElnIds = int((iMolCount / 1000) + 1)
+                self.nrofelnids_lab.setText(str(self.iNrElnIds))
+        f.close()
+        f = open(fname[0], "rb")
+        sMol = b''
+        for line in f:
+            sMol += line
+            if b'$$$$' in line:
+                break
+        sMol = sMol.decode()
+        pattern = '>\s*<(.+)>'
+        saTags = re.findall(pattern, sMol)
+        saTags.insert(0, '')
+        self.cmpidfield_cb.clear()
+        self.cmpidfield_cb.addItems(saTags)
+        self.batchfield_cb.clear()
+        self.batchfield_cb.addItems(saTags)
+        self.purity_cb.clear()
+        self.purity_cb.addItems(saTags)
+
+
 class SearchScreen(QMainWindow):
     def __init__(self, token):
         super(SearchScreen, self).__init__()
