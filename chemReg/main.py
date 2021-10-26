@@ -375,6 +375,7 @@ class LoadSDF(QDialog):
         self.batchfield_cb.addItems(saTags)
         self.purity_cb.clear()
         self.purity_cb.addItems(saTags)
+        self.sdfilename = fname[0]
 
 
 class SearchScreen(QMainWindow):
