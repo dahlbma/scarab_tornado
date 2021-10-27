@@ -1,6 +1,11 @@
 import requests
 import json
 
+def uploadMolFile(dict):
+    print(dict)
+    return
+
+
 def listify(data, addBlank=True):
     res = data.content.decode()
     res = json.loads(res)
