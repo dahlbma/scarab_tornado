@@ -2,7 +2,7 @@ import sys
 from PyQt5.uic import loadUi
 from PyQt5.QtGui import QIntValidator, QImage, QPixmap
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QDialog, QApplication, QWidget, QMainWindow, QFileDialog
+from PyQt5.QtWidgets import QDialog, QApplication, QWidget, QMainWindow, QFileDialog, QProgressBar
 import requests
 import json
 import dbInterface
@@ -354,12 +354,12 @@ class LoadSDF(QDialog):
 
     def getTags(self, sMol):
         try:
-            sMol = sMol.decode()
+            sMol = sMol.decode('latin-1')
         except:
             pass
         sPrevLine = ""
         pattern = '>\s*<(.+)>\n(.*)\n'
-        saTags = re.findall(pattern, str(sMol))
+        saTags = re.findall(pattern, sMol)
         return saTags
     
     def getValuePairs(self, lList):
@@ -380,7 +380,16 @@ class LoadSDF(QDialog):
     def uploadSDFile(self):
         mol_info = {'external_id': self.cmpidfield_cb.currentText()}
         f = open(self.sdfilename, "rb")
+
+        iCount = 0
+        iTicks = int(self.iMolCount / 100)
+        progress = 1
         while True:
+            iCount += 1
+            if iCount == iTicks:
+                progress += 1
+                iCount = 0
+                self.pbar.setValue(progress)
             sMol = self.getNextMolecule(f)
             lTags = self.getTags(sMol)
             if lTags == []:
