@@ -1,10 +1,10 @@
 import requests
 import json
 
-def uploadMolFile(dict):
-    print(dict)
-    return
-
+def uploadMolFile(dict, token):
+    r = requests.post('http://esox3.scilifelab.se:8082/api/chemRegAddMol',
+                      data = dict,
+                      headers={'token': token})
 
 def listify(data, addBlank=True):
     res = data.content.decode()

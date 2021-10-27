@@ -330,7 +330,7 @@ class LoadSDF(QDialog):
                     self.upload_btn.setEnabled(False)
 
     def getNextMolecule(self, sFile):
-        sMol = b"'"
+        sMol = b""
         iCount = 0
         while True:
             iCount += 1
@@ -341,7 +341,7 @@ class LoadSDF(QDialog):
             line = line.replace(b"'", b"")
             sMol += line
             if b'$$$$' in line:
-                return sMol[:-1] + b"'"
+                return sMol[:-1] # + b"'"
         return ""
 
     def getTags(self, sMol):
@@ -351,7 +351,7 @@ class LoadSDF(QDialog):
             pass
         sPrevLine = ""
         pattern = '>\s*<(.+)>\n(.*)\n'
-        saTags = re.findall(pattern, sMol)
+        saTags = re.findall(pattern, str(sMol))
         return saTags
     
     def getValuePairs(self, lList):
@@ -375,6 +375,9 @@ class LoadSDF(QDialog):
         while True:
             sMol = self.getNextMolecule(f)
             lTags = self.getTags(sMol)
+            if lTags == []:
+                print(sMol)
+                break
             if sMol == "":
                 break
             dTags = self.getValuePairs(lTags)
@@ -387,7 +390,7 @@ class LoadSDF(QDialog):
             dTags['solvent'] = self.solvent_cb.currentText()
             dTags['product'] = self.producttype_cb.currentText()
             dTags['library_id'] = self.library_cb.currentText()
-            dbInterface.uploadMolFile(dTags)
+            dbInterface.uploadMolFile(dTags, self.token)
     
     def closeWindow(self):
         self.close()
