@@ -3,7 +3,6 @@ from PyQt5.uic import loadUi
 from PyQt5.QtGui import QIntValidator, QImage, QPixmap
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QDialog, QApplication, QWidget, QMainWindow, QFileDialog
-import mysql
 import requests
 import json
 import dbInterface
