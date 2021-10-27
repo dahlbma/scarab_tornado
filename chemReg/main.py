@@ -11,6 +11,14 @@ import re
 
 from PyQt5 import QtGui, uic
 
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 def displayMolfile(self):
     sFile = "http://esox3.scilifelab.se:8082/mols/" + self.regno + ".png"
     image = QImage()
@@ -125,7 +133,7 @@ def updateScreen(self):
 class LoginScreen(QDialog):
     def __init__(self):
         super(LoginScreen, self).__init__()
-        loadUi("welcomescreen.ui", self)
+        loadUi(resource_path("welcomescreen.ui"), self)
         self.passwordfield.setEchoMode(QtWidgets.QLineEdit.Password)
         self.login.clicked.connect(self.loginfunction)
         
@@ -160,7 +168,7 @@ class LoginScreen(QDialog):
 class RegScreen(QMainWindow):
     def __init__(self, token, regno=None):
         super(RegScreen, self).__init__()
-        loadUi("regchem.ui", self)
+        loadUi(resource_path("regchem.ui"), self)
         self.token = token
         self.dirty = False
         self.loadsdf_btn.clicked.connect(self.gotoLoadSdf)
@@ -284,7 +292,7 @@ class LoadSDF(QDialog):
         self.iMolCount = 0
         self.iElnIdsFound = 0
         self.iNrElnIds = None
-        loadUi("sdfReg.ui", self)
+        loadUi(resource_path("sdfReg.ui"), self)
         submitters = dbInterface.getColComboData(self.token, 'chemist')
         self.submitter_cb.addItems(submitters)
         compoundTypes = dbInterface.getColComboData(self.token, 'compound_type')
@@ -431,7 +439,7 @@ class SearchScreen(QMainWindow):
     def __init__(self, token):
         super(SearchScreen, self).__init__()
         self.token = token
-        loadUi("searchchem.ui", self)
+        loadUi(resource_path("searchchem.ui"), self)
         self.gotoreg_btn.clicked.connect(self.gotoReg)
         self.setWindowTitle("Search")
         self.dirty = False
