@@ -13,12 +13,6 @@ import re
 
 from PyQt5 import QtGui, uic
 
-if hasattr(QtCore.Qt, 'AA_EnableHighDpiScaling'):
-    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
-
-if hasattr(QtCore.Qt, 'AA_UseHighDpiPixmaps'):
-    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
-
 def displayMolfile(self):
     sFile = "http://esox3.scilifelab.se:8082/mols/" + self.regno + ".png"
     image = QImage()
@@ -469,16 +463,8 @@ class SearchScreen(QMainWindow):
         widget.addWidget(reg)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
-
-# Handle high resolution displays:
-#if hasattr(QtCore.Qt, 'AA_EnableHighDpiScaling'):
-     #QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
-#if hasattr(QtCore.Qt, 'AA_UseHighDpiPixmaps'):
-#    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
-
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "2"
 app = QApplication(sys.argv)
-#app.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
 
 welcome = LoginScreen()
 widget = QtWidgets.QStackedWidget()
@@ -488,9 +474,12 @@ desktop = QApplication.desktop()
 windowHeight = 800
 windowWidth = 1200
 
-windowHeight = int(round(0.9 *  desktop.screenGeometry().height(), -1))
+windowHeight = int(round(0.9 * desktop.screenGeometry().height(), -1))
 #print(windowHeight)
-windowWidth = int(round(1200 * (windowHeight / 800), -1))
+if windowHeight > 800:
+    windowHeight = 800
+
+windowWidth = int(round((1200/800) * windowHeight, -1))
 #print(windowWidth)
 
 widget.resize(windowWidth, windowHeight)
