@@ -330,9 +330,66 @@ class LoadSDF(QDialog):
                     self.upload_btn.setEnabled(True)
                 else:    
                     self.upload_btn.setEnabled(False)
-                
+
+    def getNextMolecule(self, sFile):
+        sMol = b"'"
+        iCount = 0
+        while True:
+            iCount += 1
+            if iCount > 1000:
+                return ""
+            line = sFile.readline()
+            line = line.replace(b'\r\n', b'\n')
+            line = line.replace(b"'", b"")
+            sMol += line
+            if b'$$$$' in line:
+                return sMol[:-1] + b"'"
+        return ""
+
+    def getTags(self, sMol):
+        try:
+            sMol = sMol.decode()
+        except:
+            pass
+        sPrevLine = ""
+        pattern = '>\s*<(.+)>\n(.*)\n'
+        saTags = re.findall(pattern, sMol)
+        return saTags
+    
+    def getValuePairs(self, lList):
+        dValues = {
+            "external_id": '',
+            "supplier_batch": '',
+            "purity": ''
+            }
+        for i in lList:
+            if i[0] == self.cmpidfield_cb.currentText():
+                dValues['external_id'] = i[1]
+            elif i[0] == self.batchfield_cb.currentText():
+                dValues['supplier_batch'] = i[1]
+            elif i[0] == self.purity_cb.currentText():
+                dValues['purity'] = i[1]
+        return dValues
+        
     def uploadSDFile(self):
-        pass
+        mol_info = {'external_id': self.cmpidfield_cb.currentText()}
+        f = open(self.sdfilename, "rb")
+        while True:
+            sMol = self.getNextMolecule(f)
+            lTags = self.getTags(sMol)
+            if sMol == "":
+                break
+            dTags = self.getValuePairs(lTags)
+            print(dTags)
+            dTags['molfile'] = sMol
+            dTags['chemist'] = self.submitter_cb.currentText()
+            dTags['compound_type'] = self.compoundtype_cb.currentText()
+            dTags['project'] = self.project_cb.currentText()
+            dTags['source'] = self.supplier_cb.currentText()
+            dTags['solvent'] = self.solvent_cb.currentText()
+            dTags['product'] = self.producttype_cb.currentText()
+            dTags['library_id'] = self.library_cb.currentText()
+            dbInterface.uploadMolFile(dTags)
     
     def closeWindow(self):
         self.close()
