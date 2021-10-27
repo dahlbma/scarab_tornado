@@ -4,7 +4,6 @@ from PyQt5.QtGui import QIntValidator, QImage, QPixmap
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QDialog, QApplication, QWidget, QMainWindow, QFileDialog
 import mysql
-from mysql.connector import connect, Error
 import requests
 import json
 import dbInterface
