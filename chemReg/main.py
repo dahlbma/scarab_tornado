@@ -2,7 +2,8 @@ import sys
 from PyQt5.uic import loadUi
 from PyQt5.QtGui import QIntValidator, QImage, QPixmap
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QDialog, QApplication, QWidget, QMainWindow, QFileDialog, QProgressBar
+from PyQt5.QtWidgets import QDialog, QApplication, QWidget, QMainWindow
+from PyQt5.QtWidgets import QFileDialog, QProgressBar, QMessageBox
 import requests
 import json
 import dbInterface
@@ -293,6 +294,8 @@ class LoadSDF(QDialog):
         self.iElnIdsFound = 0
         self.iNrElnIds = None
         loadUi(resource_path("sdfReg.ui"), self)
+        self.pbar.setValue(0)
+        self.pbar.hide()
         submitters = dbInterface.getColComboData(self.token, 'chemist')
         self.submitter_cb.addItems(submitters)
         compoundTypes = dbInterface.getColComboData(self.token, 'compound_type')
@@ -384,7 +387,13 @@ class LoadSDF(QDialog):
         iCount = 0
         iTicks = int(self.iMolCount / 100)
         progress = 1
+        self.pbar.show()
+        self.pbar.setValue(progress)
+        QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         while True:
+            # Maybe run in separate thread instead, see:
+            # https://www.pythonguis.com/tutorials/multithreading-pyqt-applications-qthreadpool/
+            QApplication.processEvents()
             iCount += 1
             if iCount == iTicks:
                 progress += 1
@@ -408,6 +417,14 @@ class LoadSDF(QDialog):
             dTags['product'] = self.producttype_cb.currentText()
             dTags['library_id'] = self.library_cb.currentText()
             dbInterface.uploadMolFile(dTags, self.token)
+        self.pbar.hide()
+        QApplication.restoreOverrideCursor()
+        msg = QMessageBox()
+        msg.setWindowTitle("SDFile upload done")
+        msg.setIcon(QMessageBox.Information)
+        msg.setText(f"Uploaded {self.iMolCount} compounds")
+        x = msg.exec_()
+
     
     def closeWindow(self):
         self.close()
