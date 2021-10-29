@@ -403,12 +403,10 @@ class LoadSDF(QDialog):
             sMol = self.getNextMolecule(f)
             lTags = self.getTags(sMol)
             if lTags == []:
-                print(sMol)
                 break
             if sMol == "":
                 break
             dTags = self.getValuePairs(lTags)
-            print(dTags)
             dTags['molfile'] = sMol
             dTags['chemist'] = self.submitter_cb.currentText()
             dTags['compound_type'] = self.compoundtype_cb.currentText()
