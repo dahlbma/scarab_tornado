@@ -137,6 +137,7 @@ class LoginScreen(QDialog):
         loadUi(resource_path("welcomescreen.ui"), self)
         self.passwordfield.setEchoMode(QtWidgets.QLineEdit.Password)
         self.login.clicked.connect(self.loginfunction)
+        self.setWindowTitle("Chem Reg")
         
     def loginfunction(self):
         user = self.usernamefield.text()
@@ -424,7 +425,6 @@ class LoadSDF(QDialog):
         msg.setIcon(QMessageBox.Information)
         msg.setText(f"Uploaded {self.iMolCount} compounds")
         x = msg.exec_()
-
     
     def closeWindow(self):
         self.close()
