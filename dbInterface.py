@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 db_connection = MySQLdb.connect(
     host=config.database['host'],
     user=config.database['user'],
-    passwd=config.database['password']
+    passwd=config.database['password'],
+    database='chem_reg'
 )
 db_connection.autocommit(True)
 cur = db_connection.cursor()
@@ -24,6 +25,48 @@ def sqlExec(sSql, values=None):
         cur.execute(sSql, values)
     result = [list(i) for i in cur.fetchall()]
     return json.dumps(result)
+
+@jwtauth
+class chemRegAddMol(tornado.web.RequestHandler):
+    def post(self):
+        ####
+        # Get pkey for tmp_mol table
+        sSql = "select pkey from chem_reg.tmp_mol_sequence"
+        cur.execute(sSql)
+        pkey = cur.fetchall()[0][0] +1
+        sSql = f"update chem_reg.tmp_mol_sequence set pkey={pkey}"
+        cur.execute(sSql)
+
+        ####
+        # Insert molfile in tmp_mol table
+        molfile = self.get_arguments('molfile')[0]
+        sSql = f"""
+        insert into chem_reg.tmp_mol (pkey, molfile) values
+        ({pkey}, '{molfile}')
+        """
+        cur.execute(sSql)
+        
+        ####
+        # Do exact match with molecule against present molucules
+        sSql = f"""
+        select bin2smiles(chem_reg.mol.mol) from
+          chem_reg.mol_ukey join mol on (chem_reg.mol.molid=chem_reg.mol_ukey.molid)
+        where uniquekey(mol2bin(
+            'select molfile from chem_reg.tmp_mol where pkey={pkey}', 'mol'))=molkey
+        """
+        cur.execute(sSql)
+        mols = cur.fetchall()
+
+        ####
+        # Reg the molfile in chem_info if the molfile is unique        
+        if len(mols) == 0:
+            pass
+
+        ####
+        # Cleanup tmp_mol table, delete the temporary molfile
+        sSql = f"""delete from chem_reg.tmp_mol where pkey={pkey}"""
+        cur.execute(sSql)
+
 
 @jwtauth
 class Search(tornado.web.RequestHandler):

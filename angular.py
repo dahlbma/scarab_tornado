@@ -76,6 +76,7 @@ class login(tornado.web.RequestHandler):
 def make_app():
     return tornado.web.Application([
         (r"/login", login),
+        (r"/api/chemRegAddMol", dbInterface.chemRegAddMol),
         (r"/api/search", dbInterface.Search),
         (r"/api/loadMolfile", dbInterface.LoadMolfile),
         (r"/api/update", dbInterface.UpdateColumn),

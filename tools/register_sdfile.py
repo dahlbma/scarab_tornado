@@ -3,6 +3,11 @@ import mysql
 import argparse
 import config
 
+'''
+## Example usage:
+python register_sdfile.py chemspec chemspec_mol regno chemspec_jcmol_moltable.sdf
+##
+'''
 parser = argparse.ArgumentParser(description='Import a SDFile into mysql')
 
 parser.add_argument('SchemaName', metavar='SchemaName', type=str, nargs=1,
@@ -28,7 +33,7 @@ db_connection = mysql.connector.connect(
 )
 
 cur = db_connection.cursor()
-quit()
+
 def getNextMolecule(sFile):
     sMol = "'"
     iCount = 0
