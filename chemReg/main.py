@@ -137,7 +137,6 @@ class LoginScreen(QDialog):
         loadUi(resource_path("welcomescreen.ui"), self)
         self.passwordfield.setEchoMode(QtWidgets.QLineEdit.Password)
         self.login.clicked.connect(self.loginfunction)
-        self.setWindowTitle("Chem Reg")
         
     def loginfunction(self):
         user = self.usernamefield.text()
@@ -175,7 +174,7 @@ class RegScreen(QMainWindow):
         self.dirty = False
         self.loadsdf_btn.clicked.connect(self.gotoLoadSdf)
         self.gotosearch_btn.clicked.connect(self.gotoSearch)
-        self.setWindowTitle("Register new compound")
+        widget.setWindowTitle("Register new compound")
         self.onlyInt = QIntValidator()
         self.populated = False
 
@@ -468,7 +467,7 @@ class SearchScreen(QMainWindow):
         self.token = token
         loadUi(resource_path("searchchem.ui"), self)
         self.gotoreg_btn.clicked.connect(self.gotoReg)
-        self.setWindowTitle("Search")
+        widget.setWindowTitle("Search")
         self.dirty = False
         self.populated = False
         self.searchingInProgress = False
@@ -554,7 +553,7 @@ class SearchScreen(QMainWindow):
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "2"
-app = QApplication(sys.argv)
+app = QApplication(['Chem Reg'])
 
 welcome = LoginScreen()
 widget = QtWidgets.QStackedWidget()
