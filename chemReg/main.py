@@ -172,11 +172,6 @@ class LoginScreen(QDialog):
         except Exception as e:
             self.errorlabel.setText("Bad Connection")
             send_msg("Error Message", str(e), e, QMessageBox.Warning)
-            #msg = QMessageBox()
-            #msg.setWindowTitle("Error Message")
-            #msg.setIcon(QMessageBox.Information)
-            #msg.setText(str(e))
-            #x = msg.exec_()
             return
         if r.status_code != 200:
             self.errorlabel.setText("Wrong username/password")
@@ -446,11 +441,7 @@ class LoadSDF(QDialog):
             dbInterface.uploadMolFile(dTags, self.token)
         self.pbar.hide()
         QApplication.restoreOverrideCursor()
-        msg = QMessageBox()
-        msg.setWindowTitle("SDFile upload done")
-        msg.setIcon(QMessageBox.Information)
-        msg.setText(f"Uploaded {self.iMolCount} compounds")
-        x = msg.exec_()
+        send_msg("SDFile upload done", f"Uploaded {self.iMolCount} compounds")
     
     def closeWindow(self):
         self.close()
