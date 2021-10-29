@@ -12,6 +12,25 @@ import re
 
 from PyQt5 import QtGui, uic
 
+def send_msg(title, text, e=None, icon=QMessageBox.Information):
+    msg = QMessageBox()
+    msg.setWindowTitle(title)
+    msg.setIcon(icon)
+    msg.setText(text)
+    if icon is QMessageBox.Warning:
+        # add clipboard btn
+        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Save)
+        buttonS = msg.button(QMessageBox.Save)
+        buttonS.setText('Save to clipboard')
+    msg.exec_()
+    if e is not None:
+        if msg.clickedButton() == buttonS:
+            # copy to clipboard if clipboard button was clicked
+            clipboard.setText(text)
+            cb_msg = QMessageBox()
+            cb_msg.setText(clipboard.text()+" \n\ncopied to clipboard!")
+            cb_msg.exec_()
+
 def resource_path(relative_path):
     try:
         base_path = sys._MEIPASS
@@ -146,9 +165,19 @@ class LoginScreen(QDialog):
             self.errorlabel.setText("Please input all fields")
         else:
             self.errorlabel.setText("")
-
-        r = requests.post('http://esox3.scilifelab.se:8082/login',
-                          data = {'username':user, 'password':password})
+        
+        try:
+            r = requests.post('http://esox3.scilifelab.se:8082/login',
+                              data = {'username':user, 'password':password})
+        except Exception as e:
+            self.errorlabel.setText("Bad Connection")
+            send_msg("Error Message", str(e), e, QMessageBox.Warning)
+            #msg = QMessageBox()
+            #msg.setWindowTitle("Error Message")
+            #msg.setIcon(QMessageBox.Information)
+            #msg.setText(str(e))
+            #x = msg.exec_()
+            return
         if r.status_code != 200:
             self.errorlabel.setText("Wrong username/password")
             return
@@ -554,6 +583,7 @@ class SearchScreen(QMainWindow):
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "2"
 app = QApplication(['Chem Reg'])
+clipboard = app.clipboard()
 
 welcome = LoginScreen()
 widget = QtWidgets.QStackedWidget()
