@@ -6,6 +6,7 @@ import config
 import logging
 from rdkit import Chem
 from rdkit.Chem import Draw
+import codecs
 
 logger = logging.getLogger(__name__)
 
@@ -37,14 +38,24 @@ class chemRegAddMol(tornado.web.RequestHandler):
         sSql = f"update chem_reg.tmp_mol_sequence set pkey={pkey}"
         cur.execute(sSql)
 
+        def to_bytes(s):
+            if type(s) is bytes:
+                return s
+            elif type(s) is str or type(s) is unicode:
+                return codecs.encode(s, 'utf-8')
+            else:
+                raise TypeError("Expected bytes or string, but got %s." % type(s))
+
+
         ####
         # Insert molfile in tmp_mol table
-        molfile = self.get_arguments('molfile')[0]
+        molfile = self.get_body_argument('molfile')
         sSql = f"""
         insert into chem_reg.tmp_mol (pkey, molfile) values
         ({pkey}, '{molfile}')
         """
         cur.execute(sSql)
+
         
         ####
         # Do exact match with molecule against present molucules
