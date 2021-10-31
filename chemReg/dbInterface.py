@@ -5,6 +5,10 @@ def uploadMolFile(dict, token):
     r = requests.post('http://esox3.scilifelab.se:8082/api/chemRegAddMol',
                       data = dict,
                       headers={'token': token})
+    if r.status_code != 200:
+        return False
+    else:
+        return True
 
 def listify(data, addBlank=True):
     res = data.content.decode()

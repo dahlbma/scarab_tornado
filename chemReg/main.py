@@ -9,6 +9,7 @@ import json
 import dbInterface
 import os
 import re
+import codecs
 
 from PyQt5 import QtGui, uic
 
@@ -208,7 +209,6 @@ class RegScreen(QMainWindow):
             dbInterface.createNewRegno(self.regno, self.token)
         else:
             self.regno = regno
-        self.regno_eb.textChanged.connect(self.getMolfile)
         self.regno_eb.setText(self.regno)
 
         updateScreen(self)
@@ -379,13 +379,18 @@ class LoadSDF(QDialog):
                 return sMol[:-1] # + b"'"
         return ""
 
+    def to_bytes(self, s):
+        if type(s) is bytes:
+            return s
+        elif type(s) is str or type(s) is unicode:
+            return codecs.encode(s, 'utf-8')
+        else:
+            raise TypeError("Expected bytes or string, but got %s." % type(s))
+
+    
     def getTags(self, sMol):
-        try:
-            sMol = sMol.decode('latin-1')
-        except:
-            pass
         sPrevLine = ""
-        pattern = '>\s*<(.+)>\n(.*)\n'
+        pattern = b'>\s*<(.+)>\n(.*)\n'
         saTags = re.findall(pattern, sMol)
         return saTags
     
@@ -424,13 +429,14 @@ class LoadSDF(QDialog):
                 iCount = 0
                 self.pbar.setValue(progress)
             sMol = self.getNextMolecule(f)
+            sMol = self.to_bytes(sMol)
             lTags = self.getTags(sMol)
             if lTags == []:
                 break
             if sMol == "":
                 break
             dTags = self.getValuePairs(lTags)
-            dTags['molfile'] = sMol
+            dTags['molfile'] = sMol.decode('latin-1')
             dTags['chemist'] = self.submitter_cb.currentText()
             dTags['compound_type'] = self.compoundtype_cb.currentText()
             dTags['project'] = self.project_cb.currentText()
@@ -438,7 +444,11 @@ class LoadSDF(QDialog):
             dTags['solvent'] = self.solvent_cb.currentText()
             dTags['product'] = self.producttype_cb.currentText()
             dTags['library_id'] = self.library_cb.currentText()
-            dbInterface.uploadMolFile(dTags, self.token)
+            if dbInterface.uploadMolFile(dTags, self.token) != True:
+                send_msg("Molecule register failed",
+                         f"Failed to register molfile {dTags['external_id']}",
+                         QMessageBox.Warning)
+                break
         self.pbar.hide()
         QApplication.restoreOverrideCursor()
         send_msg("SDFile upload done", f"Uploaded {self.iMolCount} compounds")
