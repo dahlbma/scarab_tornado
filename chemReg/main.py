@@ -431,9 +431,7 @@ class LoadSDF(QDialog):
             sMol = self.getNextMolecule(f)
             sMol = self.to_bytes(sMol)
             lTags = self.getTags(sMol)
-            if lTags == []:
-                break
-            if sMol == "":
+            if lTags == [] or sMol == "":
                 break
             dTags = self.getValuePairs(lTags)
             dTags['molfile'] = sMol.decode('latin-1')
