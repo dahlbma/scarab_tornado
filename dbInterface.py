@@ -27,9 +27,38 @@ def sqlExec(sSql, values=None):
     result = [list(i) for i in cur.fetchall()]
     return json.dumps(result)
 
+def getNewRegno():
+    sSql = "select id from chemspec.regno_sequence"
+    cur.execute(sSql)
+    id = cur.fetchall()[0][0] +1
+    sSql = "update chemspec.regno_sequence set id=" + str(id)
+    cur.execute(sSql)
+    return id
+
+def createPngFromMolfile(regno, molfile):
+    fileName = "mols/" + regno + ".mol"
+    fileHandle = open(fileName, "w")
+    fileHandle.write(molfile)
+    fileHandle.close()
+    m = Chem.MolFromMolFile(fileName)
+    Draw.MolToFile(m,'mols/' + regno + '.png')
+
+
 @jwtauth
 class chemRegAddMol(tornado.web.RequestHandler):
     def post(self):
+        molfile = self.get_body_argument('molfile')
+        chemist = self.get_body_argument('chemist')
+        compound_type = self.get_body_argument('compound_type')
+        project = self.get_body_argument('project')
+        source = self.get_body_argument('source')
+        solvent = self.get_body_argument('solvent')
+        product = self.get_body_argument('product')
+        library_id = self.get_body_argument('library_id')
+        external_id = self.get_body_argument('external_id')
+        supplier_batch = self.get_body_argument('supplier_batch')
+        purity = self.get_body_argument('purity')
+
         ####
         # Get pkey for tmp_mol table
         sSql = "select pkey from chem_reg.tmp_mol_sequence"
@@ -46,16 +75,13 @@ class chemRegAddMol(tornado.web.RequestHandler):
             else:
                 raise TypeError("Expected bytes or string, but got %s." % type(s))
 
-
         ####
         # Insert molfile in tmp_mol table
-        molfile = self.get_body_argument('molfile')
         sSql = f"""
         insert into chem_reg.tmp_mol (pkey, molfile) values
         ({pkey}, '{molfile}')
         """
         cur.execute(sSql)
-
         
         ####
         # Do exact match with molecule against present molucules
@@ -67,12 +93,67 @@ class chemRegAddMol(tornado.web.RequestHandler):
         """
         cur.execute(sSql)
         mols = cur.fetchall()
-
+        
+        ####
+        # Get new regno
+        newRegno = getNewRegno()
+        if purity == '':
+            purity = -1
+        sSql = f"""
+        insert into chem_reg.chem_info (
+        regno,
+        chemist,
+        compound_type,
+        project,
+        source,
+        solvent,
+        product,
+        library_id,
+        external_id,
+        supplier_batch,
+        purity,
+        molfile)
+        values (
+        '{newRegno}',
+        '{chemist}',
+        '{compound_type}',
+        '{project}',
+        '{source}',
+        '{solvent}',
+        '{product}',
+        '{library_id}',
+        '{external_id}',
+        '{supplier_batch}',
+        {purity},
+        '{molfile}'
+        )
+        """
+        cur.execute(sSql)
+        createPngFromMolfile(str(newRegno), molfile)
+        
         ####
         # Reg the molfile in chem_info if the molfile is unique        
         if len(mols) == 0:
-            pass
+            print('here')
+            sSql = f"""
+            insert into chem_reg.mol (mol, regno)
+            value
+            (mol2bin('{molfile}', 'mol'), {newRegno})
+            """
+            cur.execute(sSql)
 
+            sSql = f"""
+            insert into chem_reg.mol_ukey select molid, uniquekey(mol) as molkey
+            from chem_reg.mol where regno = '{newRegno}'
+            """
+            cur.execute(sSql)
+
+            sSql = f"""
+            insert into chem_reg.mol_key select molid, fp(mol, 'sss') as molkey
+            from chem_reg.mol where regno = '{newRegno}'
+            """
+            cur.execute(sSql)
+            
         ####
         # Cleanup tmp_mol table, delete the temporary molfile
         sSql = f"""delete from chem_reg.tmp_mol where pkey={pkey}"""
@@ -113,14 +194,9 @@ class LoadMolfile(tornado.web.RequestHandler):
                   where regno = %s"""
         values = (molfile, regno, )
         cur.execute(sSql, values)
-        fileName = "mols/" + regno + ".mol"
-        fileHandle = open(fileName, "w")
-        fileHandle.write(molfile)
-        fileHandle.close()
-        m = Chem.MolFromMolFile(fileName)
-        Draw.MolToFile(m,'mols/' + regno + '.png')
+        createPngFromMolfile(regno, molfile)
 
-        
+
 @jwtauth
 class CreateRegno(tornado.web.RequestHandler):
     def put(self):
@@ -129,6 +205,7 @@ class CreateRegno(tornado.web.RequestHandler):
         (regno, rdate) values (%s, now())"""
         val = (regno, )
         cur.execute(sSql, val)
+
 
 @jwtauth
 class DeleteRegno(tornado.web.RequestHandler):
@@ -145,6 +222,7 @@ class DeleteRegno(tornado.web.RequestHandler):
             sSql = """delete from chem_reg.chem_info
                       where regno = %s"""
             cur.execute(sSql, val)
+
 
 @jwtauth
 class UpdateColumn(tornado.web.RequestHandler):
@@ -231,9 +309,5 @@ class GetLibraries(tornado.web.RequestHandler):
 @jwtauth
 class GetNextRegno(tornado.web.RequestHandler):
     def get(self):
-        sSql = "select id from chemspec.regno_sequence"
-        cur.execute(sSql)
-        id = cur.fetchall()[0][0] +1
-        sSql = "update chemspec.regno_sequence set id=" + str(id)
-        cur.execute(sSql)
-        self.write(json.dumps(id))
+        newRegno = getNewRegno()
+        self.write(json.dumps(newRegno))
