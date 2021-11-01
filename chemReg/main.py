@@ -407,6 +407,7 @@ class LoadSDF(QDialog):
                 dValues['supplier_batch'] = i[1]
             elif i[0] == self.purity_cb.currentText():
                 dValues['purity'] = i[1]
+        print(dValues)
         return dValues
         
     def uploadSDFile(self):
