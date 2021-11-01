@@ -400,14 +400,14 @@ class LoadSDF(QDialog):
             "supplier_batch": '',
             "purity": ''
             }
-        for i in lList:
-            if i[0] == self.cmpidfield_cb.currentText():
+
+        for i in lList:            
+            if i[0] == str.encode(self.cmpidfield_cb.currentText()):
                 dValues['external_id'] = i[1]
-            elif i[0] == self.batchfield_cb.currentText():
+            elif i[0] == str.encode(self.batchfield_cb.currentText()):
                 dValues['supplier_batch'] = i[1]
-            elif i[0] == self.purity_cb.currentText():
+            elif i[0] == str.encode(self.purity_cb.currentText()):
                 dValues['purity'] = i[1]
-        print(dValues)
         return dValues
         
     def uploadSDFile(self):
