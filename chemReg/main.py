@@ -13,12 +13,12 @@ import codecs
 
 from PyQt5 import QtGui, uic
 
-def send_msg(title, text, e=None, icon=QMessageBox.Information):
+def send_msg(title, text, icon=QMessageBox.Information, e=None):
     msg = QMessageBox()
     msg.setWindowTitle(title)
     msg.setIcon(icon)
     msg.setText(text)
-    if icon is QMessageBox.Warning:
+    if e is not None: #  icon is QMessageBox.Warning:
         # add clipboard btn
         msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Save)
         buttonS = msg.button(QMessageBox.Save)
