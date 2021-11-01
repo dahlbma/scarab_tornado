@@ -11,8 +11,6 @@ import os
 import re
 import codecs
 
-from PyQt5 import QtGui, uic
-
 def send_msg(title, text, icon=QMessageBox.Information, e=None):
     msg = QMessageBox()
     msg.setWindowTitle(title)
@@ -330,8 +328,8 @@ class LoadSDF(QDialog):
         super(LoadSDF, self).__init__()
         self.token = token
         self.iMolCount = 0
-        self.iElnIdsFound = 0
         self.iNrElnIds = None
+        self.saElnIds = None
         loadUi(resource_path("sdfReg.ui"), self)
         self.pbar.setValue(0)
         self.pbar.hide()
@@ -368,14 +366,15 @@ class LoadSDF(QDialog):
     def parseElnIds(self):
         sIds = self.elnids_text.toPlainText()
         saStrings = sIds.split(' ')
-        self.iElnIdsFound = 0
+        iElnIdsFound = 0
         pattern = '^[a-zA-Z0-9]{9}$'
         for sId in saStrings:
             if len(re.findall(pattern, sId)) == 1:
-                self.iElnIdsFound += 1
-                if self.iElnIdsFound == self.iNrElnIds and \
+                iElnIdsFound += 1
+                if iElnIdsFound == self.iNrElnIds and \
                    len(saStrings) == self.iNrElnIds:
                     self.upload_btn.setEnabled(True)
+                    self.saElnIds = saStrings
                 else:    
                     self.upload_btn.setEnabled(False)
 
@@ -429,20 +428,23 @@ class LoadSDF(QDialog):
         mol_info = {'external_id': self.cmpidfield_cb.currentText()}
         f = open(self.sdfilename, "rb")
 
-        iCount = 0
+        iTickCount = 0
+        iBatchCount = 0
         iTicks = int(self.iMolCount / 100)
-        progress = 1
+        progress = 0
+        iElnId = 0
         self.pbar.show()
         self.pbar.setValue(progress)
         QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        sCurrentEln = self.saElnIds[iElnId]
         while True:
             # Maybe run in separate thread instead, see:
             # https://www.pythonguis.com/tutorials/multithreading-pyqt-applications-qthreadpool/
             QApplication.processEvents()
-            iCount += 1
-            if iCount == iTicks:
+            iTickCount += 1
+            if iTickCount == iTicks:
                 progress += 1
-                iCount = 0
+                iTickCount = 0
                 self.pbar.setValue(progress)
             sMol = self.getNextMolecule(f)
             sMol = self.to_bytes(sMol)
@@ -450,6 +452,12 @@ class LoadSDF(QDialog):
             if lTags == [] or sMol == "":
                 break
             dTags = self.getValuePairs(lTags)
+            iBatchCount += 1
+            if iBatchCount == 1000:
+                iBatchCount = 1
+                iElnId += 1
+                sCurrentEln = self.saElnIds[iElnId]
+            dTags['jpage'] = sCurrentEln + str(iBatchCount).zfill(3)
             dTags['molfile'] = sMol.decode('latin-1')
             dTags['chemist'] = self.submitter_cb.currentText()
             dTags['compound_type'] = self.compoundtype_cb.currentText()
