@@ -1078,10 +1078,13 @@ background-color: rgba(212, 239, 248, 255);
             <property name="orientation">
              <enum>Qt::Vertical</enum>
             </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Preferred</enum>
+            </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>639</width>
-              <height>13</height>
+              <width>20</width>
+              <height>18</height>
              </size>
             </property>
            </spacer>
