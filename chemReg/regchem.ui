@@ -14,7 +14,12 @@
    <string>Edit compound</string>
   </property>
   <property name="styleSheet">
-   <string notr="true"/>
+   <string notr="true">QMainWindow#MainWindow{
+background-color: rgb(255, 204, 204)
+}
+QWidget#centralwidget{
+background-color: rgb(255, 204, 204)
+}</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -465,7 +470,7 @@
              </size>
             </property>
             <property name="styleSheet">
-             <string notr="true">background-color: rgb(211, 215, 207);</string>
+             <string notr="true">background-color: rgb(211, 215, 207); border: 1px solid black;</string>
             </property>
             <property name="frameShape">
              <enum>QFrame::NoFrame</enum>

@@ -17,7 +17,12 @@
    <string>Search</string>
   </property>
   <property name="styleSheet">
-   <string notr="true"/>
+   <string notr="true">QMainWindow#MainWindow{
+background-color: rgba(212, 239, 248, 255);
+}
+QWidget#centralwidget{
+background-color: rgba(212, 239, 248, 255);
+}</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -543,7 +548,7 @@
              </size>
             </property>
             <property name="styleSheet">
-             <string notr="true">background-color: rgb(211, 215, 207);</string>
+             <string notr="true">background-color: rgb(211, 215, 207); border: 1px solid black;</string>
             </property>
             <property name="text">
              <string/>
@@ -570,6 +575,9 @@
             </item>
             <item>
              <widget class="QPushButton" name="loadmol_btn">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="text">
                <string>Load molfile</string>
               </property>
@@ -945,47 +953,54 @@
            <layout class="QHBoxLayout" name="horizontalLayout_14">
             <item>
              <layout class="QGridLayout" name="gridLayout_4">
-              <item row="3" column="1">
-               <widget class="QLineEdit" name="compoundid_search_eb"/>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLineEdit" name="regno_search_eb">
+              <item row="4" column="2">
+               <widget class="QLabel" name="label_17">
                 <property name="text">
-                 <string/>
+                 <string>Batch</string>
                 </property>
                </widget>
               </item>
-              <item row="3" column="0">
-               <widget class="QLabel" name="label_13">
-                <property name="text">
-                 <string>Compound Id</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="3">
+              <item row="1" column="3">
                <widget class="QComboBox" name="submitter_search_cb"/>
               </item>
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_6">
-                <property name="text">
-                 <string>Regno</string>
-                </property>
-               </widget>
+              <item row="4" column="1">
+               <widget class="QLineEdit" name="compoundid_search_eb"/>
               </item>
-              <item row="3" column="3">
-               <widget class="QLineEdit" name="batch_search_eb"/>
-              </item>
-              <item row="0" column="2">
+              <item row="1" column="2">
                <widget class="QLabel" name="label_14">
                 <property name="text">
                  <string>Submitter</string>
                 </property>
                </widget>
               </item>
-              <item row="3" column="2">
-               <widget class="QLabel" name="label_17">
+              <item row="4" column="3">
+               <widget class="QLineEdit" name="batch_search_eb"/>
+              </item>
+              <item row="4" column="0">
+               <widget class="QLabel" name="label_13">
                 <property name="text">
-                 <string>Batch</string>
+                 <string>Compound Id</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_6">
+                <property name="text">
+                 <string>Regno</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QLineEdit" name="regno_search_eb">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_21">
+                <property name="text">
+                 <string>Search</string>
                 </property>
                </widget>
               </item>
