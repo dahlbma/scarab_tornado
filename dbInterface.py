@@ -41,13 +41,21 @@ def createPngFromMolfile(regno, molfile):
     fileHandle.write(molfile)
     fileHandle.close()
     m = Chem.MolFromMolFile(fileName)
-    Draw.MolToFile(m,'mols/' + regno + '.png')
+    try:
+        Draw.MolToFile(m,'mols/' + regno + '.png')
+    except:
+        '''
+        # Check:
+        https://sourceforge.net/p/rdkit/mailman/rdkit-discuss/thread/48DA553F-AA94-455E-98D7-71287037FE6F%40gmail.com/
+        '''
+        logger.info(f"regno {regno} is nostruct")
 
 
 @jwtauth
 class chemRegAddMol(tornado.web.RequestHandler):
     def post(self):
         molfile = self.get_body_argument('molfile')
+        jpage = self.get_body_argument('jpage')
         chemist = self.get_body_argument('chemist')
         compound_type = self.get_body_argument('compound_type')
         project = self.get_body_argument('project')
@@ -102,6 +110,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
         sSql = f"""
         insert into chem_reg.chem_info (
         regno,
+        jpage,
         chemist,
         compound_type,
         project,
@@ -115,6 +124,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
         molfile)
         values (
         '{newRegno}',
+        '{jpage}',
         '{chemist}',
         '{compound_type}',
         '{project}',
@@ -134,7 +144,6 @@ class chemRegAddMol(tornado.web.RequestHandler):
         ####
         # Reg the molfile in chem_info if the molfile is unique        
         if len(mols) == 0:
-            print('here')
             sSql = f"""
             insert into chem_reg.mol (mol, regno)
             value
