@@ -52,7 +52,10 @@ def updateScreen(self):
         self.regno_eb.setText(self.regno)
         submitters = dbInterface.getColComboData(self.token, 'chemist')
         self.submitter_cb.addItems(submitters)
-        
+        try:
+            self.submitter_search_cb.addItems(submitters)
+        except:
+            pass
         projects = dbInterface.getColComboData(self.token, 'project')
         self.project_cb.addItems(projects)
 
@@ -91,6 +94,10 @@ def updateScreen(self):
 
         submitter = dbInterface.getTextColumn(self.token, 'chemist', self.regno)
         self.submitter_cb.setCurrentText(submitter)
+        try:
+            self.submitter_search_cb.setCurrentText(submitter)
+        except:
+            pass
 
         project = dbInterface.getTextColumn(self.token, 'project', self.regno)
         self.project_cb.setCurrentText(project)
@@ -150,6 +157,14 @@ def updateScreen(self):
         self.avgmolmass_lab.setText(None)
         self.date_lab.setText(None)
         self.structure_lab.clear()
+        # search buttons
+        try:
+            self.regno_search_eb.setText(None)
+            self.compoundid_search_eb.setText(None)
+            self.batch_search_eb.setText(None)
+            self.submitter_search_cb.setCurrentText(' ')
+        except:
+            pass
         
 class LoginScreen(QDialog):
     def __init__(self):
@@ -504,8 +519,8 @@ class SearchScreen(QMainWindow):
         self.regnos = None
         self.editregno_btn.setEnabled(False)
         self.editregno_btn.clicked.connect(self.gotoEditRegno)
-        self.regno_eb.editingFinished.connect(
-            lambda: self.searchEvent(self.regno_eb.text(), 'regno'))
+        self.regno_search_eb.editingFinished.connect(
+            lambda: self.searchEvent(self.regno_search_eb.text(), 'regno'))
 
         self.loadsdf_btn.clicked.connect(self.gotoLoadSdf)
         self.back_btn.clicked.connect(self.previousRegno)
@@ -513,14 +528,14 @@ class SearchScreen(QMainWindow):
 
         updateScreen(self)
         self.populated = True
-        self.submitter_cb.currentTextChanged.connect(
+        self.submitter_search_cb.currentTextChanged.connect(
             lambda x: self.searchEvent(x, 'CHEMIST'))
 
-        self.compoundid_eb.textChanged.connect(
-            lambda: self.searchEvent(self.compoundid_eb.text(), 'COMPOUND_ID'))
+        self.compoundid_search_eb.textChanged.connect(
+            lambda: self.searchEvent(self.compoundid_search_eb.text(), 'COMPOUND_ID'))
 
-        self.batch_eb.editingFinished.connect(
-            lambda: self.searchEvent(self.batch_eb.text(), 'JPAGE'))
+        self.batch_search_eb.editingFinished.connect(
+            lambda: self.searchEvent(self.batch_search_eb.text(), 'JPAGE'))
 
     def gotoLoadSdf(self):
         if self.dirty == False:

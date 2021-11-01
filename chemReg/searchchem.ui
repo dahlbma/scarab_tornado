@@ -22,6 +22,9 @@ background-color: rgba(212, 239, 248, 255);
 }
 QWidget#centralwidget{
 background-color: rgba(212, 239, 248, 255);
+}
+QComboBox:disabled{
+color: black;
 }</string>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -256,6 +259,9 @@ background-color: rgba(212, 239, 248, 255);
                     <property name="focusPolicy">
                      <enum>Qt::NoFocus</enum>
                     </property>
+                    <property name="frame">
+                     <bool>true</bool>
+                    </property>
                    </widget>
                   </item>
                   <item>
@@ -380,6 +386,9 @@ background-color: rgba(212, 239, 248, 255);
                  <layout class="QVBoxLayout" name="verticalLayout_11">
                   <item>
                    <widget class="QComboBox" name="submitter_cb">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
                     <property name="focusPolicy">
                      <enum>Qt::NoFocus</enum>
                     </property>
@@ -387,6 +396,9 @@ background-color: rgba(212, 239, 248, 255);
                   </item>
                   <item>
                    <widget class="QLineEdit" name="batch_eb">
+                    <property name="enabled">
+                     <bool>true</bool>
+                    </property>
                     <property name="focusPolicy">
                      <enum>Qt::NoFocus</enum>
                     </property>
@@ -394,6 +406,9 @@ background-color: rgba(212, 239, 248, 255);
                   </item>
                   <item>
                    <widget class="QComboBox" name="project_cb">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
                     <property name="focusPolicy">
                      <enum>Qt::NoFocus</enum>
                     </property>
@@ -475,6 +490,9 @@ background-color: rgba(212, 239, 248, 255);
                <layout class="QVBoxLayout" name="verticalLayout_12">
                 <item>
                  <widget class="QComboBox" name="compoundtype_cb">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="focusPolicy">
                    <enum>Qt::NoFocus</enum>
                   </property>
@@ -482,6 +500,9 @@ background-color: rgba(212, 239, 248, 255);
                 </item>
                 <item>
                  <widget class="QComboBox" name="product_cb">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="focusPolicy">
                    <enum>Qt::NoFocus</enum>
                   </property>
@@ -489,6 +510,9 @@ background-color: rgba(212, 239, 248, 255);
                 </item>
                 <item>
                  <widget class="QComboBox" name="libraryid_cb">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="focusPolicy">
                    <enum>Qt::NoFocus</enum>
                   </property>
