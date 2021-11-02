@@ -90,7 +90,6 @@ class chemRegAddMol(tornado.web.RequestHandler):
         ({pkey}, '{molfile}')
         """
         cur.execute(sSql)
-        
         ####
         # Do exact match with molecule against present molucules
         sSql = f"""
@@ -101,6 +100,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
         """
         cur.execute(sSql)
         mols = cur.fetchall()
+        print(mols)
         
         ####
         # Get new regno
@@ -166,7 +166,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
         ####
         # Cleanup tmp_mol table, delete the temporary molfile
         sSql = f"""delete from chem_reg.tmp_mol where pkey={pkey}"""
-        cur.execute(sSql)
+        #cur.execute(sSql)
 
 
 @jwtauth
