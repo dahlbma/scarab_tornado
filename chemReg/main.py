@@ -412,7 +412,7 @@ class LoadSDF(QDialog):
         dValues = {
             "external_id": '',
             "supplier_batch": '',
-            "purity": ''
+            "purity": -1
             }
 
         for i in lList:            
@@ -427,7 +427,7 @@ class LoadSDF(QDialog):
     def uploadSDFile(self):
         mol_info = {'external_id': self.cmpidfield_cb.currentText()}
         f = open(self.sdfilename, "rb")
-
+        lError = False
         iTickCount = 0
         iBatchCount = 0
         iTicks = int(self.iMolCount / 100)
@@ -452,6 +452,14 @@ class LoadSDF(QDialog):
             if lTags == [] or sMol == "":
                 break
             dTags = self.getValuePairs(lTags)
+
+            try:
+                iSlask = int(dTags['purity']) + 1
+            except:
+                send_msg("Purity error", f"Purity must be a number, got: {dTags['purity']}")
+                lError = True
+                break
+            
             iBatchCount += 1
             if iBatchCount == 1000:
                 iBatchCount = 1
@@ -470,10 +478,12 @@ class LoadSDF(QDialog):
                 send_msg("Molecule register failed",
                          f"Failed to register molfile {dTags['external_id']}",
                          QMessageBox.Warning)
+                lError = True
                 break
         self.pbar.hide()
         QApplication.restoreOverrideCursor()
-        send_msg("SDFile upload done", f"Uploaded {self.iMolCount} compounds")
+        if lError == False:
+            send_msg("SDFile upload done", f"Uploaded {self.iMolCount} compounds")
     
     def closeWindow(self):
         self.close()
