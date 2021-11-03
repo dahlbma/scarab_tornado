@@ -88,6 +88,7 @@ def make_app():
         (r"/api/getLibraryName", dbInterface.GetLibraryName),
         (r"/api/getLibraries", dbInterface.GetLibraries),
         (r"/api/getNextRegno", dbInterface.GetNextRegno),
+        (r"/api/getMolfile", dbInterface.GetMolfile),
         (r"/getCompound", dbInterface.GetCompound),
         (r"/mols/(.*)", web.StaticFileHandler, {"path": "mols/"}),
     ], **settings)

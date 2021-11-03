@@ -95,13 +95,11 @@ class chemRegAddMol(tornado.web.RequestHandler):
         sSql = f"""
         select bin2smiles(chem_reg.mol.mol) from
           chem_reg.mol_ukey join mol on (chem_reg.mol.molid=chem_reg.mol_ukey.molid)
-        where uniquekey(mol2bin(
-            'select molfile from chem_reg.tmp_mol where pkey={pkey}', 'mol'))=molkey
+        where uniquekey(mol2bin('{molfile}', 'mol'))=molkey
         """
         cur.execute(sSql)
         mols = cur.fetchall()
-        print(mols)
-        
+
         ####
         # Get new regno
         newRegno = getNewRegno()
@@ -166,7 +164,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
         ####
         # Cleanup tmp_mol table, delete the temporary molfile
         sSql = f"""delete from chem_reg.tmp_mol where pkey={pkey}"""
-        #cur.execute(sSql)
+        cur.execute(sSql)
 
 
 @jwtauth
@@ -259,6 +257,19 @@ class GetCompound(tornado.web.RequestHandler):
         if self.request.headers.get('auth'):
             self.write('ok')
 
+
+@jwtauth
+class GetMolfile(tornado.web.RequestHandler):
+    def get(self):
+        regno = self.get_argument("regno")
+        sSql = f"""select molfile from chem_reg.chem_info
+                   where regno = '{regno}'"""
+        cur.execute(sSql)
+        res = cur.fetchall()
+        if len(res) > 0:
+            self.write(res[0][0])
+        
+        
 
 @jwtauth
 class GetTextColumn(tornado.web.RequestHandler):
