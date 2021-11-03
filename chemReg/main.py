@@ -10,8 +10,37 @@ import dbInterface
 import os
 import re
 import codecs
+import traceback
+import logging
 
 from PyQt5 import QtGui, uic
+
+def setLogger(name='logger',
+                level=logging.DEBUG,
+                file=os.path.join(".","chemreg.log")):
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+
+    # console logging
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(message)s')
+    ch.setFormatter(formatter)
+
+    # file logging
+    fh = logging.FileHandler(file)
+    fh.setLevel(level)
+    formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
+    fh.setFormatter(formatter)
+
+    logger.addHandler(ch)
+    logger.addHandler(fh)
+    return logger
+
+def error_handler(etype, value, tb):
+    err_msg = "".join(traceback.format_exception(etype, value, tb))
+    #print("error caught")
+    logger.exception(err_msg + " from error handler\n")
 
 def send_msg(title, text, icon=QMessageBox.Information, e=None):
     msg = QMessageBox()
@@ -187,7 +216,8 @@ class LoginScreen(QDialog):
                               data = {'username':user, 'password':password})
         except Exception as e:
             self.errorlabel.setText("Bad Connection")
-            send_msg("Error Message", str(e), e, QMessageBox.Warning)
+            send_msg("Error Message", str(e), QMessageBox.Warning, e)
+            logger.exception(str(e))
             return
         if r.status_code != 200:
             self.errorlabel.setText("Wrong username/password")
@@ -596,32 +626,37 @@ class SearchScreen(QMainWindow):
         widget.addWidget(reg)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
-os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "2"
-app = QApplication(['Chem Reg'])
-clipboard = app.clipboard()
 
-welcome = LoginScreen()
-widget = QtWidgets.QStackedWidget()
-widget.addWidget(welcome)
+logger = setLogger()
+sys.excepthook = error_handler
 
-desktop = QApplication.desktop()
-windowHeight = 800
-windowWidth = 1200
-
-windowHeight = int(round(0.9 * desktop.screenGeometry().height(), -1))
-#print(windowHeight)
-if windowHeight > 800:
-    windowHeight = 800
-
-windowWidth = int(round((1200/800) * windowHeight, -1))
-#print(windowWidth)
-
-widget.resize(windowWidth, windowHeight)
-#widget.setFixedHeight(windowHeight)
-#widget.setFixedWidth(windowWidth)
-
-widget.show()
 try:
+    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "2"
+    app = QApplication(['Chem Reg'])
+    clipboard = app.clipboard()
+
+    welcome = LoginScreen()
+    widget = QtWidgets.QStackedWidget()
+    widget.addWidget(welcome)
+
+    desktop = QApplication.desktop()
+    windowHeight = 800
+    windowWidth = 1200
+
+    windowHeight = int(round(0.9 * desktop.screenGeometry().height(), -1))
+    #print(windowHeight)
+    if windowHeight > 800:
+        windowHeight = 800
+
+    windowWidth = int(round((1200/800) * windowHeight, -1))
+    #print(windowWidth)
+
+    widget.resize(windowWidth, windowHeight)
+    #widget.setFixedHeight(windowHeight)
+    #widget.setFixedWidth(windowWidth)
+
+    widget.show()
     sys.exit(app.exec_())
-except:
-    print("Exiting")
+except Exception as e:
+    logger.info(str(e))
+    #print("Exiting")
