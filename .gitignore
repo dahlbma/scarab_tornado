@@ -2,6 +2,7 @@ config.py
 mols/
 *.sdf
 *.mol
+error_msg.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

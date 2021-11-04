@@ -459,6 +459,8 @@ class LoadSDF(QDialog):
     def uploadSDFile(self):
         mol_info = {'external_id': self.cmpidfield_cb.currentText()}
         f = open(self.sdfilename, "rb")
+        f_err = open("error.sdf", "wb")
+        f_err_msg = open("error_msg.txt", "w")
         lError = False
         iTickCount = 0
         iBatchCount = 0
@@ -506,17 +508,22 @@ class LoadSDF(QDialog):
             dTags['solvent'] = self.solvent_cb.currentText()
             dTags['product'] = self.producttype_cb.currentText()
             dTags['library_id'] = self.library_cb.currentText()
-            if dbInterface.uploadMolFile(dTags, self.token) != True:
-                send_msg("Molecule register failed",
-                         f"Failed to register molfile {dTags['external_id']}",
-                         QMessageBox.Warning)
+            lStatus, sMessage = dbInterface.uploadMolFile(dTags, self.token)
+            if lStatus != True:
+                f_err.write(sMol)
+                f_err_msg.write(f"{str(dTags['external_id'])} {str(sMessage)}\n")
+                f_err_msg.flush()
                 lError = True
-                break
         self.pbar.hide()
         QApplication.restoreOverrideCursor()
         if lError == False:
             send_msg("SDFile upload done", f"Uploaded {self.iMolCount} compounds")
-    
+        else:
+            send_msg("Some errors occured",
+                     f"Failed to register some molecules, see error_msg.txt and error.sdf",
+                     QMessageBox.Warning)
+
+            
     def closeWindow(self):
         self.close()
     
@@ -664,19 +671,14 @@ try:
     windowWidth = 1200
 
     windowHeight = int(round(0.9 * desktop.screenGeometry().height(), -1))
-    #print(windowHeight)
     if windowHeight > 800:
         windowHeight = 800
 
     windowWidth = int(round((1200/800) * windowHeight, -1))
-    #print(windowWidth)
 
     widget.resize(windowWidth, windowHeight)
-    #widget.setFixedHeight(windowHeight)
-    #widget.setFixedWidth(windowWidth)
 
     widget.show()
     sys.exit(app.exec_())
 except Exception as e:
     logger.info(str(e))
-    #print("Exiting")

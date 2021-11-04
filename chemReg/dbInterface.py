@@ -6,9 +6,10 @@ def uploadMolFile(dict, token):
                       data = dict,
                       headers={'token': token})
     if r.status_code != 200:
-        return False
+        #print(r.content)
+        return False, r.content
     else:
-        return True
+        return True, ""
 
 def listify(data, addBlank=True):
     res = data.content.decode()
