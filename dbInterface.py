@@ -6,6 +6,10 @@ import config
 import logging
 from rdkit import Chem
 from rdkit.Chem import Draw
+from rdkit.Chem import rdMolDescriptors
+from molmass import Formula
+from io import StringIO
+import sys
 import codecs
 
 logger = logging.getLogger(__name__)
@@ -36,13 +40,14 @@ def getNewRegno():
     return id
 
 def createPngFromMolfile(regno, molfile):
-    fileName = "mols/" + regno + ".mol"
-    fileHandle = open(fileName, "w")
-    fileHandle.write(molfile)
-    fileHandle.close()
-    m = Chem.MolFromMolFile(fileName)
+    #fileName = "mols/" + regno + ".mol"
+    #fileHandle = open(fileName, "w")
+    #fileHandle.write(molfile)
+    #fileHandle.close()
+    m = Chem.MolFromMolBlock(molfile)
+    #m = Chem.MolFromMolFile(fileName)
     try:
-        Draw.MolToFile(m,'mols/' + regno + '.png')
+        Draw.MolToFile(m, 'mols/' + regno + '.png')
     except:
         '''
         # Check:
@@ -66,7 +71,22 @@ class chemRegAddMol(tornado.web.RequestHandler):
         external_id = self.get_body_argument('external_id')
         supplier_batch = self.get_body_argument('supplier_batch')
         purity = self.get_body_argument('purity')
+        sio = sys.stderr = StringIO()
 
+        Chem.WrapLogs()
+
+        mol = Chem.MolFromMolBlock(molfile)
+        try:
+            mf = rdMolDescriptors.CalcMolFormula(mol)
+        except:
+            print(sio.getvalue())
+            self.set_status(500)
+            self.finish(sio.getvalue())
+            return
+        m_formula = Formula(mf)
+        c_mw = m_formula.mass
+        c_monoiso = m_formula.isotope.mass
+        return
         ####
         # Get pkey for tmp_mol table
         sSql = "select pkey from chem_reg.tmp_mol_sequence"
