@@ -353,7 +353,7 @@ class RegScreen(QMainWindow):
             displayMolfile(self)
     
     def editMolFile():
-        fname = 'test.txt' #"sketch_test.mol"
+        fname = "sketch_test.mol"
         retcode = open_file(fname)
         # confirm dialogue
         msg = QMessageBox()
