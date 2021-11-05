@@ -8,6 +8,7 @@ import requests
 import json
 import dbInterface
 import os
+import subprocess, platform
 import re
 import codecs
 import traceback
@@ -69,12 +70,25 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
+def open_file(filename):
+    # open file with default OS application
+    if platform.system() == 'Windows':
+        proc = subprocess.Popen("start " + filename, shell=True)
+    else:
+        proc = subprocess.Popen("xdg-open " + filename, shell=True)
+    return proc
+
 def displayMolfile(self):
     sFile = "http://esox3.scilifelab.se:8082/mols/" + self.regno + ".png"
     image = QImage()
     self.structure_lab.setScaledContents(True)
     image.loadFromData(requests.get(sFile).content)
     self.structure_lab.setPixmap(QPixmap(image))
+
+def postMolFile(self, fname, regno):
+    logger.info("posting file %s to server", fname)
+    f = {'file': open(fname, 'rb'), 'regno': regno}
+    r = requests.post('http://esox3.scilifelab.se:8082/api/loadMolfile', headers={'token': self.token}, files=f)
 
 def updateScreen(self):
     if self.populated == False:
@@ -313,6 +327,7 @@ class RegScreen(QMainWindow):
             lambda: self.changeEvent(self.comments_text.toPlainText(), 'COMMENTS'))
 
         self.loadmol_btn.clicked.connect(self.uploadMolfile)
+        self.btn.clicked.connect(self.editMolFile)
 
     def changeLibraryName(self):
         library_name = dbInterface.getLibraryName(self.token,
@@ -330,12 +345,39 @@ class RegScreen(QMainWindow):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 
                                                 '.', "Molfiles (*.mol)")
         if fname[0] != '':
-            f = {'file': open(fname[0], 'rb'),
-                 'regno': self.regno}
-            r = requests.post('http://esox3.scilifelab.se:8082/api/loadMolfile',
-                              headers={'token': self.token}, files=f)
+            postMolFile(self, fname[0], self.regno)
+            #f = {'file': open(fname[0], 'rb'),
+            #     'regno': self.regno}
+            #r = requests.post('http://esox3.scilifelab.se:8082/api/loadMolfile',
+            #                  headers={'token': self.token}, files=f)
             displayMolfile(self)
-        
+    
+    def editMolFile():
+        fname = 'test.txt' #"sketch_test.mol"
+        retcode = open_file(fname)
+        # confirm dialogue
+        msg = QMessageBox()
+        msg.setWindowTitle("Edit " + fname)
+        msg.setIcon(QMessageBox.Question)
+        msg.setText("Do you want to save .mol-file changes to the database?")
+        msg.setStandardButtons(QMessageBox.Save | QMessageBox.Cancel)
+        msg.setDefaultButton(QMessageBox.Save)
+        btnS = msg.button(QMessageBox.Save)
+        msg.exec_()
+        ok_msg = QMessageBox()
+        ok_msg.setStandardButtons(QMessageBox.Ok)
+        ok_msg.setWindowTitle("Edit " + fname)
+        if (msg.clickedButton() == btnS):
+            # save changes
+            #postMolFile(self, fname, self.regno)
+            #displayMolfile(self)
+            ok_msg.setText("Updated .mol file")
+            print("y")
+        else:
+            # cancel, do nothing
+            ok_msg.setText("Did not update .mol file")
+        ok_msg.exec_()    
+    
     def changeEvent(self, value='', action='doNothing'):
         if action == 'doNothing':
             return
