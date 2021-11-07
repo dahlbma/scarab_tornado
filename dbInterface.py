@@ -51,12 +51,7 @@ def getAtomicComposition(saComp):
     return sComp
 
 def createPngFromMolfile(regno, molfile):
-    #fileName = "mols/" + regno + ".mol"
-    #fileHandle = open(fileName, "w")
-    #fileHandle.write(molfile)
-    #fileHandle.close()
     m = Chem.MolFromMolBlock(molfile)
-    #m = Chem.MolFromMolFile(fileName)
     try:
         Draw.MolToFile(m, 'mols/' + regno + '.png')
     except:
@@ -67,6 +62,38 @@ def createPngFromMolfile(regno, molfile):
         logger.info(f"regno {regno} is nostruct")
 
 
+def getMoleculeProperties(self, molfile):
+    mol = Chem.MolFromMolBlock(molfile)
+    try:
+        mf = rdMolDescriptors.CalcMolFormula(mol)
+    except:
+        self.set_status(500)
+        self.finish(sio.getvalue())
+        return (False, False, False, False)
+
+    C_MF = Formula(mf)
+    C_MW = C_MF.mass
+    C_MONOISO = C_MF.isotope.mass
+
+    remover = SaltRemover()
+    res = remover.StripMol(mol)
+    numAtoms = mol.GetNumAtoms()
+    salt = []
+    C_CHNS = getAtomicComposition(C_MF.composition())
+
+    if res.GetNumAtoms() != numAtoms:
+        res_mf = rdMolDescriptors.CalcMolFormula(res)            
+        res_formula = Formula(res_mf)
+        res_mw = res_formula.mass
+            
+        saltMass = C_MW - res_mw
+        for key in salts.items():
+            if abs(key[1]['mw'] - saltMass) < 0.005:
+                salt = key[1]
+                break
+    return (C_MF, C_MW, C_MONOISO, C_CHNS)
+
+        
 @jwtauth
 class chemRegAddMol(tornado.web.RequestHandler):
     def post(self):
@@ -86,38 +113,9 @@ class chemRegAddMol(tornado.web.RequestHandler):
 
         Chem.WrapLogs()
 
-        mol = Chem.MolFromMolBlock(molfile)
-        try:
-            mf = rdMolDescriptors.CalcMolFormula(mol)
-        except:
-            print(sio.getvalue())
-            self.set_status(500)
-            self.finish(sio.getvalue())
+        (C_MF, C_MW, C_MONOISO, C_CHNS) = getMoleculeProperties(self, molfile)
+        if C_MF == False:
             return
-
-        C_MF = Formula(mf)
-        C_MW = C_MF.mass
-        C_MONOISO = C_MF.isotope.mass
-
-        remover = SaltRemover()
-        res = remover.StripMol(mol)
-        numAtoms = mol.GetNumAtoms()
-        salt = []
-        C_CHNS = getAtomicComposition(C_MF.composition())
-
-        if res.GetNumAtoms() != numAtoms:
-            res_mf = rdMolDescriptors.CalcMolFormula(res)            
-            res_formula = Formula(res_mf)
-            res_mw = res_formula.mass
-            
-            saltMass = C_MW - res_mw
-            for key in salts.items():
-                if abs(key[1]['mw'] - saltMass) < 0.005:
-                    salt = key[1]
-                    print(salt)
-                    break
-        #return
-
         ####
         # Get pkey for tmp_mol table
         sSql = "select pkey from chem_reg.tmp_mol_sequence"
@@ -134,13 +132,6 @@ class chemRegAddMol(tornado.web.RequestHandler):
             else:
                 raise TypeError("Expected bytes or string, but got %s." % type(s))
 
-        ####
-        # Insert molfile in tmp_mol table
-        #sSql = f"""
-        #insert into chem_reg.tmp_mol (pkey, molfile) values
-        #({pkey}, '{molfile}')
-        #"""
-        #cur.execute(sSql)
         ####
         # Do exact match with molecule against present molucules
         sSql = f"""
@@ -256,12 +247,19 @@ class LoadMolfile(tornado.web.RequestHandler):
         regnoBody = self.request.files['regno'][0]
         molfile = tornado.escape.xhtml_unescape(fBody.body)
         regno = tornado.escape.xhtml_unescape(regnoBody.body)
-        sSql = """update chem_reg.chem_info set `molfile` = %s
-                  where regno = %s"""
-        values = (molfile, regno, )
-        cur.execute(sSql, values)
+        (C_MF, C_MW, C_MONOISO, C_CHNS) = getMoleculeProperties(self, molfile)
+        if C_MF == False:
+            return
+        sSql = f"""update chem_reg.chem_info set
+                   `molfile` = '{molfile}',
+                    C_MF = '{C_MF}',
+                    C_MW = {C_MW},
+                    C_MONOISO = {C_MONOISO},
+                    C_CHNS = '{C_CHNS}'
+                  where regno = {regno}"""
+        cur.execute(sSql)
         createPngFromMolfile(regno, molfile)
-
+        
 
 @jwtauth
 class CreateRegno(tornado.web.RequestHandler):
@@ -327,7 +325,6 @@ class GetMolfile(tornado.web.RequestHandler):
         res = cur.fetchall()
         if len(res) > 0:
             self.write(res[0][0])
-        
         
 
 @jwtauth
