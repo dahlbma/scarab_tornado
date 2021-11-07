@@ -1,0 +1,227 @@
+{
+    "1":
+        {
+            "suffix": "D",
+            "formula": "Li",
+            "mw": 6.941,
+            "smiles": "[Li]"
+        },
+    "2":
+        {
+            "suffix": "D",
+            "formula": "Li",
+            "mw": 6.941,
+            "smiles": "[Li]"
+        },
+    "3":
+        {
+            "suffix": "N",
+            "formula": "Na",
+            "mw": 22.989769,
+            "smiles": "[Na+]"
+        },
+    
+    "4":
+        {
+            "suffix": "N",
+            "formula": "Na",
+            "mw": 22.989769,
+            "smiles": "[Na]"
+        },
+    "5":
+        {
+            "suffix": "C",
+            "formula": "Cl",
+            "mw": 35.453,
+            "smiles": "[Cl-]"
+        },
+    "6":
+        {
+            "suffix": "C",
+            "formula": "ClH",
+            "mw": 36.461,
+            "smiles": "Cl"
+        },
+    "7":
+        {
+            "suffix": "K",
+            "formula": "K",
+            "mw": 39.0983,
+            "smiles": "[K+]"
+        },
+    "8":
+        {
+            "suffix": "K",
+            "formula": "K",
+            "mw": 39.0983,
+            "smiles": "[K]"
+        },
+    "9":
+        {
+            "suffix": "A",
+            "formula": "C2H3O2",
+            "mw": 59.044,
+            "smiles": "CC([O-])=O"
+        },
+    "10":
+        {
+            "suffix": "A",
+            "formula": "C2H4O2",
+            "mw": 60.052,
+            "smiles": "CC(O)=O"
+        },
+    "11":
+        {
+            "suffix": "B",
+            "formula": "Br",
+            "mw": 79.904,
+            "smiles": "[Br-]"
+        },
+    "12":
+        {
+            "suffix": "B",
+            "formula": "BrH",
+            "mw": 80.912,
+            "smiles": "Br"
+        },
+    "13":
+        {
+            "suffix": "T",
+            "formula": "C2F3O2",
+            "mw": 113.0154,
+            "smiles": "[O-]C(=O)C(F)(F)F"
+        },
+    "14":
+        {
+            "suffix": "T",
+            "formula": "C2HF3O2",
+            "mw": 114.0233,
+            "smiles": "OC(=O)C(F)(F)F"
+        },
+    "15":
+        {
+            "suffix": "F",
+            "formula": "C4H2O4",
+            "mw": 114.0563,
+            "smiles": "[O-]C(=O)\\C=C\\C([O-])=O"
+        },
+    "16":
+        {
+            "suffix": "F",
+            "formula": "C4H4O4",
+            "mw": 116.0722,
+            "smiles": "OC(=O)\\C=C\\C(O)=O"
+        },
+    "17":
+        {
+            "suffix": "S",
+            "formula": "C4H4O4",
+            "mw": 116.0722,
+            "smiles": "[O-]C(=O)CCC([O-])=O"
+        },
+    "18":
+        {
+            "suffix": "S",
+            "formula": "C4H6O4",
+            "mw": 118.088,
+            "smiles": "OC(=O)CCC(O)=O"
+        },
+    "19":
+        {
+            "suffix": "I",
+            "formula": "I",
+            "mw": 126.90447,
+            "smiles": "[I-]"
+        },
+    "20":
+        {
+            "suffix": "I",
+            "formula": "HI",
+            "mw": 127.91241,
+            "smiles": "I"
+        },
+    "":
+        {
+            "suffix": "E",
+            "formula": "C4H4O6",
+            "mw": 148.071,
+            "smiles": "OC(C(O)C([O-])=O)C([O-])=O"
+        },
+    "21":
+        {
+            "suffix": "E",
+            "formula": "C4H4O6",
+            "mw": 148.071,
+            "smiles": "O[C@@H]([C@H](O)C([O-])=O)C([O-])=O"
+        },
+    "22":
+        {
+            "suffix": "E",
+            "formula": "C4H4O6",
+            "mw": 148.071,
+            "smiles": "O[C@H]([C@@H](O)C([O-])=O)C([O-])=O"
+        },
+    "23":
+        {
+            "suffix": "E",
+            "formula": "C4H6O6",
+            "mw": 150.0868,
+            "smiles": "O[C@@H]([C@H](O)C(O)=O)C(O)=O"
+        },
+    "24":
+        {
+            "suffix": "E",
+            "formula": "C4H6O6",
+            "mw": 150.0868,
+            "smiles": "O[C@H]([C@@H](O)C(O)=O)C(O)=O"
+        },
+    "25":
+        {
+            "suffix": "E",
+            "formula": "C4H6O6",
+            "mw": 150.0868,
+            "smiles": "OC(C(O)C(O)=O)C(O)=O"
+        },
+    "26":
+        {
+            "suffix": "M",
+            "formula": "C8H7O3",
+            "mw": 151.1394,
+            "smiles": "O[C@@H](C([O-])=O)c1ccccc1"
+        },
+    "27":
+        {
+            "suffix": "M",
+            "formula": "C8H7O3",
+            "mw": 151.1394,
+            "smiles": "OC(C([O-])=O)c1ccccc1"
+        },
+    "28":
+        {
+            "suffix": "M",
+            "formula": "C8H7O3",
+            "mw": 151.1394,
+            "smiles": "O[C@H](C([O-])=O)c1ccccc1"
+        },
+    "29":
+        {
+            "suffix": "M",
+            "formula": "C8H8O3",
+            "mw": 152.1473,
+            "smiles": "OC(C(O)=O)c1ccccc1"
+        },
+    "30":
+        {
+            "suffix": "M",
+            "formula": "C8H8O3",
+            "mw": 152.1473,
+            "smiles": "O[C@@H](C(O)=O)c1ccccc1"
+        },
+    "31":
+        {
+            "suffix": "M",
+            "formula": "C8H8O3",
+            "mw": 152.1473,
+            "smiles": "O[C@H](C(O)=O)c1ccccc1"
+        }
+}
