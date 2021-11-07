@@ -121,6 +121,27 @@ def updateScreen(self):
         
         createdDate = dbInterface.getTextColumn(self.token, 'rdate', self.regno)
         self.date_lab.setText(createdDate)
+
+
+        avgMolMass = dbInterface.getTextColumn(self.token,
+                                               'C_MW',
+                                               self.regno)
+        self.avgmolmass_lab.setText(avgMolMass)
+        molFormula = dbInterface.getTextColumn(self.token,
+                                               'C_MF',
+                                               self.regno)
+        self.mf_eb.setText(molFormula)
+        sCHNS = dbInterface.getTextColumn(self.token,
+                                          'C_CHNS',
+                                          self.regno)
+        self.chns_eb.setText(sCHNS)
+        monoIsoMass = dbInterface.getTextColumn(self.token,
+                                                'C_MONOISO',
+                                                self.regno)
+        self.monoisomass_lab.setText(monoIsoMass)
+
+
+
         
         externalCompoundId = dbInterface.getTextColumn(self.token,
                                                        'EXTERNAL_ID',
