@@ -6,6 +6,7 @@ import config
 import logging
 from rdkit import Chem
 from rdkit.Chem import Draw
+from rdkit.Chem import Descriptors
 from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem.SaltRemover import SaltRemover
 from molmass import Formula
@@ -65,31 +66,32 @@ def createPngFromMolfile(regno, molfile):
 def getMoleculeProperties(self, molfile):
     mol = Chem.MolFromMolBlock(molfile)
     try:
-        mf = rdMolDescriptors.CalcMolFormula(mol)
+        C_MF = rdMolDescriptors.CalcMolFormula(mol)
     except:
         self.set_status(500)
         self.finish(sio.getvalue())
         return (False, False, False, False)
-
-    C_MF = Formula(mf)
-    C_MW = C_MF.mass
-    C_MONOISO = C_MF.isotope.mass
+    C_MW = Descriptors.MolWt(mol)
+    C_MONOISO = Descriptors.ExactMolWt(mol)
+    print(C_MF.replace('-', ''))
+    molmassFormula = Formula(C_MF.replace('-', ''))
 
     remover = SaltRemover()
     res = remover.StripMol(mol)
     numAtoms = mol.GetNumAtoms()
     salt = []
-    C_CHNS = getAtomicComposition(C_MF.composition())
-
+    C_CHNS = getAtomicComposition(molmassFormula.composition())
+    print(res.GetNumAtoms(),numAtoms)
     if res.GetNumAtoms() != numAtoms:
-        res_mf = rdMolDescriptors.CalcMolFormula(res)            
-        res_formula = Formula(res_mf)
-        res_mw = res_formula.mass
+        res_mw = Descriptors.MolWt(res)
             
         saltMass = C_MW - res_mw
+        print(saltMass)
+        print(Chem.MolToSmiles(mol))
         for key in salts.items():
-            if abs(key[1]['mw'] - saltMass) < 0.005:
+            if abs(key[1]['mw'] - saltMass) < 0.1:
                 salt = key[1]
+                print(salt)
                 break
     return (C_MF, C_MW, C_MONOISO, C_CHNS)
 
@@ -115,6 +117,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
 
         (C_MF, C_MW, C_MONOISO, C_CHNS) = getMoleculeProperties(self, molfile)
         if C_MF == False:
+            print('Molfile failed')
             return
         ####
         # Get pkey for tmp_mol table
@@ -325,7 +328,7 @@ class GetMolfile(tornado.web.RequestHandler):
         res = cur.fetchall()
         if len(res) > 0:
             self.write(res[0][0])
-        
+
 
 @jwtauth
 class GetTextColumn(tornado.web.RequestHandler):
