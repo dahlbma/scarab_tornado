@@ -183,21 +183,6 @@ color: black;
                   </property>
                  </widget>
                 </item>
-                <item>
-                 <widget class="QLineEdit" name="chns_eb">
-                  <property name="font">
-                   <font>
-                    <pointsize>6</pointsize>
-                   </font>
-                  </property>
-                  <property name="focusPolicy">
-                   <enum>Qt::NoFocus</enum>
-                  </property>
-                  <property name="styleSheet">
-                   <string notr="true">background-color:&quot;transparent&quot;</string>
-                  </property>
-                 </widget>
-                </item>
                </layout>
               </item>
              </layout>
