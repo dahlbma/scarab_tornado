@@ -62,18 +62,39 @@ def createPngFromMolfile(regno, molfile):
         '''
         logger.info(f"regno {regno} is nostruct")
 
+def getSaltLetters(saSmileFragments):
+    saSaltLetters = ''
+    for smile in saSmileFragments:
+        fragmentMass = Descriptors.MolWt(Chem.MolFromSmiles(smile))
+        canonSmile = Chem.CanonSmiles(smile)
+        for key in salts.items():
+            if canonSmile == Chem.CanonSmiles(key[1]['smiles']):
+                saSaltLetters += key[1]['suffix']
+                break
 
+    if saSaltLetters == '':
+        # This is an error state, there are multiple fragments in
+        # the molfile but there is no match against the salt database
+        print(saSmileFragments)
+        return False
+    print(saSaltLetters)
+    print(saSmileFragments)
+    return saSaltLetters
+
+    
 def getMoleculeProperties(self, molfile):
+    sio = sys.stderr = StringIO()
+    Chem.WrapLogs()
     mol = Chem.MolFromMolBlock(molfile)
     try:
         C_MF = rdMolDescriptors.CalcMolFormula(mol)
-    except:
+    except Exception as e:
+        print(str(e))
         self.set_status(500)
         self.finish(sio.getvalue())
-        return (False, False, False, False)
+        return (False, False, False, False, False)
     C_MW = Descriptors.MolWt(mol)
     C_MONOISO = Descriptors.ExactMolWt(mol)
-    print(C_MF.replace('-', ''))
     molmassFormula = Formula(C_MF.replace('-', ''))
 
     remover = SaltRemover()
@@ -81,19 +102,16 @@ def getMoleculeProperties(self, molfile):
     numAtoms = mol.GetNumAtoms()
     salt = []
     C_CHNS = getAtomicComposition(molmassFormula.composition())
-    print(res.GetNumAtoms(),numAtoms)
+    saSalts = list()
     if res.GetNumAtoms() != numAtoms:
         res_mw = Descriptors.MolWt(res)
             
         saltMass = C_MW - res_mw
-        print(saltMass)
-        print(Chem.MolToSmiles(mol))
-        for key in salts.items():
-            if abs(key[1]['mw'] - saltMass) < 0.1:
-                salt = key[1]
-                print(salt)
-                break
-    return (C_MF, C_MW, C_MONOISO, C_CHNS)
+        sSmiles = Chem.MolToSmiles(mol)
+        saSmileFragments = sSmiles.split('.')
+        if len(saSmileFragments) > 1:
+            saSalts = getSaltLetters(saSmileFragments)
+    return (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts)
 
         
 @jwtauth
@@ -111,13 +129,13 @@ class chemRegAddMol(tornado.web.RequestHandler):
         external_id = self.get_body_argument('external_id')
         supplier_batch = self.get_body_argument('supplier_batch')
         purity = self.get_body_argument('purity')
-        sio = sys.stderr = StringIO()
 
-        Chem.WrapLogs()
-
-        (C_MF, C_MW, C_MONOISO, C_CHNS) = getMoleculeProperties(self, molfile)
+        (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts) = getMoleculeProperties(self, molfile)
         if C_MF == False:
-            print('Molfile failed')
+            print('Molfile failed ' + external_id)
+            return
+        if saSalts == False:
+            print('Unknown salt in molfile')
             return
         ####
         # Get pkey for tmp_mol table
