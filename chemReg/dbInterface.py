@@ -74,3 +74,10 @@ def getNextRegno(token):
     res = r.content.decode()
     return res
     
+def getMolFile(token, regno):
+    r = requests.get('http://esox3.scilifelab.se:8082/api/getMolfile', 
+                     params={'regno': regno}, 
+                     headers={'token': token})
+    res = r.content.decode()
+    return res
+    

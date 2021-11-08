@@ -9,6 +9,7 @@ import json
 import dbInterface
 import os
 import subprocess, platform
+import shutil
 import re
 import codecs
 import traceback
@@ -350,6 +351,7 @@ class RegScreen(QMainWindow):
 
         self.loadmol_btn.clicked.connect(self.uploadMolfile)
         self.editmol_btn.clicked.connect(self.editMolFile)
+        self.structure_lab.mouseReleaseEvent = self.editMolFile
 
     def changeLibraryName(self):
         library_name = dbInterface.getLibraryName(self.token,
@@ -373,9 +375,19 @@ class RegScreen(QMainWindow):
             displayMolfile(self)
             updateMoleculeProperties(self)
             
-    def editMolFile():
-        fname = "sketch_test.mol"
-        retcode = open_file(fname)
+    def editMolFile(self, event=None):
+        fname = "tmp.mol"
+        fname_path = resource_path(fname)
+        if self.structure_lab.pixmap().isNull():
+            # no loaded mol, copying template
+            shutil.copy(resource_path("nostruct.mol"), fname_path)
+        else:
+            # download molfile for selected regno, write to 'tmp.mol'
+            tmp_mol = dbInterface.getMolFile(self.token, self.regno)
+            tmp_file = open(fname_path, "w")
+            n = tmp_file.write(tmp_mol)
+            tmp_file.close()
+        retcode = open_file(fname_path)
         # confirm dialogue
         msg = QMessageBox()
         msg.setWindowTitle("Edit " + fname)
@@ -390,14 +402,15 @@ class RegScreen(QMainWindow):
         ok_msg.setWindowTitle("Edit " + fname)
         if (msg.clickedButton() == btnS):
             # save changes
-            #postMolFile(self, fname, self.regno)
-            #displayMolfile(self)
+            postMolFile(self, fname, self.regno)
+            displayMolfile(self)
             ok_msg.setText("Updated .mol file")
-            print("y")
         else:
             # cancel, do nothing
             ok_msg.setText("Did not update .mol file")
-        ok_msg.exec_()    
+        ok_msg.exec_()
+        # cleanup, remove tmp.mol
+        os.remove(fname) 
     
     def changeEvent(self, value='', action='doNothing'):
         if action == 'doNothing':
