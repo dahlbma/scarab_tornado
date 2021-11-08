@@ -6,7 +6,6 @@ def uploadMolFile(dict, token):
                       data = dict,
                       headers={'token': token})
     if r.status_code != 200:
-        #print(r.content)
         return False, r.content
     else:
         return True, ""
