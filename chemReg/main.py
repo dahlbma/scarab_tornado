@@ -90,6 +90,26 @@ def postMolFile(self, fname, regno):
     f = {'file': open(fname, 'rb'), 'regno': regno}
     r = requests.post('http://esox3.scilifelab.se:8082/api/loadMolfile', headers={'token': self.token}, files=f)
 
+
+def updateMoleculeProperties(self):
+    avgMolMass = dbInterface.getTextColumn(self.token,
+                                           'C_MW',
+                                           self.regno)
+    self.avgmolmass_lab.setText(avgMolMass)
+    molFormula = dbInterface.getTextColumn(self.token,
+                                           'C_MF',
+                                           self.regno)
+    self.mf_eb.setText(molFormula)
+    sCHNS = dbInterface.getTextColumn(self.token,
+                                      'C_CHNS',
+                                      self.regno)
+    self.chns_eb.setText(sCHNS)
+    monoIsoMass = dbInterface.getTextColumn(self.token,
+                                            'C_MONOISO',
+                                            self.regno)
+    self.monoisomass_lab.setText(monoIsoMass)
+    
+    
 def updateScreen(self):
     if self.populated == False:
         self.regno_eb.setText(self.regno)
@@ -121,6 +141,8 @@ def updateScreen(self):
         
         createdDate = dbInterface.getTextColumn(self.token, 'rdate', self.regno)
         self.date_lab.setText(createdDate)
+
+        updateMoleculeProperties(self)
         
         externalCompoundId = dbInterface.getTextColumn(self.token,
                                                        'EXTERNAL_ID',
@@ -328,7 +350,6 @@ class RegScreen(QMainWindow):
 
         self.loadmol_btn.clicked.connect(self.uploadMolfile)
         self.editmol_btn.clicked.connect(self.editMolFile)
-        #self.structure_lab.clicked.connect(self.editMolFile)
 
     def changeLibraryName(self):
         library_name = dbInterface.getLibraryName(self.token,
@@ -341,20 +362,18 @@ class RegScreen(QMainWindow):
         self.structure_lab.setScaledContents(True)
         image.loadFromData(requests.get(sFile).content)
         self.structure_lab.setPixmap(QPixmap(image))
+
     
+        
     def uploadMolfile(self):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 
                                                 '.', "Molfiles (*.mol)")
         if fname[0] != '':
             postMolFile(self, fname[0], self.regno)
-            #f = {'file': open(fname[0], 'rb'),
-            #     'regno': self.regno}
-            #r = requests.post('http://esox3.scilifelab.se:8082/api/loadMolfile',
-            #                  headers={'token': self.token}, files=f)
             displayMolfile(self)
-    
-    def editMolFile(self):
-        print("edit")
+            updateMoleculeProperties(self)
+            
+    def editMolFile():
         fname = "sketch_test.mol"
         retcode = open_file(fname)
         # confirm dialogue
