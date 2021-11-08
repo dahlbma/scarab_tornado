@@ -327,7 +327,8 @@ class RegScreen(QMainWindow):
             lambda: self.changeEvent(self.comments_text.toPlainText(), 'COMMENTS'))
 
         self.loadmol_btn.clicked.connect(self.uploadMolfile)
-        self.btn.clicked.connect(self.editMolFile)
+        self.editmol_btn.clicked.connect(self.editMolFile)
+        #self.structure_lab.clicked.connect(self.editMolFile)
 
     def changeLibraryName(self):
         library_name = dbInterface.getLibraryName(self.token,
@@ -352,7 +353,8 @@ class RegScreen(QMainWindow):
             #                  headers={'token': self.token}, files=f)
             displayMolfile(self)
     
-    def editMolFile():
+    def editMolFile(self):
+        print("edit")
         fname = "sketch_test.mol"
         retcode = open_file(fname)
         # confirm dialogue

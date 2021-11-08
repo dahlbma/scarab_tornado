@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1240</width>
-    <height>801</height>
+    <height>797</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -133,13 +133,6 @@ color: black;
                   </property>
                  </widget>
                 </item>
-                <item>
-                 <widget class="QLabel" name="label_44">
-                  <property name="text">
-                   <string>CHNS Calc</string>
-                  </property>
-                 </widget>
-                </item>
                </layout>
               </item>
               <item>
@@ -147,38 +140,46 @@ color: black;
                 <item>
                  <widget class="QLineEdit" name="regno_eb">
                   <property name="focusPolicy">
-                   <enum>Qt::NoFocus</enum>
+                   <enum>Qt::StrongFocus</enum>
+                  </property>
+                  <property name="readOnly">
+                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>
                 <item>
                  <widget class="QLineEdit" name="compoundid_eb">
                   <property name="focusPolicy">
-                   <enum>Qt::NoFocus</enum>
+                   <enum>Qt::StrongFocus</enum>
+                  </property>
+                  <property name="readOnly">
+                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>
                 <item>
                  <widget class="QLabel" name="avgmolmass_lab">
+                  <property name="focusPolicy">
+                   <enum>Qt::StrongFocus</enum>
+                  </property>
                   <property name="text">
                    <string/>
+                  </property>
+                  <property name="textInteractionFlags">
+                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
                   </property>
                  </widget>
                 </item>
                 <item>
                  <widget class="QLabel" name="mf_eb">
+                  <property name="focusPolicy">
+                   <enum>Qt::StrongFocus</enum>
+                  </property>
                   <property name="text">
                    <string/>
                   </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="chns_eb">
-                  <property name="focusPolicy">
-                   <enum>Qt::NoFocus</enum>
-                  </property>
-                  <property name="styleSheet">
-                   <string notr="true">background-color:&quot;transparent&quot;</string>
+                  <property name="textInteractionFlags">
+                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
                   </property>
                  </widget>
                 </item>
@@ -203,95 +204,96 @@ color: black;
              </spacer>
             </item>
             <item>
-             <layout class="QVBoxLayout" name="verticalLayout_17">
+             <layout class="QHBoxLayout" name="horizontalLayout_24">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_24">
+               <layout class="QVBoxLayout" name="verticalLayout_9">
                 <item>
-                 <layout class="QVBoxLayout" name="verticalLayout_9">
-                  <item>
-                   <widget class="QLabel" name="label_37">
-                    <property name="text">
-                     <string>Date</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_38">
-                    <property name="text">
-                     <string>External Id</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_39">
-                    <property name="text">
-                     <string>External Batch</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_40">
-                    <property name="text">
-                     <string>Monoiso Mass</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
+                 <widget class="QLabel" name="label_37">
+                  <property name="text">
+                   <string>Date</string>
+                  </property>
+                 </widget>
                 </item>
                 <item>
-                 <layout class="QVBoxLayout" name="verticalLayout_8">
-                  <item>
-                   <widget class="QLabel" name="date_lab">
-                    <property name="text">
-                     <string/>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLineEdit" name="externalid_eb">
-                    <property name="focusPolicy">
-                     <enum>Qt::NoFocus</enum>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLineEdit" name="externalbatch_eb">
-                    <property name="focusPolicy">
-                     <enum>Qt::NoFocus</enum>
-                    </property>
-                    <property name="frame">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="monoisomass_lab">
-                    <property name="text">
-                     <string/>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
+                 <widget class="QLabel" name="label_38">
+                  <property name="text">
+                   <string>External Id</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_39">
+                  <property name="text">
+                   <string>External Batch</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_40">
+                  <property name="text">
+                   <string>Monoiso Mass</string>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </item>
               <item>
-               <spacer name="verticalSpacer">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeType">
-                 <enum>QSizePolicy::Preferred</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>18</height>
-                 </size>
-                </property>
-               </spacer>
+               <layout class="QVBoxLayout" name="verticalLayout_8">
+                <item>
+                 <widget class="QLabel" name="date_lab">
+                  <property name="focusPolicy">
+                   <enum>Qt::StrongFocus</enum>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="textInteractionFlags">
+                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="externalid_eb">
+                  <property name="focusPolicy">
+                   <enum>Qt::StrongFocus</enum>
+                  </property>
+                  <property name="readOnly">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="externalbatch_eb">
+                  <property name="focusPolicy">
+                   <enum>Qt::StrongFocus</enum>
+                  </property>
+                  <property name="frame">
+                   <bool>true</bool>
+                  </property>
+                  <property name="readOnly">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="monoisomass_lab">
+                  <property name="focusPolicy">
+                   <enum>Qt::StrongFocus</enum>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="textInteractionFlags">
+                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
              </layout>
+            </item>
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_17"/>
             </item>
            </layout>
           </item>
@@ -312,18 +314,38 @@ color: black;
            </spacer>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout">
-            <item>
+           <layout class="QGridLayout" name="gridLayout_2">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_44">
+              <property name="text">
+               <string>CHNS Calc</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
              <widget class="QLabel" name="label_18">
               <property name="text">
                <string>IUPAC Name</string>
               </property>
              </widget>
             </item>
-            <item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="chns_eb">
+              <property name="focusPolicy">
+               <enum>Qt::StrongFocus</enum>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color:&quot;transparent&quot;</string>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
              <widget class="QLineEdit" name="iupac_eb">
               <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
+               <enum>Qt::StrongFocus</enum>
               </property>
               <property name="styleSheet">
                <string notr="true">background-color:&quot;transparent&quot;</string>
@@ -390,7 +412,7 @@ color: black;
                      <bool>false</bool>
                     </property>
                     <property name="focusPolicy">
-                     <enum>Qt::NoFocus</enum>
+                     <enum>Qt::StrongFocus</enum>
                     </property>
                    </widget>
                   </item>
@@ -400,7 +422,10 @@ color: black;
                      <bool>true</bool>
                     </property>
                     <property name="focusPolicy">
-                     <enum>Qt::NoFocus</enum>
+                     <enum>Qt::StrongFocus</enum>
+                    </property>
+                    <property name="readOnly">
+                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
@@ -410,7 +435,7 @@ color: black;
                      <bool>false</bool>
                     </property>
                     <property name="focusPolicy">
-                     <enum>Qt::NoFocus</enum>
+                     <enum>Qt::StrongFocus</enum>
                     </property>
                    </widget>
                   </item>
@@ -494,7 +519,7 @@ color: black;
                    <bool>false</bool>
                   </property>
                   <property name="focusPolicy">
-                   <enum>Qt::NoFocus</enum>
+                   <enum>Qt::StrongFocus</enum>
                   </property>
                  </widget>
                 </item>
@@ -504,7 +529,7 @@ color: black;
                    <bool>false</bool>
                   </property>
                   <property name="focusPolicy">
-                   <enum>Qt::NoFocus</enum>
+                   <enum>Qt::StrongFocus</enum>
                   </property>
                  </widget>
                 </item>
@@ -514,14 +539,14 @@ color: black;
                    <bool>false</bool>
                   </property>
                   <property name="focusPolicy">
-                   <enum>Qt::NoFocus</enum>
+                   <enum>Qt::StrongFocus</enum>
                   </property>
                  </widget>
                 </item>
                 <item>
                  <widget class="QLineEdit" name="librarydesc_eb">
                   <property name="focusPolicy">
-                   <enum>Qt::NoFocus</enum>
+                   <enum>Qt::StrongFocus</enum>
                   </property>
                   <property name="styleSheet">
                    <string notr="true">background-color:&quot;transparent&quot;</string>
@@ -732,7 +757,7 @@ color: black;
                </font>
               </property>
               <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
+               <enum>Qt::StrongFocus</enum>
               </property>
               <property name="styleSheet">
                <string notr="true">background-color:&quot;transparent&quot;</string>
@@ -745,7 +770,7 @@ color: black;
             <item>
              <widget class="QLineEdit" name="chrompurity_eb">
               <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
+               <enum>Qt::StrongFocus</enum>
               </property>
               <property name="styleSheet">
                <string notr="true">background-color:&quot;transparent&quot;</string>
@@ -805,7 +830,7 @@ color: black;
                </font>
               </property>
               <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
+               <enum>Qt::StrongFocus</enum>
               </property>
               <property name="styleSheet">
                <string notr="true">background-color:&quot;transparent&quot;</string>
@@ -818,7 +843,7 @@ color: black;
             <item>
              <widget class="QLineEdit" name="nmrpurity_eb">
               <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
+               <enum>Qt::StrongFocus</enum>
               </property>
               <property name="styleSheet">
                <string notr="true">background-color:&quot;transparent&quot;</string>
@@ -878,7 +903,7 @@ color: black;
                </font>
               </property>
               <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
+               <enum>Qt::StrongFocus</enum>
               </property>
               <property name="styleSheet">
                <string notr="true">background-color:&quot;transparent&quot;</string>
@@ -891,7 +916,7 @@ color: black;
             <item>
              <widget class="QLineEdit" name="mspurity_eb">
               <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
+               <enum>Qt::StrongFocus</enum>
               </property>
               <property name="styleSheet">
                <string notr="true">background-color:&quot;transparent&quot;</string>
@@ -954,6 +979,9 @@ color: black;
             </item>
             <item>
              <widget class="QPlainTextEdit" name="comments_text">
+              <property name="focusPolicy">
+               <enum>Qt::StrongFocus</enum>
+              </property>
               <property name="styleSheet">
                <string notr="true">background-color:&quot;transparent&quot;</string>
               </property>
@@ -1163,8 +1191,14 @@ color: black;
               <pointsize>9</pointsize>
              </font>
             </property>
+            <property name="focusPolicy">
+             <enum>Qt::StrongFocus</enum>
+            </property>
             <property name="text">
              <string/>
+            </property>
+            <property name="textInteractionFlags">
+             <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
             </property>
            </widget>
           </item>
@@ -1193,8 +1227,14 @@ color: black;
                 <pointsize>9</pointsize>
                </font>
               </property>
+              <property name="focusPolicy">
+               <enum>Qt::StrongFocus</enum>
+              </property>
               <property name="text">
                <string/>
+              </property>
+              <property name="textInteractionFlags">
+               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
               </property>
              </widget>
             </item>
