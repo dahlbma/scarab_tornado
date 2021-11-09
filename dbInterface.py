@@ -4,6 +4,7 @@ import MySQLdb
 from auth import jwtauth
 import config
 import logging
+import rdkit.Chem
 from rdkit import Chem
 from rdkit.Chem import Draw
 from rdkit.Chem import Descriptors
@@ -65,10 +66,16 @@ def createPngFromMolfile(regno, molfile):
 def getSaltLetters(saSmileFragments):
     saSaltLetters = ''
     for smile in saSmileFragments:
-        fragmentMass = Descriptors.MolWt(Chem.MolFromSmiles(smile))
-        canonSmile = Chem.CanonSmiles(smile)
+        mol = Chem.MolFromSmiles(smile)
+        # Remove all stereochemistry from the fragment
+        Chem.rdmolops.RemoveStereochemistry(mol)
+        flattenSmile = Chem.rdmolfiles.MolToSmiles(mol)
+        canonSmile = Chem.CanonSmiles(flattenSmile)
         for key in salts.items():
-            if canonSmile == Chem.CanonSmiles(key[1]['smiles']):
+            saltMol = Chem.MolFromSmiles(key[1]['smiles'])
+            Chem.rdmolops.RemoveStereochemistry(saltMol)
+            saltSmile = Chem.MolToSmiles(saltMol)
+            if canonSmile == Chem.CanonSmiles(saltSmile):
                 saSaltLetters += key[1]['suffix']
                 break
 
@@ -88,20 +95,18 @@ def getMoleculeProperties(self, molfile):
     mol = Chem.MolFromMolBlock(molfile)
     try:
         C_MF = rdMolDescriptors.CalcMolFormula(mol)
+        molmassFormula = Formula(C_MF.replace('-', ''))
+        C_CHNS = getAtomicComposition(molmassFormula.composition())
     except Exception as e:
         print(str(e))
-        self.set_status(500)
-        self.finish(sio.getvalue())
-        return (False, False, False, False, False)
+        return (False, False, False, False, False, sio.getvalue())
     C_MW = Descriptors.MolWt(mol)
     C_MONOISO = Descriptors.ExactMolWt(mol)
-    molmassFormula = Formula(C_MF.replace('-', ''))
 
     remover = SaltRemover()
     res = remover.StripMol(mol)
     numAtoms = mol.GetNumAtoms()
     salt = []
-    C_CHNS = getAtomicComposition(molmassFormula.composition())
     saSalts = list()
     if res.GetNumAtoms() != numAtoms:
         res_mw = Descriptors.MolWt(res)
@@ -111,7 +116,7 @@ def getMoleculeProperties(self, molfile):
         saSmileFragments = sSmiles.split('.')
         if len(saSmileFragments) > 1:
             saSalts = getSaltLetters(saSmileFragments)
-    return (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts)
+    return (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, '')
 
         
 @jwtauth
@@ -130,12 +135,16 @@ class chemRegAddMol(tornado.web.RequestHandler):
         supplier_batch = self.get_body_argument('supplier_batch')
         purity = self.get_body_argument('purity')
 
-        (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts) = getMoleculeProperties(self, molfile)
+        (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, errorMessage) = getMoleculeProperties(self, molfile)
         if C_MF == False:
-            print('Molfile failed ' + external_id)
+            self.set_status(500)
+            self.finish(f'Molfile failed {external_id} {errorMessage}')
+            print(f'Molfile failed {external_id}')
             return
         if saSalts == False:
-            print('Unknown salt in molfile')
+            self.set_status(500)
+            self.finish(f'Unknown salt in molfile for {external_id} {errorMessage}')
+            print(f'Unknown salt in molfile for {external_id}')
             return
         ####
         # Get pkey for tmp_mol table
@@ -268,8 +277,11 @@ class LoadMolfile(tornado.web.RequestHandler):
         regnoBody = self.request.files['regno'][0]
         molfile = tornado.escape.xhtml_unescape(fBody.body)
         regno = tornado.escape.xhtml_unescape(regnoBody.body)
-        (C_MF, C_MW, C_MONOISO, C_CHNS) = getMoleculeProperties(self, molfile)
+        (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, errorMessage) = getMoleculeProperties(self, molfile)
         if C_MF == False:
+            self.set_status(500)
+            self.finish(f'Molfile failed {regno} {errorMessage}')
+            print(f'Molfile failed {regno}')
             return
         sSql = f"""update chem_reg.chem_info set
                    `molfile` = '{molfile}',
