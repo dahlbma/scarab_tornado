@@ -496,6 +496,10 @@ class LoadSDF(QDialog):
             line = sFile.readline()
             line = line.replace(b'\r\n', b'\n')
             line = line.replace(b"'", b"")
+            # RDKit can't handle empty first line in molfile
+            if iCount == 1 and line == b'\n':
+                line = b'id\n'
+                
             sMol += line
             if b'$$$$' in line:
                 return sMol[:-1] # + b"'"
@@ -586,6 +590,7 @@ class LoadSDF(QDialog):
             dTags['library_id'] = self.library_cb.currentText()
             lStatus, sMessage = dbInterface.uploadMolFile(dTags, self.token)
             if lStatus != True:
+                f_err.write(b'\n')
                 f_err.write(sMol)
                 f_err_msg.write(f"{str(dTags['external_id'])} {str(sMessage)}\n")
                 f_err_msg.flush()
@@ -598,6 +603,8 @@ class LoadSDF(QDialog):
             send_msg("Some errors occured",
                      f"Failed to register some molecules, see error_msg.txt and error.sdf",
                      QMessageBox.Warning)
+            f_err.close()
+            f_err_msg.close()
 
             
     def closeWindow(self):
