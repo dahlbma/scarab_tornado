@@ -223,5 +223,61 @@
             "formula": "C8H8O3",
             "mw": 152.1473,
             "smiles": "O[C@H](C(O)=O)c1ccccc1"
+        },
+    "32":
+        {
+            "suffix": "W",
+            "formula": "H2O",
+            "mw": 18.01528,
+            "smiles": "O"
+        },
+    "33":
+        {
+            "suffix": "X",
+            "formula": "C2H2O4",
+            "mw": 90.03399999999999,
+            "smiles": "O=C(O)C(=O)O"
+        },
+    "34":
+        {
+            "suffix": "Y",
+            "formula": "CH4O3S",
+            "mw": 96.107,
+            "smiles": "CS(=O)(=O)O"
+        },
+    "35":
+        {
+            "suffix": "Z",
+            "formula": "H3O4P",
+            "mw": 97.99399999999999,
+            "smiles": "O=P(O)(O)O"
+        },
+    "36":
+        {
+            "suffix": "U",
+            "formula": "H2O4S",
+            "mw": 98.07899999999998,
+            "smiles": "O=S(=O)(O)O"
+        },
+    "37":
+        {
+            "suffix": "R",
+            "formula": "HNO3",
+            "mw": 63.01200000000001,
+            "smiles": "O=[N+]([O-])O"
+        },
+    "38":
+        {
+            "suffix": "H",
+            "formula": "H4N+",
+            "mw": 18.039,
+            "smiles": "[NH4+]"
+        },
+    "39":
+        {
+            "suffix": "H",
+            "formula": "C7H8O3S",
+            "mw": 172.205,
+            "smiles": "Cc1ccc(S(=O)(=O)[O-])cc1"
         }
 }
