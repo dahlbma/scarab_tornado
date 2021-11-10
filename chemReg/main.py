@@ -437,31 +437,41 @@ class LoadSDF(QDialog):
     def __init__(self, token):
         super(LoadSDF, self).__init__()
         self.token = token
+        self.sdfilename = None
         self.iMolCount = 0
         self.iNrElnIds = None
         self.saElnIds = None
+        self.ElnIdsOK = False
         loadUi(resource_path("sdfReg.ui"), self)
         self.pbar.setValue(0)
         self.pbar.hide()
         submitters = dbInterface.getColComboData(self.token, 'chemist')
         self.submitter_cb.addItems(submitters)
+        self.submitter_cb.currentTextChanged.connect(self.check_fields)
+        
         compoundTypes = dbInterface.getColComboData(self.token, 'compound_type')
         self.compoundtype_cb.addItems(compoundTypes)
-
+        self.compoundtype_cb.currentTextChanged.connect(self.check_fields)
+        
         projects = dbInterface.getColComboData(self.token, 'project')
         self.project_cb.addItems(projects)
-
+        self.project_cb.currentTextChanged.connect(self.check_fields)
+        
         suppliers = dbInterface.getColComboData(self.token, 'supplier')
         self.supplier_cb.addItems(suppliers)
+        self.supplier_cb.currentTextChanged.connect(self.check_fields)
         
         solvents = dbInterface.getColComboData(self.token, 'solvent')
         self.solvent_cb.addItems(solvents)
+        self.solvent_cb.currentTextChanged.connect(self.check_fields)
         
         productTypes = dbInterface.getColComboData(self.token, 'product')
         self.producttype_cb.addItems(productTypes)
+        self.producttype_cb.currentTextChanged.connect(self.check_fields)
         
         libraryIds = dbInterface.getColComboData(self.token, 'library_id')
         self.library_cb.addItems(libraryIds)
+        self.library_cb.currentTextChanged.connect(self.check_fields)
 
         self.upload_btn.setEnabled(False)
         self.upload_btn.clicked.connect(self.uploadSDFile)
@@ -469,9 +479,24 @@ class LoadSDF(QDialog):
         self.cancel_btn.clicked.connect(self.closeWindow)
 
         self.elnids_text.textChanged.connect(self.parseElnIds)
+        self.sdfname_lab.setText(' ')
 
         self.exec_()
         self.show()
+    
+    def check_fields(self):
+        if self.sdfilename == None or \
+           self.submitter_cb.currentText() == '' or \
+           self.compoundtype_cb.currentText() == '' or \
+           self.project_cb.currentText() == '' or \
+           self.supplier_cb.currentText() == '' or \
+           self.solvent_cb.currentText() == '' or \
+           self.producttype_cb.currentText() == '' or \
+           self.library_cb.currentText() == '' or \
+           self.ElnIdsOK == False:
+            self.upload_btn.setEnabled(False)
+        else:
+            self.upload_btn.setEnabled(True)
 
     def parseElnIds(self):
         sIds = self.elnids_text.toPlainText()
@@ -481,12 +506,15 @@ class LoadSDF(QDialog):
         for sId in saStrings:
             if len(re.findall(pattern, sId)) == 1:
                 iElnIdsFound += 1
-                if iElnIdsFound == self.iNrElnIds and \
-                   len(saStrings) == self.iNrElnIds:
-                    self.upload_btn.setEnabled(True)
-                    self.saElnIds = saStrings
-                else:    
-                    self.upload_btn.setEnabled(False)
+        if iElnIdsFound == self.iNrElnIds and len(saStrings) == iElnIdsFound:
+            print("ElnIds ok")
+            self.saElnIds = saStrings
+            self.ElnIdsOK = True
+        else:
+            print("ElnIds not ok")
+            self.saElnIds = None
+            self.ElnIdsOK = False
+        self.check_fields()
 
     def getNextMolecule(self, sFile):
         sMol = b""
@@ -648,6 +676,10 @@ class LoadSDF(QDialog):
         self.purity_cb.clear()
         self.purity_cb.addItems(saTags)
         self.sdfilename = fname[0]
+        if len(self.sdfilename) > 40:
+            self.sdfname_lab.setText(self.sdfilename[:5] + "..." + self.sdfilename[-15:])
+        else:
+            self.sdfname_lab.setText(self.sdfilename)
 
 
 class SearchScreen(QMainWindow):
