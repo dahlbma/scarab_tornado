@@ -10,6 +10,7 @@ import dbInterface
 import os
 import subprocess, platform
 import shutil
+import datetime
 import re
 import codecs
 import traceback
@@ -73,10 +74,13 @@ def resource_path(relative_path):
 
 def open_file(filename):
     # open file with default OS application
+    # opens folders too
     if platform.system() == 'Windows':
         proc = subprocess.Popen("start " + filename, shell=True)
-    else:
+    elif platform.system() == 'Linux':
         proc = subprocess.Popen("xdg-open " + filename, shell=True)
+    elif platform.system() == 'Darwin':
+        proc = subprocess.Popen("open " + filename, shell=True)
     return proc
 
 def displayMolfile(self):
@@ -537,8 +541,9 @@ class LoadSDF(QDialog):
     def uploadSDFile(self):
         mol_info = {'external_id': self.cmpidfield_cb.currentText()}
         f = open(self.sdfilename, "rb")
-        f_err = open("error.sdf", "wb")
-        f_err_msg = open("error_msg.txt", "w")
+        currtime = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        f_err = open(f"error_{currtime}.sdf", "wb")
+        f_err_msg = open(f"error_msg_{currtime}.log", "w")
         lError = False
         iTickCount = 0
         iBatchCount = 0
@@ -599,10 +604,12 @@ class LoadSDF(QDialog):
             send_msg("SDFile upload done", f"Uploaded {self.iMolCount} compounds")
         else:
             send_msg("Some errors occured",
-                     f"Failed to register some molecules, see error_msg.txt and error.sdf",
+                     f"Failed to register some molecules, see error_msg_{currtime}.log and error_{currtime}.sdf",
                      QMessageBox.Warning)
             f_err.close()
             f_err_msg.close()
+            logger.error(f"Wrote failed molecule registration to error_{currtime}.sdf and info to error_msg_{currtime}.log")
+            open_file(os.getcwd())
 
             
     def closeWindow(self):
