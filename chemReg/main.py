@@ -363,9 +363,7 @@ class RegScreen(QMainWindow):
         image = QImage()
         self.structure_lab.setScaledContents(True)
         image.loadFromData(requests.get(sFile).content)
-        self.structure_lab.setPixmap(QPixmap(image))
-
-    
+        self.structure_lab.setPixmap(QPixmap(image))    
         
     def uploadMolfile(self):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 
@@ -376,16 +374,16 @@ class RegScreen(QMainWindow):
             updateMoleculeProperties(self)
             
     def editMolFile(self, event=None):
-        fname = "tmp.mol"
-        fname_path = resource_path(fname)
+        fname = "tmp.mol" # temp file name
+        fname_path = resource_path(fname) # file location / actual file name
         if self.structure_lab.pixmap().isNull():
             # no loaded mol, copying template
             shutil.copy(resource_path("nostruct.mol"), fname_path)
         else:
             # download molfile for selected regno, write to 'tmp.mol'
-            tmp_mol = dbInterface.getMolFile(self.token, self.regno)
+            tmp_mol_str = dbInterface.getMolFile(self.token, self.regno)
             tmp_file = open(fname_path, "w")
-            n = tmp_file.write(tmp_mol)
+            n = tmp_file.write(tmp_mol_str)
             tmp_file.close()
         retcode = open_file(fname_path)
         # confirm dialogue
@@ -402,7 +400,7 @@ class RegScreen(QMainWindow):
         ok_msg.setWindowTitle("Edit " + fname)
         if (msg.clickedButton() == btnS):
             # save changes
-            postMolFile(self, fname, self.regno)
+            postMolFile(self, fname_path, self.regno)
             displayMolfile(self)
             ok_msg.setText("Updated .mol file")
         else:
@@ -410,7 +408,7 @@ class RegScreen(QMainWindow):
             ok_msg.setText("Did not update .mol file")
         ok_msg.exec_()
         # cleanup, remove tmp.mol
-        os.remove(fname) 
+        os.remove(fname_path) 
     
     def changeEvent(self, value='', action='doNothing'):
         if action == 'doNothing':
