@@ -15,10 +15,6 @@ from io import StringIO
 import sys
 import codecs
 
-# Read the salt file
-with open('salts.json') as json_file:
-    salts = json.load(json_file)
-
 logger = logging.getLogger(__name__)
 
 db_connection = MySQLdb.connect(
@@ -29,6 +25,14 @@ db_connection = MySQLdb.connect(
 )
 db_connection.autocommit(True)
 cur = db_connection.cursor()
+
+
+# Read the salt file
+#with open('salts.json') as json_file:
+#    salts = json.load(json_file)
+sSql = f'select pkey, suffix, smiles, mf, mw from salts order by pkey'
+cur.execute(sSql)
+salts = cur.fetchall()
 
 def sqlExec(sSql, values=None):
     if values == None:
@@ -71,12 +75,12 @@ def getSaltLetters(saSmileFragments):
         Chem.rdmolops.RemoveStereochemistry(mol)
         flattenSmile = Chem.rdmolfiles.MolToSmiles(mol)
         canonSmile = Chem.CanonSmiles(flattenSmile)
-        for key in salts.items():
-            saltMol = Chem.MolFromSmiles(key[1]['smiles'])
+        for salt in salts:
+            saltMol = Chem.MolFromSmiles(salt[2])
             Chem.rdmolops.RemoveStereochemistry(saltMol)
-            saltSmile = Chem.MolToSmiles(saltMol)
-            if canonSmile == Chem.CanonSmiles(saltSmile):
-                saSaltLetters += key[1]['suffix']
+            saltSmile = salt[2]
+            if canonSmile == saltSmile:
+                saSaltLetters += salt[1]
                 break
 
     if saSaltLetters == '':
@@ -93,13 +97,14 @@ def getMoleculeProperties(self, molfile):
     sio = sys.stderr = StringIO()
     Chem.WrapLogs()
     mol = Chem.MolFromMolBlock(molfile)
+    sSmiles = Chem.MolToSmiles(mol)
     try:
         C_MF = rdMolDescriptors.CalcMolFormula(mol)
         molmassFormula = Formula(C_MF.replace('-', ''))
         C_CHNS = getAtomicComposition(molmassFormula.composition())
     except Exception as e:
         print(str(e))
-        return (False, False, False, False, False, sio.getvalue())
+        return (False, False, False, False, False, f'{sio.getvalue()}')
     C_MW = Descriptors.MolWt(mol)
     C_MONOISO = Descriptors.ExactMolWt(mol)
 
@@ -107,7 +112,7 @@ def getMoleculeProperties(self, molfile):
     res = remover.StripMol(mol)
     numAtoms = mol.GetNumAtoms()
     salt = []
-    saSalts = list()
+    saSalts = ''
     if res.GetNumAtoms() != numAtoms:
         res_mw = Descriptors.MolWt(res)
             
@@ -116,7 +121,7 @@ def getMoleculeProperties(self, molfile):
         saSmileFragments = sSmiles.split('.')
         if len(saSmileFragments) > 1:
             saSalts = getSaltLetters(saSmileFragments)
-    return (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, '')
+    return (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, sSmiles, '')
 
         
 @jwtauth
@@ -135,16 +140,22 @@ class chemRegAddMol(tornado.web.RequestHandler):
         supplier_batch = self.get_body_argument('supplier_batch')
         purity = self.get_body_argument('purity')
 
-        (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, errorMessage) = getMoleculeProperties(self, molfile)
+        (C_MF,
+         C_MW,
+         C_MONOISO,
+         C_CHNS,
+         saSalts,
+         sSmiles,
+         errorMessage) = getMoleculeProperties(self, molfile)
         if C_MF == False:
             self.set_status(500)
-            self.finish(f'Molfile failed {external_id} {errorMessage}')
-            print(f'Molfile failed {external_id}')
+            self.finish(f'Molfile failed {external_id} {errorMessage} {sSmiles}')
+            print(f'Molfile failed {external_id} {errorMessage} {sSmiles}')
             return
         if saSalts == False:
             self.set_status(500)
-            self.finish(f'Unknown salt in molfile for {external_id} {errorMessage}')
-            print(f'Unknown salt in molfile for {external_id}')
+            self.finish(f'Unknown salt in molfile for {external_id} {errorMessage} {sSmiles}')
+            print(f'Unknown salt in molfile for {external_id} {errorMessage} {sSmiles}')
             return
         ####
         # Get pkey for tmp_mol table
@@ -195,6 +206,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
         C_MF,
         C_MW,
         C_MONOISO,
+        SUFFIX,
         molfile)
         values (
         '{newRegno}',
@@ -213,6 +225,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
         '{C_MF}',
         {C_MW},
         {C_MONOISO},
+        '{saSalts}',
         '{molfile}'
         )
         """
@@ -277,7 +290,13 @@ class LoadMolfile(tornado.web.RequestHandler):
         regnoBody = self.request.files['regno'][0]
         molfile = tornado.escape.xhtml_unescape(fBody.body)
         regno = tornado.escape.xhtml_unescape(regnoBody.body)
-        (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, errorMessage) = getMoleculeProperties(self, molfile)
+        (C_MF,
+         C_MW,
+         C_MONOISO,
+         C_CHNS,
+         saSalts,
+         sSmiles,
+         errorMessage) = getMoleculeProperties(self, molfile)
         if C_MF == False:
             self.set_status(500)
             self.finish(f'Molfile failed {regno} {errorMessage}')

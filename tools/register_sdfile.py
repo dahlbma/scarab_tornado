@@ -56,7 +56,7 @@ def createTable(sSchema, sTable, sOtherCols):
     {sOtherCols}) character set latin1 ENGINE = InnoDB
     """
     cur.execute(sSql)
-    '''
+
     sSql = f"""
     create table {sSchema}.{sTable}_key
     ( molid INTEGER PRIMARY KEY,
@@ -77,7 +77,7 @@ def createTable(sSchema, sTable, sOtherCols):
     molkey mediumblob) character set latin1 ENGINE = InnoDB
     """
     cur.execute(sSql)
-    '''
+
     
 def dropTables(sSchema, sTable):
     sSql = f"""
@@ -153,7 +153,6 @@ while True:
         insertMolecule(sSchema, sTable, sMol, sCols, sValues)
     iCount += 1
 
-quit()
 sSql = f"""
     insert into {sSchema}.{sTable}_key
     select molid, fp(mol, 'sss') as molkey from {sSchema}.{sTable}
