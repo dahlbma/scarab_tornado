@@ -8,7 +8,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('*.ui', '.')],
+    datas=[('*.ui', '.'), ('nostruct.mol', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
