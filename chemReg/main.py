@@ -507,13 +507,11 @@ class LoadSDF(QDialog):
             if len(re.findall(pattern, sId)) == 1:
                 iElnIdsFound += 1
         if iElnIdsFound == self.iNrElnIds and len(saStrings) == iElnIdsFound:
-            print("ElnIds ok")
             self.saElnIds = saStrings
             self.ElnIdsOK = True
         else:
-            print("ElnIds not ok")
             self.saElnIds = None
-            self.ElnIdsOK = False
+            self.ElnIdsOk = False
         self.check_fields()
 
     def getNextMolecule(self, sFile):
