@@ -85,6 +85,7 @@ def open_file(filename):
     return proc
 
 def displayMolfile(self):
+    dbInterface.createMolImage(self.token, self.regno)
     sFile = "http://esox3.scilifelab.se:8082/mols/" + self.regno + ".png"
     image = QImage()
     self.structure_lab.setScaledContents(True)
@@ -96,7 +97,6 @@ def postMolFile(self, fname, regno):
     f = {'file': open(fname, 'rb'), 'regno': regno}
     r = requests.post('http://esox3.scilifelab.se:8082/api/loadMolfile',
                       headers={'token': self.token}, files=f)
-
 
 def updateMoleculeProperties(self):
     avgMolMass = dbInterface.getTextColumn(self.token,
@@ -364,13 +364,6 @@ class RegScreen(QMainWindow):
                                                   self.libraryid_cb.currentText())
         self.librarydesc_eb.setText(library_name)
 
-    def getMolfile(self):
-        sFile = "http://esox3.scilifelab.se:8082/mols/" + self.regno + ".png"
-        image = QImage()
-        self.structure_lab.setScaledContents(True)
-        image.loadFromData(requests.get(sFile).content)
-        self.structure_lab.setPixmap(QPixmap(image))    
-        
     def uploadMolfile(self):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 
                                                 '.', "Molfiles (*.mol)")
