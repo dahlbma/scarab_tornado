@@ -86,10 +86,8 @@ def getSaltLetters(saSmileFragments):
     if saSaltLetters == '':
         # This is an error state, there are multiple fragments in
         # the molfile but there is no match against the salt database
-        print(saSmileFragments)
+        logger.info(f"Can't find salt in fragments {saSmileFragments}")
         return False
-    print(saSaltLetters)
-    print(saSmileFragments)
     return saSaltLetters
 
     
@@ -224,8 +222,6 @@ class chemRegAddMol(tornado.web.RequestHandler):
         """
         cur.execute(sSql)
         
-        '''
-        createPngFromMolfile(str(newRegno), molfile)
         ####
         # Do exact match with molecule against present molucules
         
@@ -258,7 +254,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
             from chem_reg.mol where regno = '{newRegno}'
             """
             cur.execute(sSql)
-        '''            
+
         ####
         # Cleanup tmp_mol table, delete the temporary molfile
         #sSql = f"""delete from chem_reg.tmp_mol where pkey={pkey}"""
@@ -288,6 +284,19 @@ class GetRegnoData(tornado.web.RequestHandler):
         self.write(res)
 
 
+@jwtauth
+class CreateMolImage(tornado.web.RequestHandler):
+    def get(self):
+        regno = self.get_argument("regno")
+        sSql = f"""select molfile from chem_reg.chem_info
+                   where regno = '{regno}'"""
+        cur.execute(sSql)
+        molfile = cur.fetchall()
+        if len(molfile) > 0 and molfile[0][0] != None:
+            createPngFromMolfile(regno, molfile[0][0])
+        self.finish()
+
+        
 @jwtauth
 class LoadMolfile(tornado.web.RequestHandler):
     def post(self):
@@ -338,8 +347,8 @@ class DeleteRegno(tornado.web.RequestHandler):
                   regno=%s"""
         cur.execute(sSql, val)
         res = cur.fetchall()
-        logger.info('Deleting ' + str(res))
         if len(res) > 0:
+            logger.info('Deleting ' + str(res))
             sSql = """delete from chem_reg.chem_info
                       where regno = %s"""
             cur.execute(sSql, val)
