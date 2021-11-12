@@ -59,7 +59,7 @@ def getAtomicComposition(saComp):
 def createPngFromMolfile(regno, molfile):
     m = Chem.MolFromMolBlock(molfile)
     try:
-        Draw.MolToFile(m, 'mols/' + regno + '.png')
+        Draw.MolToFile(m, f'mols/{regno}.png', size=(280, 280))
     except:
         '''
         # Check:
@@ -150,20 +150,13 @@ class chemRegAddMol(tornado.web.RequestHandler):
         if C_MF == False:
             self.set_status(500)
             self.finish(f'Molfile failed {external_id} {errorMessage} {sSmiles}')
-            print(f'Molfile failed {external_id} {errorMessage} {sSmiles}')
+            logger.info(f'Molfile failed {external_id} {errorMessage} {sSmiles}')
             return
         if saSalts == False:
             self.set_status(500)
             self.finish(f'Unknown salt in molfile for {external_id} {errorMessage} {sSmiles}')
-            print(f'Unknown salt in molfile for {external_id} {errorMessage} {sSmiles}')
+            logger.info(f'Unknown salt in molfile for {external_id} {errorMessage} {sSmiles}')
             return
-        ####
-        # Get pkey for tmp_mol table
-        #sSql = "select pkey from chem_reg.tmp_mol_sequence"
-        #cur.execute(sSql)
-        #pkey = cur.fetchall()[0][0] +1
-        #sSql = f"update chem_reg.tmp_mol_sequence set pkey={pkey}"
-        #cur.execute(sSql)
 
         def to_bytes(s):
             if type(s) is bytes:
@@ -172,7 +165,6 @@ class chemRegAddMol(tornado.web.RequestHandler):
                 return codecs.encode(s, 'utf-8')
             else:
                 raise TypeError("Expected bytes or string, but got %s." % type(s))
-
 
         ####
         # Get new regno
@@ -225,14 +217,19 @@ class chemRegAddMol(tornado.web.RequestHandler):
         ####
         # Do exact match with molecule against present molucules
         
+        #sSql = f"""
+        #select bin2smiles(chem_reg.mol.mol) from
+        #  chem_reg.mol_ukey join mol on (chem_reg.mol.molid=chem_reg.mol_ukey.molid)
+        #where uniquekey(mol2bin('{molfile}', 'mol'))=molkey
+        #"""
         sSql = f"""
-        select bin2smiles(chem_reg.mol.mol) from
-          chem_reg.mol_ukey join mol on (chem_reg.mol.molid=chem_reg.mol_ukey.molid)
+        select bin2smiles(bcpvs.jcsepmol_moltable.mol) from
+          bcpvs.jcsepmol_moltable_ukey join bcpvs.jcsepmol_moltable on
+                 (bcpvs.jcsepmol_moltable.molid=bcpvs.jcsepmol_moltable_ukey.molid)
         where uniquekey(mol2bin('{molfile}', 'mol'))=molkey
         """
         cur.execute(sSql)
         mols = cur.fetchall()
-
         ####
         # Reg the molfile in chem_info if the molfile is unique        
         if len(mols) == 0:
@@ -254,11 +251,6 @@ class chemRegAddMol(tornado.web.RequestHandler):
             from chem_reg.mol where regno = '{newRegno}'
             """
             cur.execute(sSql)
-
-        ####
-        # Cleanup tmp_mol table, delete the temporary molfile
-        #sSql = f"""delete from chem_reg.tmp_mol where pkey={pkey}"""
-        #cur.execute(sSql)
 
 
 @jwtauth
