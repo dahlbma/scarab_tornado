@@ -175,6 +175,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
         insert into chem_reg.chem_info (
         regno,
         jpage,
+        rdate,
         chemist,
         compound_type,
         project,
@@ -194,6 +195,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
         values (
         '{newRegno}',
         '{jpage}',
+        now(),
         '{chemist}',
         '{compound_type}',
         '{project}',
