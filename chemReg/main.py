@@ -244,7 +244,13 @@ class LoginScreen(QDialog):
         loadUi(resource_path("welcomescreen.ui"), self)
         self.passwordfield.setEchoMode(QtWidgets.QLineEdit.Password)
         self.login.clicked.connect(self.loginfunction)
-        
+    
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_Return or event.key() == QtCore.Qt.Key_Enter:
+            self.loginfunction()
+        else:
+            super().keyPressEvent(qKeyEvent)
+    
     def loginfunction(self):
         user = self.usernamefield.text()
         password = self.passwordfield.text()
