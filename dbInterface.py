@@ -15,10 +15,6 @@ from io import StringIO
 import sys
 import codecs
 
-# Read the salt file
-with open('salts.json') as json_file:
-    salts = json.load(json_file)
-
 logger = logging.getLogger(__name__)
 
 db_connection = MySQLdb.connect(
@@ -29,6 +25,14 @@ db_connection = MySQLdb.connect(
 )
 db_connection.autocommit(True)
 cur = db_connection.cursor()
+
+
+# Read the salt file
+#with open('salts.json') as json_file:
+#    salts = json.load(json_file)
+sSql = f'select pkey, suffix, smiles, mf, mw from salts order by pkey'
+cur.execute(sSql)
+salts = cur.fetchall()
 
 def sqlExec(sSql, values=None):
     if values == None:
@@ -71,21 +75,19 @@ def getSaltLetters(saSmileFragments):
         Chem.rdmolops.RemoveStereochemistry(mol)
         flattenSmile = Chem.rdmolfiles.MolToSmiles(mol)
         canonSmile = Chem.CanonSmiles(flattenSmile)
-        for key in salts.items():
-            saltMol = Chem.MolFromSmiles(key[1]['smiles'])
+        for salt in salts:
+            saltMol = Chem.MolFromSmiles(salt[2])
             Chem.rdmolops.RemoveStereochemistry(saltMol)
-            saltSmile = Chem.MolToSmiles(saltMol)
-            if canonSmile == Chem.CanonSmiles(saltSmile):
-                saSaltLetters += key[1]['suffix']
+            saltSmile = salt[2]
+            if canonSmile == saltSmile:
+                saSaltLetters += salt[1]
                 break
 
     if saSaltLetters == '':
         # This is an error state, there are multiple fragments in
         # the molfile but there is no match against the salt database
-        print(saSmileFragments)
+        logger.info(f"Can't find salt in fragments {saSmileFragments}")
         return False
-    print(saSaltLetters)
-    print(saSmileFragments)
     return saSaltLetters
 
     
@@ -93,13 +95,16 @@ def getMoleculeProperties(self, molfile):
     sio = sys.stderr = StringIO()
     Chem.WrapLogs()
     mol = Chem.MolFromMolBlock(molfile)
+    sSmiles = Chem.MolToSmiles(mol)
+    if sSmiles == '':
+        return (False, False, False, False, False, '', 'Empty molfile')
     try:
         C_MF = rdMolDescriptors.CalcMolFormula(mol)
         molmassFormula = Formula(C_MF.replace('-', ''))
         C_CHNS = getAtomicComposition(molmassFormula.composition())
     except Exception as e:
         print(str(e))
-        return (False, False, False, False, False, sio.getvalue())
+        return (False, False, False, False, False, f'{sio.getvalue()}')
     C_MW = Descriptors.MolWt(mol)
     C_MONOISO = Descriptors.ExactMolWt(mol)
 
@@ -107,7 +112,7 @@ def getMoleculeProperties(self, molfile):
     res = remover.StripMol(mol)
     numAtoms = mol.GetNumAtoms()
     salt = []
-    saSalts = list()
+    saSalts = ''
     if res.GetNumAtoms() != numAtoms:
         res_mw = Descriptors.MolWt(res)
             
@@ -116,7 +121,7 @@ def getMoleculeProperties(self, molfile):
         saSmileFragments = sSmiles.split('.')
         if len(saSmileFragments) > 1:
             saSalts = getSaltLetters(saSmileFragments)
-    return (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, '')
+    return (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, sSmiles, '')
 
         
 @jwtauth
@@ -135,24 +140,30 @@ class chemRegAddMol(tornado.web.RequestHandler):
         supplier_batch = self.get_body_argument('supplier_batch')
         purity = self.get_body_argument('purity')
 
-        (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, errorMessage) = getMoleculeProperties(self, molfile)
+        (C_MF,
+         C_MW,
+         C_MONOISO,
+         C_CHNS,
+         saSalts,
+         sSmiles,
+         errorMessage) = getMoleculeProperties(self, molfile)
         if C_MF == False:
             self.set_status(500)
-            self.finish(f'Molfile failed {external_id} {errorMessage}')
-            print(f'Molfile failed {external_id}')
+            self.finish(f'Molfile failed {external_id} {errorMessage} {sSmiles}')
+            print(f'Molfile failed {external_id} {errorMessage} {sSmiles}')
             return
         if saSalts == False:
             self.set_status(500)
-            self.finish(f'Unknown salt in molfile for {external_id} {errorMessage}')
-            print(f'Unknown salt in molfile for {external_id}')
+            self.finish(f'Unknown salt in molfile for {external_id} {errorMessage} {sSmiles}')
+            print(f'Unknown salt in molfile for {external_id} {errorMessage} {sSmiles}')
             return
         ####
         # Get pkey for tmp_mol table
-        sSql = "select pkey from chem_reg.tmp_mol_sequence"
-        cur.execute(sSql)
-        pkey = cur.fetchall()[0][0] +1
-        sSql = f"update chem_reg.tmp_mol_sequence set pkey={pkey}"
-        cur.execute(sSql)
+        #sSql = "select pkey from chem_reg.tmp_mol_sequence"
+        #cur.execute(sSql)
+        #pkey = cur.fetchall()[0][0] +1
+        #sSql = f"update chem_reg.tmp_mol_sequence set pkey={pkey}"
+        #cur.execute(sSql)
 
         def to_bytes(s):
             if type(s) is bytes:
@@ -162,15 +173,6 @@ class chemRegAddMol(tornado.web.RequestHandler):
             else:
                 raise TypeError("Expected bytes or string, but got %s." % type(s))
 
-        ####
-        # Do exact match with molecule against present molucules
-        sSql = f"""
-        select bin2smiles(chem_reg.mol.mol) from
-          chem_reg.mol_ukey join mol on (chem_reg.mol.molid=chem_reg.mol_ukey.molid)
-        where uniquekey(mol2bin('{molfile}', 'mol'))=molkey
-        """
-        cur.execute(sSql)
-        mols = cur.fetchall()
 
         ####
         # Get new regno
@@ -195,6 +197,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
         C_MF,
         C_MW,
         C_MONOISO,
+        SUFFIX,
         molfile)
         values (
         '{newRegno}',
@@ -213,12 +216,23 @@ class chemRegAddMol(tornado.web.RequestHandler):
         '{C_MF}',
         {C_MW},
         {C_MONOISO},
+        '{saSalts}',
         '{molfile}'
         )
         """
         cur.execute(sSql)
-        createPngFromMolfile(str(newRegno), molfile)
         
+        ####
+        # Do exact match with molecule against present molucules
+        
+        sSql = f"""
+        select bin2smiles(chem_reg.mol.mol) from
+          chem_reg.mol_ukey join mol on (chem_reg.mol.molid=chem_reg.mol_ukey.molid)
+        where uniquekey(mol2bin('{molfile}', 'mol'))=molkey
+        """
+        cur.execute(sSql)
+        mols = cur.fetchall()
+
         ####
         # Reg the molfile in chem_info if the molfile is unique        
         if len(mols) == 0:
@@ -240,7 +254,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
             from chem_reg.mol where regno = '{newRegno}'
             """
             cur.execute(sSql)
-            
+
         ####
         # Cleanup tmp_mol table, delete the temporary molfile
         #sSql = f"""delete from chem_reg.tmp_mol where pkey={pkey}"""
@@ -271,13 +285,32 @@ class GetRegnoData(tornado.web.RequestHandler):
 
 
 @jwtauth
+class CreateMolImage(tornado.web.RequestHandler):
+    def get(self):
+        regno = self.get_argument("regno")
+        sSql = f"""select molfile from chem_reg.chem_info
+                   where regno = '{regno}'"""
+        cur.execute(sSql)
+        molfile = cur.fetchall()
+        if len(molfile) > 0 and molfile[0][0] != None:
+            createPngFromMolfile(regno, molfile[0][0])
+        self.finish()
+
+        
+@jwtauth
 class LoadMolfile(tornado.web.RequestHandler):
     def post(self):
         fBody = self.request.files['file'][0]
         regnoBody = self.request.files['regno'][0]
         molfile = tornado.escape.xhtml_unescape(fBody.body)
         regno = tornado.escape.xhtml_unescape(regnoBody.body)
-        (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, errorMessage) = getMoleculeProperties(self, molfile)
+        (C_MF,
+         C_MW,
+         C_MONOISO,
+         C_CHNS,
+         saSalts,
+         sSmiles,
+         errorMessage) = getMoleculeProperties(self, molfile)
         if C_MF == False:
             self.set_status(500)
             self.finish(f'Molfile failed {regno} {errorMessage}')
@@ -314,8 +347,8 @@ class DeleteRegno(tornado.web.RequestHandler):
                   regno=%s"""
         cur.execute(sSql, val)
         res = cur.fetchall()
-        logger.info('Deleting ' + str(res))
         if len(res) > 0:
+            logger.info('Deleting ' + str(res))
             sSql = """delete from chem_reg.chem_info
                       where regno = %s"""
             cur.execute(sSql, val)

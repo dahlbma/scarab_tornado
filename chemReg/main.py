@@ -33,7 +33,8 @@ def setLogger(name='logger',
     # file logging
     fh = logging.FileHandler(file)
     fh.setLevel(level)
-    formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
+    formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(message)s',
+                                  datefmt='%m/%d/%Y %H:%M:%S')
     fh.setFormatter(formatter)
 
     logger.addHandler(ch)
@@ -84,6 +85,7 @@ def open_file(filename):
     return proc
 
 def displayMolfile(self):
+    dbInterface.createMolImage(self.token, self.regno)
     sFile = "http://esox3.scilifelab.se:8082/mols/" + self.regno + ".png"
     image = QImage()
     self.structure_lab.setScaledContents(True)
@@ -93,8 +95,8 @@ def displayMolfile(self):
 def postMolFile(self, fname, regno):
     logger.info("posting file %s to server", fname)
     f = {'file': open(fname, 'rb'), 'regno': regno}
-    r = requests.post('http://esox3.scilifelab.se:8082/api/loadMolfile', headers={'token': self.token}, files=f)
-
+    r = requests.post('http://esox3.scilifelab.se:8082/api/loadMolfile',
+                      headers={'token': self.token}, files=f)
 
 def updateMoleculeProperties(self):
     avgMolMass = dbInterface.getTextColumn(self.token,
@@ -362,13 +364,6 @@ class RegScreen(QMainWindow):
                                                   self.libraryid_cb.currentText())
         self.librarydesc_eb.setText(library_name)
 
-    def getMolfile(self):
-        sFile = "http://esox3.scilifelab.se:8082/mols/" + self.regno + ".png"
-        image = QImage()
-        self.structure_lab.setScaledContents(True)
-        image.loadFromData(requests.get(sFile).content)
-        self.structure_lab.setPixmap(QPixmap(image))    
-        
     def uploadMolfile(self):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 
                                                 '.', "Molfiles (*.mol)")
@@ -525,12 +520,12 @@ class LoadSDF(QDialog):
             line = line.replace(b'\r\n', b'\n')
             line = line.replace(b"'", b"")
             # RDKit can't handle empty first line in molfile
-            if iCount == 1 and line == b'\n':
+            if iCount == 1 and line in (b'\n', b' \n', b''):
                 line = b'id\n'
                 
             sMol += line
             if b'$$$$' in line:
-                return sMol[:-1] # + b"'"
+                return sMol
         return ""
 
     def to_bytes(self, s):
@@ -568,8 +563,10 @@ class LoadSDF(QDialog):
         mol_info = {'external_id': self.cmpidfield_cb.currentText()}
         f = open(self.sdfilename, "rb")
         currtime = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-        f_err = open(f"error_{currtime}.sdf", "wb")
-        f_err_msg = open(f"error_msg_{currtime}.log", "w")
+        f_err = open(f"error.sdf", "wb")
+        #f_err = open(f"error_{currtime}.sdf", "wb")
+        f_err_msg = open(f"error_msg.log", "w")
+        #f_err_msg = open(f"error_msg_{currtime}.log", "w")
         lError = False
         iTickCount = 0
         iBatchCount = 0
@@ -619,7 +616,7 @@ class LoadSDF(QDialog):
             dTags['library_id'] = self.library_cb.currentText()
             lStatus, sMessage = dbInterface.uploadMolFile(dTags, self.token)
             if lStatus != True:
-                f_err.write(b'\n')
+                #f_err.write(b'\n')
                 f_err.write(sMol)
                 f_err_msg.write(f"{str(dTags['external_id'])} {str(sMessage)}\n")
                 f_err_msg.flush()

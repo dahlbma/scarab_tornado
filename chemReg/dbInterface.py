@@ -80,3 +80,9 @@ def getMolFile(token, regno):
     res = r.content.decode()
     return res
     
+def createMolImage(token, regno):
+    r = requests.get('http://esox3.scilifelab.se:8082/api/createMolImage',
+                     params={'regno': regno},
+                     headers={'token': token})
+    res = r.content.decode()
+    return res
