@@ -511,7 +511,7 @@ class LoadSDF(QDialog):
             self.ElnIdsOK = True
         else:
             self.saElnIds = None
-            self.ElnIdsOk = False
+            self.ElnIdsOK = False
         self.check_fields()
 
     def getNextMolecule(self, sFile):
