@@ -218,12 +218,6 @@ class chemRegAddMol(tornado.web.RequestHandler):
         
         ####
         # Do exact match with molecule against present molucules
-        
-        #sSql = f"""
-        #select bin2smiles(chem_reg.mol.mol) from
-        #  chem_reg.mol_ukey join mol on (chem_reg.mol.molid=chem_reg.mol_ukey.molid)
-        #where uniquekey(mol2bin('{molfile}', 'mol'))=molkey
-        #"""
         sSql = f"""
         select bin2smiles(bcpvs.jcsepmol_moltable.mol) from
           bcpvs.jcsepmol_moltable_ukey join bcpvs.jcsepmol_moltable on
