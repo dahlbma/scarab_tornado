@@ -562,11 +562,11 @@ class LoadSDF(QDialog):
     def uploadSDFile(self):
         mol_info = {'external_id': self.cmpidfield_cb.currentText()}
         f = open(self.sdfilename, "rb")
-        currtime = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        currtime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         f_err = open(f"error.sdf", "wb")
-        #f_err = open(f"error_{currtime}.sdf", "wb")
+        f_err = open(f"error_{currtime}.sdf", "wb")
         f_err_msg = open(f"error_msg.log", "w")
-        #f_err_msg = open(f"error_msg_{currtime}.log", "w")
+        f_err_msg = open(f"error_msg_{currtime}.log", "w")
         lError = False
         iTickCount = 0
         iBatchCount = 0
