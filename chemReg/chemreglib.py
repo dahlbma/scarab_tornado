@@ -74,7 +74,7 @@ def displayMolfile(self):
     self.structure_lab.setPixmap(QPixmap(image))
 
 def postMolFile(self, fname, regno):
-    logger.info("posting file %s to server", fname)
+    self.logger.info("posting file %s to server", fname)
     f = {'file': open(fname, 'rb'), 'regno': regno}
     r = requests.post('http://esox3.scilifelab.se:8082/api/loadMolfile',
                       headers={'token': self.token}, files=f)
