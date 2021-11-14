@@ -95,16 +95,16 @@ def getMoleculeProperties(self, molfile):
     sio = sys.stderr = StringIO()
     Chem.WrapLogs()
     mol = Chem.MolFromMolBlock(molfile)
-    sSmiles = Chem.MolToSmiles(mol)
-    if sSmiles == '':
-        return (False, False, False, False, False, '', 'Empty molfile')
     try:
         C_MF = rdMolDescriptors.CalcMolFormula(mol)
         molmassFormula = Formula(C_MF.replace('-', ''))
         C_CHNS = getAtomicComposition(molmassFormula.composition())
     except Exception as e:
         print(str(e))
-        return (False, False, False, False, False, f'{sio.getvalue()}')
+        return (False, False, False, False, False, '', f'{sio.getvalue()}')
+    sSmiles = Chem.MolToSmiles(mol)
+    if sSmiles == '':
+        return (False, False, False, False, False, '', 'Empty molfile')
     C_MW = Descriptors.MolWt(mol)
     C_MONOISO = Descriptors.ExactMolWt(mol)
 
@@ -247,7 +247,10 @@ class chemRegAddMol(tornado.web.RequestHandler):
             from chem_reg.mol where regno = '{newRegno}'
             """
             cur.execute(sSql)
-
+            self.finish('newMolecule')
+        else:
+            self.finish('oldMolecule')
+            
 
 @jwtauth
 class Search(tornado.web.RequestHandler):
