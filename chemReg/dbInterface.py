@@ -8,7 +8,7 @@ def uploadMolFile(dict, token):
     if r.status_code != 200:
         return False, r.content
     else:
-        return True, ""
+        return True, r.content
 
 def listify(data, addBlank=True):
     res = data.content.decode()

@@ -68,6 +68,7 @@ class SearchScreen(QMainWindow):
         self.searchingInProgress = False
 
     def gotoEditRegno(self):
+        from regscreen import RegScreen
         reg = RegScreen(self.token, self.regno)
         self.window().addWidget(reg)
         self.window().setCurrentIndex(self.window().currentIndex() + 1)

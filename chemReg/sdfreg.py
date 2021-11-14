@@ -115,7 +115,6 @@ class LoadSDF(QDialog):
             return codecs.encode(s, 'utf-8')
         else:
             raise TypeError("Expected bytes or string, but got %s." % type(s))
-
     
     def getTags(self, sMol):
         sPrevLine = ""
@@ -138,7 +137,7 @@ class LoadSDF(QDialog):
             elif i[0] == str.encode(self.purity_cb.currentText()):
                 dValues['purity'] = i[1]
         return dValues
-        
+
     def uploadSDFile(self):
         mol_info = {'external_id': self.cmpidfield_cb.currentText()}
         f = open(self.sdfilename, "rb")
@@ -151,6 +150,8 @@ class LoadSDF(QDialog):
         iTicks = int(self.iMolCount / 100)
         progress = 0
         iElnId = 0
+        iNewMols = 0
+        iErrorMols = 0
         self.pbar.show()
         self.pbar.setValue(progress)
         QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
@@ -193,8 +194,10 @@ class LoadSDF(QDialog):
             dTags['product'] = self.producttype_cb.currentText()
             dTags['library_id'] = self.library_cb.currentText()
             lStatus, sMessage = dbInterface.uploadMolFile(dTags, self.token)
+            if sMessage == 'newMolecule':
+                iNewMols += 1
             if lStatus != True:
-                #f_err.write(b'\n')
+                iErrorMols += 1
                 f_err.write(sMol)
                 f_err_msg.write(f"{str(dTags['external_id'])} {str(sMessage)}\n")
                 f_err_msg.flush()
@@ -202,16 +205,19 @@ class LoadSDF(QDialog):
         self.pbar.hide()
         QApplication.restoreOverrideCursor()
         if lError == False:
-            send_msg("SDFile upload done", f"Uploaded {self.iMolCount} compounds")
+            send_msg("SDFile upload done", f'''Uploaded {self.iMolCount} compounds,
+ {iNewMols} new compounds, {self.iMolCount - iNewMols} old compounds''')
         else:
             send_msg("Some errors occured",
-                     f"Failed to register some molecules, see error_msg_{currtime}.log and error_{currtime}.sdf",
+                     f'''Failed to register {iErrorMols} molecules,
+ see error_msg_{currtime}.log and error_{currtime}.sdf,
+ {iNewMols} new compounds, {self.iMolCount - iNewMols} old compounds''',
                      QMessageBox.Warning)
             f_err.close()
             f_err_msg.close()
-            self.logger.error(f"Wrote failed molecule registration to error_{currtime}.sdf and info to error_msg_{currtime}.log")
+            self.logger.error(f'''Wrote failed molecule registration to error_{currtime}.sdf
+ and info to error_msg_{currtime}.log''')
             open_file(os.getcwd())
-
             
     def closeWindow(self):
         self.close()
