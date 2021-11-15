@@ -8,10 +8,31 @@ from loginscreen import LoginScreen
 
 def error_handler(etype, value, tb):
     err_msg = "".join(traceback.format_exception(etype, value, tb))
-    #print("error caught")
-    logging.getLogger().exception(err_msg + " from error handler\n")
+    logger.exception(err_msg)
 
-logger = setLogger("mainLogger")
+#logger = initLogger() #root logger
+
+file=os.path.join(".","chemreg.log")
+level=logging.INFO
+
+logger = logging.getLogger()
+logger.setLevel(level)
+
+# console logging
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+formatter = logging.Formatter('%(message)s')
+ch.setFormatter(formatter)
+
+# file logging
+fh = logging.FileHandler(file)
+fh.setLevel(level)
+formatter = logging.Formatter('%(asctime)s : %(name)s:%(levelname)s : %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
+fh.setFormatter(formatter)
+
+logger.addHandler(ch)
+logger.addHandler(fh)
+
 sys.excepthook = error_handler
 
 try:
@@ -38,4 +59,4 @@ try:
     widget.show()
     sys.exit(app.exec_())
 except Exception as e:
-    logging.getLogger().info(str(e) + " main")
+    logger.info(str(e))
