@@ -1,4 +1,4 @@
-import sys, dbInterface, os
+import sys, dbInterface, os, logging
 from PyQt5.uic import loadUi
 from PyQt5.QtWidgets import QMainWindow
 
@@ -11,7 +11,8 @@ class SearchScreen(QMainWindow):
     def __init__(self, token):
         super(SearchScreen, self).__init__()
         self.token = token
-        #self.logger = setLogger()
+        self.mod_name = "search"
+        logger = logging.getLogger(self.mod_name)
         loadUi(resource_path("assets/searchchem.ui"), self)
         self.gotoreg_btn.clicked.connect(self.gotoReg)
         self.window().setWindowTitle("Search")

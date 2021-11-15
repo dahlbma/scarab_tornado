@@ -1,4 +1,4 @@
-import dbInterface, os, datetime, re, codecs
+import dbInterface, os, datetime, re, codecs, logging
 from PyQt5.uic import loadUi
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QDialog, QApplication
@@ -11,7 +11,8 @@ class LoadSDF(QDialog):
     def __init__(self, token):
         super(LoadSDF, self).__init__()
         self.token = token
-        #self.logger = setLogger()
+        self.mod_name = "sdfreg"
+        logger = logging.getLogger(self.mod_name)
         self.sdfilename = None
         self.iMolCount = 0
         self.iNrElnIds = None
@@ -222,7 +223,7 @@ class LoadSDF(QDialog):
                      QMessageBox.Warning)
             f_err.close()
             f_err_msg.close()
-            logging.getLogger().error(f'''Wrote failed molecule registration to {f_err_path} and info to {f_err_msg_path}''')
+            logging.getLogger(self.mod_name).error(f'''Wrote failed molecule registration to {f_err_path} and info to {f_err_msg_path}''')
             open_file(os.getcwd())
             
     def closeWindow(self):

@@ -3,29 +3,26 @@ from PyQt5.QtGui import QImage, QPixmap
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMessageBox
 
-
-def setLogger(name='logger',
-                level=logging.DEBUG,
-                file=os.path.join(".","chemreg.log")):
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-
-    # console logging
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(message)s')
-    ch.setFormatter(formatter)
-
-    # file logging
-    fh = logging.FileHandler(file)
-    fh.setLevel(level)
-    formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(message)s',
-                                  datefmt='%m/%d/%Y %H:%M:%S')
-    fh.setFormatter(formatter)
-
-    logger.addHandler(ch)
-    logger.addHandler(fh)
-    return logger
+#def setLogger(level=logging.DEBUG, file=os.path.join(".","chemreg.log")
+#    logger = logging.getLogger()
+#    logger.setLevel(level)
+#
+#    # console logging
+#    ch = logging.StreamHandler()
+#    ch.setLevel(logging.INFO)
+#    formatter = logging.Formatter('%(message)s')
+#    ch.setFormatter(formatter)
+#
+#    # file logging
+#    fh = logging.FileHandler(file)
+#    fh.setLevel(level)
+#    formatter = logging.Formatter('%(asctime)s : %(name)s:%(levelname)s : %(message)s',
+#                                  datefmt='%m/%d/%Y %H:%M:%S')
+#    fh.setFormatter(formatter)
+#
+#    logger.addHandler(ch)
+#    logger.addHandler(fh)
+#    return logger
 
 def send_msg(title, text, icon=QMessageBox.Information, e=None):
     msg = QMessageBox()
@@ -73,8 +70,8 @@ def displayMolfile(self):
     image.loadFromData(requests.get(sFile).content)
     self.structure_lab.setPixmap(QPixmap(image))
 
-def postMolFile(self, fname, regno):
-    self.logger.info("posting file %s to server", fname)
+def postMolFile(self, fname, regno, logger):
+    logger.info("posting file %s to server", fname)
     f = {'file': open(fname, 'rb'), 'regno': regno}
     r = requests.post('http://esox3.scilifelab.se:8082/api/loadMolfile',
                       headers={'token': self.token}, files=f)

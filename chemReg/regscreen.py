@@ -1,4 +1,4 @@
-import sys, dbInterface, os, shutil
+import sys, dbInterface, os, shutil, logging
 from PyQt5.uic import loadUi
 from PyQt5.QtGui import QIntValidator
 from PyQt5 import QtWidgets
@@ -14,7 +14,8 @@ class RegScreen(QMainWindow):
         super(RegScreen, self).__init__()
         loadUi(resource_path("assets/regchem.ui"), self)
         self.token = token
-        #self.logger = setLogger()
+        self.mod_name = "reg"
+        logger = logging.getLogger(self.mod_name)
         self.dirty = False
         self.loadsdf_btn.clicked.connect(self.gotoLoadSdf)
         self.gotosearch_btn.clicked.connect(self.gotoSearch)
@@ -99,7 +100,7 @@ class RegScreen(QMainWindow):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 
                                                 '.', "Molfiles (*.mol)")
         if fname[0] != '':
-            postMolFile(self, fname[0], self.regno)
+            postMolFile(self, fname[0], self.regno, logging.getLogger(self.mod_name))
             displayMolfile(self)
             updateMoleculeProperties(self)
             
@@ -130,7 +131,7 @@ class RegScreen(QMainWindow):
         ok_msg.setWindowTitle("Edit " + fname)
         if (msg.clickedButton() == btnS):
             # save changes
-            postMolFile(self, fname_path, self.regno)
+            postMolFile(self, fname_path, self.regno, logging.getLogger(self.mod_name))
             displayMolfile(self)
             ok_msg.setText("Updated .mol file")
         else:
