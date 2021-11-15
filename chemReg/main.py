@@ -9,9 +9,9 @@ from loginscreen import LoginScreen
 def error_handler(etype, value, tb):
     err_msg = "".join(traceback.format_exception(etype, value, tb))
     #print("error caught")
-    logger.exception(err_msg + " from error handler\n")
+    logging.getLogger().exception(err_msg + " from error handler\n")
 
-logger = setLogger()
+logger = setLogger("mainLogger")
 sys.excepthook = error_handler
 
 try:
@@ -38,4 +38,4 @@ try:
     widget.show()
     sys.exit(app.exec_())
 except Exception as e:
-    logger.info(str(e))
+    logging.getLogger().info(str(e) + " main")

@@ -11,13 +11,13 @@ class LoadSDF(QDialog):
     def __init__(self, token):
         super(LoadSDF, self).__init__()
         self.token = token
-        self.logger = setLogger()
+        #self.logger = setLogger()
         self.sdfilename = None
         self.iMolCount = 0
         self.iNrElnIds = None
         self.saElnIds = None
         self.ElnIdsOK = False
-        loadUi(resource_path("sdfReg.ui"), self)
+        loadUi(resource_path("assets/sdfReg.ui"), self)
         self.pbar.setValue(0)
         self.pbar.hide()
         submitters = dbInterface.getColComboData(self.token, 'chemist')
@@ -143,8 +143,10 @@ class LoadSDF(QDialog):
         mol_info = {'external_id': self.cmpidfield_cb.currentText()}
         f = open(self.sdfilename, "rb")
         currtime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        f_err = open(f"error_{currtime}.sdf", "wb")
-        f_err_msg = open(f"error_msg_{currtime}.log", "w")
+        f_err_path = f"error_{currtime}.sdf"
+        f_err_msg_path = f"error_msg_{currtime}.log"
+        f_err = open(f_err_path, "wb")
+        f_err_msg = open(f_err_msg_path, "w")
         lError = False
         iTickCount = 0
         iBatchCount = 0
@@ -203,13 +205,18 @@ class LoadSDF(QDialog):
         QApplication.restoreOverrideCursor()
         if lError == False:
             send_msg("SDFile upload done", f"Uploaded {self.iMolCount} compounds")
+            # remove error files
+            f_err.close()
+            f_err_msg.close()
+            os.remove(f_err_path)
+            os.remove(f_err_msg_path)
         else:
             send_msg("Some errors occured",
-                     f"Failed to register some molecules, see error_msg_{currtime}.log and error_{currtime}.sdf",
+                     f"Failed to register some molecules, see {f_err_msg_path} and {f_err_path}",
                      QMessageBox.Warning)
             f_err.close()
             f_err_msg.close()
-            self.logger.error(f"Wrote failed molecule registration to error_{currtime}.sdf and info to error_msg_{currtime}.log")
+            logging.getLogger().error(f"Wrote failed molecule registration to error_{currtime}.sdf and info to error_msg_{currtime}.log")
             open_file(os.getcwd())
 
             

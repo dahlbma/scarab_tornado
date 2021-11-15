@@ -12,9 +12,9 @@ from sdfreg import LoadSDF
 class RegScreen(QMainWindow):
     def __init__(self, token, regno=None):
         super(RegScreen, self).__init__()
-        loadUi(resource_path("regchem.ui"), self)
+        loadUi(resource_path("assets/regchem.ui"), self)
         self.token = token
-        self.logger = setLogger()
+        #self.logger = setLogger()
         self.dirty = False
         self.loadsdf_btn.clicked.connect(self.gotoLoadSdf)
         self.gotosearch_btn.clicked.connect(self.gotoSearch)

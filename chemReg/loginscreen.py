@@ -12,8 +12,8 @@ from searchscreen import SearchScreen
 class LoginScreen(QDialog):
     def __init__(self):
         super(LoginScreen, self).__init__()
-        self.logger = setLogger()
-        loadUi(resource_path("welcomescreen.ui"), self)
+        #self.logger = setLogger(__name__)
+        loadUi(resource_path("assets/welcomescreen.ui"), self)
         self.passwordfield.setEchoMode(QtWidgets.QLineEdit.Password)
         self.login.clicked.connect(self.loginfunction)
     
@@ -36,7 +36,7 @@ class LoginScreen(QDialog):
         except Exception as e:
             self.errorlabel.setText("Bad Connection")
             send_msg("Error Message", str(e), QMessageBox.Warning, e)
-            logger.exception(str(e))
+            logging.getLogger().error(str(e))
             return
         if r.status_code != 200:
             self.errorlabel.setText("Wrong username/password")
