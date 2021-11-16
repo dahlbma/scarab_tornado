@@ -26,10 +26,6 @@ db_connection = MySQLdb.connect(
 db_connection.autocommit(True)
 cur = db_connection.cursor()
 
-
-# Read the salt file
-#with open('salts.json') as json_file:
-#    salts = json.load(json_file)
 sSql = f'select pkey, suffix, smiles, mf, mw from salts order by pkey'
 cur.execute(sSql)
 salts = cur.fetchall()
