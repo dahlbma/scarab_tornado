@@ -90,7 +90,12 @@ def getSaltLetters(saSmileFragments):
         return False
     return saSaltLetters
 
-    
+def registerNewCompound(molfile, regno):
+    return 'something'
+
+def registerNewBatch(regno, saSalts):
+    pass
+
 def getMoleculeProperties(self, molfile):
     sio = sys.stderr = StringIO()
     Chem.WrapLogs()
@@ -219,38 +224,45 @@ class chemRegAddMol(tornado.web.RequestHandler):
         ####
         # Do exact match with molecule against the CBK database
         sSql = f"""
-        select bin2smiles(bcpvs.jcsepmol_moltable.mol) from
-          bcpvs.jcsepmol_moltable_ukey join bcpvs.jcsepmol_moltable on
-                 (bcpvs.jcsepmol_moltable.molid=bcpvs.jcsepmol_moltable_ukey.molid)
+        select bin2smiles(bcpvs.jcmol_moltable.mol) from
+          bcpvs.jcmol_moltable_ukey join bcpvs.jcmol_moltable on
+                 (bcpvs.jcmol_moltable.molid=bcpvs.jcmol_moltable_ukey.molid)
         where uniquekey(mol2bin('{molfile}', 'mol'))=molkey
         """
         cur.execute(sSql)
         mols = cur.fetchall()
-        ####
-        # Reg the molfile in chem_info if the molfile is unique        
+        sStatus = 'oldMolecule'
         if len(mols) == 0:
-            sSql = f"""
+            ###
+            # It is a new molecule so we need to creta it in bcpvs.compound
+            compoundId = registerNewCompound(molfile, newRegno)
+            sStatus = 'newMolecule'
+
+        registerNewBatch(newRegno, saSalts)
+        #####
+        # Add the molecule to the structure tables
+        sSql = f"""
             insert into chem_reg.mol (mol, regno)
             value
             (mol2bin('{molfile}', 'mol'), {newRegno})
-            """
-            cur.execute(sSql)
+        """
+        cur.execute(sSql)
 
-            sSql = f"""
+        sSql = f"""
             insert into chem_reg.mol_ukey select molid, uniquekey(mol) as molkey
             from chem_reg.mol where regno = '{newRegno}'
-            """
-            cur.execute(sSql)
+        """
+        cur.execute(sSql)
 
-            sSql = f"""
+        sSql = f"""
             insert into chem_reg.mol_key select molid, fp(mol, 'sss') as molkey
             from chem_reg.mol where regno = '{newRegno}'
-            """
-            cur.execute(sSql)
-            self.finish('newMolecule')
-        else:
-            self.finish('oldMolecule')
-            
+        """
+        cur.execute(sSql)
+        #
+        #####
+        self.finish(sStatus)
+          
 
 @jwtauth
 class Search(tornado.web.RequestHandler):
