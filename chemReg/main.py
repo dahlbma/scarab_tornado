@@ -27,13 +27,12 @@ ch.setFormatter(formatter)
 # file logging
 fh = logging.FileHandler(file)
 fh.setLevel(level)
-formatter = logging.Formatter('%(asctime)s : %(name)s:%(levelname)s : %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
+formatter = logging.Formatter('%(asctime)s : %(name)s:%(levelname)s : %(message)s',
+                              datefmt='%m/%d/%Y %H:%M:%S')
 fh.setFormatter(formatter)
 
 logger.addHandler(ch)
 logger.addHandler(fh)
-
-sys.excepthook = error_handler
 
 try:
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "2"
