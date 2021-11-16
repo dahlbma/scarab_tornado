@@ -167,7 +167,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
                 raise TypeError("Expected bytes or string, but got %s." % type(s))
 
         ####
-        # Get new regno
+        # Get new regno and add nmolecule to chem_info
         newRegno = getNewRegno()
         if purity == '':
             purity = -1
@@ -217,7 +217,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
         cur.execute(sSql)
         
         ####
-        # Do exact match with molecule against present molucules
+        # Do exact match with molecule against the CBK database
         sSql = f"""
         select bin2smiles(bcpvs.jcsepmol_moltable.mol) from
           bcpvs.jcsepmol_moltable_ukey join bcpvs.jcsepmol_moltable on
