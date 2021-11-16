@@ -86,11 +86,78 @@ def getSaltLetters(saSmileFragments):
         return False
     return saSaltLetters
 
-def registerNewCompound(molfile, regno):
+def registerNewCompound(compound_id,
+                        compound_id_numeric,
+                        compound_name,
+                        mf,
+                        ip_rights,
+                        sep_mol_monoiso_mass):
+    sSql = f'''
+    insert into bcpvs.compound (
+    compound_id,
+    compound_id_numeric,
+    created_date,
+    creted_by_pkey,
+    mf,
+    ip_rights,
+    sep_mol_monoiso_mass)
+    values (
+    '{compound_id}',
+    {compound_id_numeric},
+    now(),
+    '{compound_name}',
+    '{mf}',
+    '{ip_rights}',
+    {sep_mol_monoiso_mass})
+    '''
     return 'something'
 
-def registerNewBatch(regno, saSalts):
-    pass
+def registerNewBatch(regno,
+                     notebook_ref,
+                     suffix,
+                     submitter,
+                     submittal_date,
+                     project,
+                     supplier,
+                     batch_comment,
+                     biological_mw,
+                     library_id,
+                     compound_type,
+                     supplier_id,
+                     chemreg_regno,
+                     purity = -1):
+    sSql = f'''insert into bcpvs.batch (
+    compound_id,
+    notebook_ref,
+    suffix,
+    submitter,
+    submittal_date,
+    project,
+    purity,
+    supplier,
+    batch_comment,
+    biological_mw,
+    library_id,
+    compound_type,
+    supplier_id,
+    chemspec_regno)
+    values (
+    {regno},
+    '{notebook_ref}',
+    '{suffix}',
+    '{submitter}',
+    now(),
+    '{project}',
+    {purity},
+    '{supplier}',
+    '{batch_comment}',
+    {biological_mw},
+    '{library_id}',
+    '{compound_type}',
+    '{supplier_id}',
+    {chemreg_regno}
+    '''
+
 
 def getMoleculeProperties(self, molfile):
     sio = sys.stderr = StringIO()
