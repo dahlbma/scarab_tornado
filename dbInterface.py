@@ -87,11 +87,11 @@ def getSaltLetters(saSmileFragments):
     return saSaltLetters
 
 def registerNewCompound(compound_id,
-                        compound_id_numeric,
-                        compound_name,
                         mf,
                         ip_rights,
-                        sep_mol_monoiso_mass):
+                        sep_mol_monoiso_mass,
+                        compound_name = ''):
+    compound_id_numeric = 1
     sSql = f'''
     insert into bcpvs.compound (
     compound_id,
@@ -112,11 +112,10 @@ def registerNewCompound(compound_id,
     '''
     return 'something'
 
-def registerNewBatch(regno,
+def registerNewBatch(chemreg_regno,
                      notebook_ref,
                      suffix,
                      submitter,
-                     submittal_date,
                      project,
                      supplier,
                      batch_comment,
@@ -124,7 +123,6 @@ def registerNewBatch(regno,
                      library_id,
                      compound_type,
                      supplier_id,
-                     chemreg_regno,
                      purity = -1):
     sSql = f'''insert into bcpvs.batch (
     compound_id,
@@ -142,7 +140,7 @@ def registerNewBatch(regno,
     supplier_id,
     chemspec_regno)
     values (
-    {regno},
+    {chemreg_regno},
     '{notebook_ref}',
     '{suffix}',
     '{submitter}',
@@ -298,10 +296,28 @@ class chemRegAddMol(tornado.web.RequestHandler):
         if len(mols) == 0:
             ###
             # It is a new molecule so we need to creta it in bcpvs.compound
-            compoundId = registerNewCompound(molfile, newRegno)
+            return
+        
+            compoundId = registerNewCompound(compound_id,
+                                             mf,
+                                             ip_rights,
+                                             sep_mol_monoiso_mass,
+                                             compound_name = '')
             sStatus = 'newMolecule'
 
-        registerNewBatch(newRegno, saSalts)
+        registerNewBatch(newRegno,
+                         jpage,
+                         saSalts,
+                         chemist,
+                         project,
+                         '', #  Supplier
+                         '', #batch_comment,    <---------------------
+                         C_MW,
+                         library_id,
+                         compound_type,
+                         external_id,
+                         purity = -1)
+        
         #####
         # Add the molecule to the structure tables
         sSql = f"""
