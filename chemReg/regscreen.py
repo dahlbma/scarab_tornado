@@ -84,6 +84,13 @@ class RegScreen(QMainWindow):
             lambda: self.changeEvent(self.mspurity_eb.text(), 'MS_PURITY'))
         self.mspurity_eb.setValidator(self.onlyInt)
         
+        self.ip_rights_cb.currentTextChanged.connect(
+            lambda x: self.changeEvent(x, 'ip_rights'))
+        
+        self.purity_eb.textChanged.connect(
+            lambda: self.changeEvent(self.purity_eb.text(), 'PURITY'))
+        self.purity_eb.setValidator(self.onlyInt)
+        
         self.comments_text.textChanged.connect(
             lambda: self.changeEvent(self.comments_text.toPlainText(), 'COMMENTS'))
 

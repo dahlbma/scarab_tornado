@@ -4,6 +4,8 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMessageBox
 
 
+ip_rights_list = [None, 'External rights', 'LCBKI', 'Commercial']
+
 def send_msg(title, text, icon=QMessageBox.Information, e=None):
     msg = QMessageBox()
     msg.setWindowTitle(title)
@@ -98,6 +100,8 @@ def updateScreen(self):
         
         libraryIds = dbInterface.getColComboData(self.token, 'library_id')
         self.libraryid_cb.addItems(libraryIds)
+        
+        self.ip_rights_cb.addItems(ip_rights_list)
     
     # Set current values for this regno
     if self.regno != None:
@@ -168,6 +172,13 @@ def updateScreen(self):
         self.nmrpurity_eb.setText(chromPurity)
         msPurity = dbInterface.getTextColumn(self.token, 'ms_purity', self.regno)
         self.mspurity_eb.setText(msPurity)
+        purity = dbInterface.getTextColumn(self.token, 'purity', self.regno)
+        self.purity_eb.setText(purity)
+        
+        ip_rights = dbInterface.getTextColumn(self.token,
+                                              'ip_rights', 
+                                              self.regno)
+        self.ip_rights_cb.setCurrentText(ip_rights)
 
         displayMolfile(self)
     else:
@@ -186,6 +197,8 @@ def updateScreen(self):
         self.chrompurity_eb.setText(None)
         self.nmrpurity_eb.setText(None)
         self.mspurity_eb.setText(None)
+        self.purity_eb.setText(None)
+        self.ip_rights_cb.setCurrentText(' ')
         self.externalid_eb.setText(None)
         self.externalbatch_eb.setText(None)
         self.iupac_eb.setText(None)
