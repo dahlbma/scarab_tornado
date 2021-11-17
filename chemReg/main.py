@@ -10,21 +10,21 @@ def error_handler(etype, value, tb):
     err_msg = "".join(traceback.format_exception(etype, value, tb))
     logger.exception(err_msg)
 
-#logger = initLogger() #root logger
-
-file=os.path.join(".","chemreg.log")
+#base settings for logging
 level=logging.INFO
 
+# init root logger
 logger = logging.getLogger()
 logger.setLevel(level)
 
 # console logging
 ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)
-formatter = logging.Formatter('%(message)s')
+formatter = logging.Formatter('%(name)s:%(message)s')
 ch.setFormatter(formatter)
 
 # file logging
+file=os.path.join(".","chemreg.log")
 fh = logging.FileHandler(file)
 fh.setLevel(level)
 formatter = logging.Formatter('%(asctime)s : %(name)s:%(levelname)s : %(message)s',
@@ -35,6 +35,7 @@ logger.addHandler(ch)
 logger.addHandler(fh)
 
 try:
+    # base app settings
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "2"
     app = QApplication(['Chem Reg'])
     clipboard = app.clipboard()

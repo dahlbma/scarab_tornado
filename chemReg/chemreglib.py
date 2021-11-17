@@ -3,33 +3,13 @@ from PyQt5.QtGui import QImage, QPixmap
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMessageBox
 
-#def setLogger(level=logging.DEBUG, file=os.path.join(".","chemreg.log")
-#    logger = logging.getLogger()
-#    logger.setLevel(level)
-#
-#    # console logging
-#    ch = logging.StreamHandler()
-#    ch.setLevel(logging.INFO)
-#    formatter = logging.Formatter('%(message)s')
-#    ch.setFormatter(formatter)
-#
-#    # file logging
-#    fh = logging.FileHandler(file)
-#    fh.setLevel(level)
-#    formatter = logging.Formatter('%(asctime)s : %(name)s:%(levelname)s : %(message)s',
-#                                  datefmt='%m/%d/%Y %H:%M:%S')
-#    fh.setFormatter(formatter)
-#
-#    logger.addHandler(ch)
-#    logger.addHandler(fh)
-#    return logger
 
 def send_msg(title, text, icon=QMessageBox.Information, e=None):
     msg = QMessageBox()
     msg.setWindowTitle(title)
     msg.setIcon(icon)
     msg.setText(text)
-    if e is not None: #  icon is QMessageBox.Warning:
+    if e is not None:
         # add clipboard btn
         msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Save)
         buttonS = msg.button(QMessageBox.Save)
