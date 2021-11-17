@@ -224,7 +224,7 @@ class LoadSDF(QDialog):
             f_err.close()
             f_err_msg.close()
             logging.getLogger(self.mod_name).error(f'''Wrote failed molecule registration to {f_err_path} and info to {f_err_msg_path}''')
-            open_file(os.getcwd())
+            open_file(".")
             
     def closeWindow(self):
         self.close()

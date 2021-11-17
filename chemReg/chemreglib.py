@@ -55,7 +55,10 @@ def open_file(filename):
     # open file with default OS application
     # opens folders too
     if platform.system() == 'Windows':
-        proc = subprocess.Popen("start " + filename, shell=True)
+        if filename == ".":
+            proc = os.startfile(filename)
+        else:
+            proc = subprocess.Popen("start " + filename, shell=True)
     elif platform.system() == 'Linux':
         proc = subprocess.Popen("xdg-open " + filename, shell=True)
     elif platform.system() == 'Darwin':
