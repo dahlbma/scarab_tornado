@@ -172,7 +172,10 @@ def updateScreen(self):
         
         nmrText = dbInterface.getTextColumn(self.token, 'nmr_text', self.regno)
         self.nmr_text.setPlainText(nmrText)
-        
+
+        commentsText = dbInterface.getTextColumn(self.token, 'comments', self.regno)
+        self.comments_text.setPlainText(commentsText)
+
         msText = dbInterface.getTextColumn(self.token, 'ms_text', self.regno)
         self.ms_text.setPlainText(msText)
 
