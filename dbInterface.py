@@ -39,12 +39,20 @@ def sqlExec(sSql, values=None):
     return json.dumps(result)
 
 def getNewRegno():
-    sSql = "select id from chemspec.regno_sequence"
+    sSql = "select pkey from chem_reg.regno_sequence"
     cur.execute(sSql)
-    id = cur.fetchall()[0][0] +1
-    sSql = "update chemspec.regno_sequence set id=" + str(id)
+    pkey = cur.fetchall()[0][0] +1
+    sSql = f"update chem_reg.regno_sequence set pkey={pkey}"
     cur.execute(sSql)
-    return id
+    return pkey
+
+def getNewCompoundId():
+    sSql = "select pkey from bcpvs.compound_id_sequence"
+    cur.execute(sSql)
+    pkey = cur.fetchall()[0][0] +1
+    sSql = f"update bcpvs.compound_id_sequence set pkey={pkey}"
+    cur.execute(sSql)
+    return pkey
 
 def getAtomicComposition(saComp):
     sComp = f""
@@ -86,18 +94,17 @@ def getSaltLetters(saSmileFragments):
         return False
     return saSaltLetters
 
-def registerNewCompound(compound_id,
+def registerNewCompound(compound_id_numeric,
                         mf,
-                        ip_rights,
                         sep_mol_monoiso_mass,
+                        ip_rights = '',
                         compound_name = ''):
-    compound_id_numeric = 1
+    compound_id = f'CBK{compound_id_numeric}'
     sSql = f'''
     insert into bcpvs.compound (
     compound_id,
     compound_id_numeric,
     created_date,
-    creted_by_pkey,
     mf,
     ip_rights,
     sep_mol_monoiso_mass)
@@ -105,25 +112,26 @@ def registerNewCompound(compound_id,
     '{compound_id}',
     {compound_id_numeric},
     now(),
-    '{compound_name}',
     '{mf}',
     '{ip_rights}',
     {sep_mol_monoiso_mass})
     '''
-    return 'something'
+    cur.execute(sSql)
 
-def registerNewBatch(chemreg_regno,
+
+def registerNewBatch(compound_id_numeric,
+                     chemreg_regno,
                      notebook_ref,
                      suffix,
                      submitter,
                      project,
                      supplier,
-                     batch_comment,
                      biological_mw,
                      library_id,
                      compound_type,
                      supplier_id,
                      purity = -1):
+    compound_id = f'CBK{compound_id_numeric}'
     sSql = f'''insert into bcpvs.batch (
     compound_id,
     notebook_ref,
@@ -133,14 +141,13 @@ def registerNewBatch(chemreg_regno,
     project,
     purity,
     supplier,
-    batch_comment,
     biological_mw,
     library_id,
     compound_type,
     supplier_id,
     chemspec_regno)
     values (
-    {chemreg_regno},
+    '{compound_id}',
     '{notebook_ref}',
     '{suffix}',
     '{submitter}',
@@ -148,13 +155,13 @@ def registerNewBatch(chemreg_regno,
     '{project}',
     {purity},
     '{supplier}',
-    '{batch_comment}',
     {biological_mw},
     '{library_id}',
     '{compound_type}',
     '{supplier_id}',
-    {chemreg_regno}
+    {chemreg_regno})
     '''
+    cur.execute(sSql)
 
 
 def getMoleculeProperties(self, molfile):
@@ -285,7 +292,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
         ####
         # Do exact match with molecule against the CBK database
         sSql = f"""
-        select bin2smiles(bcpvs.jcmol_moltable.mol) from
+        select compound_id, bin2smiles(bcpvs.jcmol_moltable.mol) from
           bcpvs.jcmol_moltable_ukey join bcpvs.jcmol_moltable on
                  (bcpvs.jcmol_moltable.molid=bcpvs.jcmol_moltable_ukey.molid)
         where uniquekey(mol2bin('{molfile}', 'mol'))=molkey
@@ -294,27 +301,27 @@ class chemRegAddMol(tornado.web.RequestHandler):
         mols = cur.fetchall()
         sStatus = 'oldMolecule'
         if len(mols) == 0:
-            ###
-            # It is a new molecule so we need to creta it in bcpvs.compound
-            return
-        
-            compoundId = registerNewCompound(compound_id,
-                                             mf,
-                                             ip_rights,
-                                             sep_mol_monoiso_mass,
-                                             compound_name = '')
             sStatus = 'newMolecule'
+            ###
+            # It is a new molecule so we need to create it in bcpvs.compound
+            # First generate new compound_id
+            compound_id_numeric = getNewCompoundId()
+            lResult = registerNewCompound(compound_id_numeric,
+                                          C_MF,
+                                          C_MONOISO,
+                                          ip_rights = '',
+                                          compound_name = '')
 
-        registerNewBatch(newRegno,
+        registerNewBatch(compound_id_numeric,
+                         newRegno,
                          jpage,
                          saSalts,
                          chemist,
                          project,
-                         '', #  Supplier
-                         '', #batch_comment,    <---------------------
+                         source,         #  Supplier
                          C_MW,
                          library_id,
-                         compound_type,
+                         product,
                          external_id,
                          purity = -1)
         
@@ -535,3 +542,28 @@ class GetNextRegno(tornado.web.RequestHandler):
     def get(self):
         newRegno = getNewRegno()
         self.write(json.dumps(newRegno))
+
+
+@jwtauth
+class CreateLibrary(tornado.web.RequestHandler):
+    def put(self):
+        sLibraryDescription = self.get_argument("library_name")
+        sSupplier = self.get_argument("supplier")
+
+        sSql = "select pkey from bcpvs.library_id_sequence"
+        cur.execute(sSql)
+        pkey = cur.fetchall()[0][0] +1
+        sSql = f"update bcpvs.library_id_sequence set pkey={pkey}"
+        cur.execute(sSql)
+
+        library_id = f'Lib-{pkey}'
+        
+        sSql = f"""insert into bcpvs.compound_library
+        (library_name,
+        supplier,
+        description) values
+        ('{library_id}',
+        '{sSupplier}',
+        '{sLibraryDescription}')
+        """
+        cur.execute(sSql, val)
