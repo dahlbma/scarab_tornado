@@ -6,7 +6,6 @@ from PyQt5.QtWidgets import QFileDialog, QProgressBar, QMessageBox
 
 from chemreglib import *
 
-
 class LoadSDF(QDialog):
     def __init__(self, token):
         super(LoadSDF, self).__init__()
@@ -197,7 +196,7 @@ class LoadSDF(QDialog):
             dTags['product'] = self.producttype_cb.currentText()
             dTags['library_id'] = self.library_cb.currentText()
             lStatus, sMessage = dbInterface.uploadMolFile(dTags, self.token)
-            if sMessage == 'newMolecule':
+            if sMessage == b'newMolecule':
                 iNewMols += 1
             if lStatus != True:
                 iErrorMols += 1
@@ -223,7 +222,8 @@ class LoadSDF(QDialog):
                      QMessageBox.Warning)
             f_err.close()
             f_err_msg.close()
-            logging.getLogger(self.mod_name).error(f'''Wrote failed molecule registration to {f_err_path} and info to {f_err_msg_path}''')
+            logging.getLogger(self.mod_name).error(f'''Wrote failed molecule registration to
+ {f_err_path} and info to {f_err_msg_path}''')
             open_file(".")
             
     def closeWindow(self):
