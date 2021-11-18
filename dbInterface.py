@@ -129,7 +129,9 @@ def registerNewBatch(compound_id_numeric,
                      biological_mw,
                      library_id,
                      compound_type,
+                     product_type,
                      supplier_id,
+                     supplier_batch,
                      purity = -1):
     compound_id = f'CBK{compound_id_numeric}'
     sSql = f'''insert into bcpvs.batch (
@@ -144,7 +146,9 @@ def registerNewBatch(compound_id_numeric,
     biological_mw,
     library_id,
     compound_type,
+    product_type,
     supplier_id,
+    supplier_batch,
     chemspec_regno)
     values (
     '{compound_id}',
@@ -158,7 +162,9 @@ def registerNewBatch(compound_id_numeric,
     {biological_mw},
     '{library_id}',
     '{compound_type}',
+    '{product_type}',
     '{supplier_id}',
+    '{supplier_batch}',
     {chemreg_regno})
     '''
     cur.execute(sSql)
@@ -321,8 +327,10 @@ class chemRegAddMol(tornado.web.RequestHandler):
                          source,         #  Supplier
                          C_MW,
                          library_id,
+                         compound_type,
                          product,
                          external_id,
+                         supplier_batch,
                          purity = -1)
         
         #####
