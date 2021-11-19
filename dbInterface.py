@@ -118,9 +118,10 @@ def registerNewCompound(compound_id_numeric,
     {sep_mol_monoiso_mass})
     '''
     cur.execute(sSql)
+    return compound_id
 
 
-def registerNewBatch(compound_id_numeric,
+def registerNewBatch(compound_id,
                      chemreg_regno,
                      notebook_ref,
                      suffix,
@@ -134,7 +135,7 @@ def registerNewBatch(compound_id_numeric,
                      supplier_id,
                      supplier_batch,
                      purity = -1):
-    compound_id = f'CBK{compound_id_numeric}'
+    
     sSql = f'''insert into bcpvs.batch (
     compound_id,
     notebook_ref,
@@ -170,6 +171,7 @@ def registerNewBatch(compound_id_numeric,
     '''
     cur.execute(sSql)
 
+
 def getMoleculeProperties(self, molfile):
     sio = sys.stderr = StringIO()
     Chem.WrapLogs()
@@ -202,6 +204,22 @@ def getMoleculeProperties(self, molfile):
             saSalts = getSaltLetters(saSmileFragments)
     return (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, sSmiles, '')
 
+
+@jwtauth
+class GetLastBatchFromEln(tornado.web.RequestHandler):
+    def get(self):
+        sEln = self.get_argument("eln")
+        eln_id = sEln[0:5]
+        sSql = f'''select notebook_ref from bcpvs.batch
+        where notebook_ref like '{eln_id}%\' order by notebook_ref desc'''
+        cur.execute(sSql)
+        cRes = cur.fetchall()
+        if len(cRes) > 0:
+            iBatch = int((cRes[0][0])[-3:])
+            self.finish(f'{iBatch}')
+        else:
+            self.finish(b'0')
+            
         
 @jwtauth
 class chemRegAddMol(tornado.web.RequestHandler):
@@ -306,20 +324,22 @@ class chemRegAddMol(tornado.web.RequestHandler):
         cur.execute(sSql)
         mols = cur.fetchall()
         sStatus = 'oldMolecule'
+
         if len(mols) == 0:
             sStatus = 'newMolecule'
             ###
             # It is a new molecule so we need to create it in bcpvs.compound
             # First generate new compound_id
             compound_id_numeric = getNewCompoundId()
-            lResult = registerNewCompound(compound_id_numeric,
-                                          molfile,
-                                          C_MF,
-                                          C_MONOISO,
-                                          ip_rights = '',
-                                          compound_name = '')
-
-        registerNewBatch(compound_id_numeric,
+            compound_id = registerNewCompound(compound_id_numeric,
+                                              molfile,
+                                              C_MF,
+                                              C_MONOISO,
+                                              ip_rights = '',
+                                              compound_name = '')
+        else:
+            compound_id = mols[0][0]
+        registerNewBatch(compound_id,
                          newRegno,
                          jpage,
                          saSalts,
@@ -538,6 +558,7 @@ class GetColComboData(tornado.web.RequestHandler):
         res = sqlExec(sSql)
         self.write(res)
 
+
 @jwtauth
 class GetLibraryName(tornado.web.RequestHandler):
     def get(self):
@@ -548,12 +569,14 @@ class GetLibraryName(tornado.web.RequestHandler):
         res = sqlExec(sSql, values)
         self.write(res)
 
+
 @jwtauth
 class GetLibraries(tornado.web.RequestHandler):
     def get(self):
         sSql = "select fullname from hive.user_details where ORGANIZATION = 'chemistry'"
         res = sqlExec(sSql)
         self.write(res)
+
 
 @jwtauth
 class GetNextRegno(tornado.web.RequestHandler):

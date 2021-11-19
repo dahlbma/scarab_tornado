@@ -89,6 +89,7 @@ def make_app():
         (r"/api/getTextColumn", dbInterface.GetTextColumn),
         (r"/api/getLibraryName", dbInterface.GetLibraryName),
         (r"/api/getLibraries", dbInterface.GetLibraries),
+        (r"/api/getLastBatchFromEln", dbInterface.GetLastBatchFromEln),
         (r"/api/getNextRegno", dbInterface.GetNextRegno),
         (r"/api/getMolfile", dbInterface.GetMolfile),
         (r"/api/createMolImage", dbInterface.CreateMolImage),
