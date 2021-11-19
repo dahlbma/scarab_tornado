@@ -104,3 +104,10 @@ def createMolImage(token, regno):
                      headers={'token': token})
     res = r.content.decode()
     return res
+
+def getLastBatchOfEln(token, sEln):
+    r = requests.get('http://esox3.scilifelab.se:8082/api/getLastBatchFromEln',
+                     params={'eln': sEln},
+                     headers={'token': token})
+    res = r.content.decode()
+    return int(res)

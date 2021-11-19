@@ -77,7 +77,7 @@ class LoadSDF(QDialog):
         sIds = self.elnids_text.toPlainText()
         saStrings = sIds.split(' ')
         iElnIdsFound = 0
-        pattern = '^[a-zA-Z0-9]{9}$'
+        pattern = '^[a-zA-Z0-9]{6}$'
         for sId in saStrings:
             if len(re.findall(pattern, sId)) == 1:
                 iElnIdsFound += 1
@@ -148,7 +148,6 @@ class LoadSDF(QDialog):
         f_err_msg = open(f_err_msg_path, "w")
         lError = False
         iTickCount = 0
-        iBatchCount = 0
         iTicks = int(self.iMolCount / 100)
         progress = 0
         iElnId = 0
@@ -158,6 +157,7 @@ class LoadSDF(QDialog):
         self.pbar.setValue(progress)
         QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         sCurrentEln = self.saElnIds[iElnId]
+        iBatchCount = dbInterface.getLastBatchOfEln(self.token, sCurrentEln)
         while True:
             # Maybe run in separate thread instead, see:
             # https://www.pythonguis.com/tutorials/multithreading-pyqt-applications-qthreadpool/
@@ -183,9 +183,10 @@ class LoadSDF(QDialog):
             
             iBatchCount += 1
             if iBatchCount == 1000:
-                iBatchCount = 1
                 iElnId += 1
                 sCurrentEln = self.saElnIds[iElnId]
+                iBatchCount = dbInterface.getLastBatchOfEln(self.token, sCurrentEln)
+                
             dTags['jpage'] = sCurrentEln + str(iBatchCount).zfill(3)
             dTags['molfile'] = sMol.decode('latin-1')
             dTags['chemist'] = self.submitter_cb.currentText()
