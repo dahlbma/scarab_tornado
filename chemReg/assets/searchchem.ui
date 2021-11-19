@@ -1348,6 +1348,19 @@ border: 1px solid black;</string>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_7">
           <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
            <widget class="QLabel" name="label_5">
             <property name="text">
              <string>Navigation</string>
@@ -1372,6 +1385,13 @@ border: 1px solid black;</string>
            <widget class="QPushButton" name="loadsdf_btn">
             <property name="text">
              <string>Load SDF</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="addmeta_btn">
+            <property name="text">
+             <string>Add metadata tags</string>
             </property>
            </widget>
           </item>

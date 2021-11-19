@@ -67,6 +67,24 @@ def getLibraryName(token, library_id):
         cleanList = cleanList[0]
     return cleanList
 
+def createLibrary(token, library_name, supplier):
+    r = requests.put('http://esox3.scilifelab.se:8082/api/createLibrary',
+                     params={'library_name': library_name, 'supplier': supplier},
+                     headers={'token': token})
+    if r.status_code != 200:
+        return False, r.content
+    else:
+        return True, r.content
+    
+def createSupplier(token, supplier):
+    r = requests.put('http://esox3.scilifelab.se:8082/api/createSupplier',
+                     params={'supplier': supplier},
+                     headers={'token': token})
+    if r.status_code != 200:
+        return False, r.content
+    else:
+        return True, r.content
+
 def getNextRegno(token):
     r = requests.get('http://esox3.scilifelab.se:8082/api/getNextRegno',
                      headers={'token': token})

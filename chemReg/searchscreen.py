@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QMainWindow
 from chemreglib import *
 
 from sdfreg import LoadSDF
+from addmetatags import AddMetaTags
 
 
 class SearchScreen(QMainWindow):
@@ -29,6 +30,7 @@ class SearchScreen(QMainWindow):
         self.loadsdf_btn.clicked.connect(self.gotoLoadSdf)
         self.back_btn.clicked.connect(self.previousRegno)
         self.forward_btn.clicked.connect(self.nextRegno)
+        self.addmeta_btn.clicked.connect(self.gotoAddMeta)
 
         updateScreen(self)
         self.populated = True
@@ -42,8 +44,6 @@ class SearchScreen(QMainWindow):
             lambda: self.searchEvent(self.batch_search_eb.text(), 'JPAGE'))
 
     def gotoLoadSdf(self):
-        if self.dirty == False:
-            dbInterface.deleteRegno(self.regno, self.token)
         loadSDF = LoadSDF(self.token)
 
     def previousRegno(self):
@@ -101,3 +101,6 @@ class SearchScreen(QMainWindow):
         reg = RegScreen(self.token)
         self.window().addWidget(reg)
         self.window().setCurrentIndex(self.window().currentIndex() + 1)
+
+    def gotoAddMeta(self):
+        addMetaTags = AddMetaTags(self.token)

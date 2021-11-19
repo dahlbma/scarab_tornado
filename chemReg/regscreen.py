@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 from chemreglib import *
 from sdfreg import LoadSDF
+from addmetatags import AddMetaTags
 
 
 class RegScreen(QMainWindow):
@@ -19,6 +20,7 @@ class RegScreen(QMainWindow):
         self.dirty = False
         self.loadsdf_btn.clicked.connect(self.gotoLoadSdf)
         self.gotosearch_btn.clicked.connect(self.gotoSearch)
+        self.addmeta_btn.clicked.connect(self.gotoAddMeta)
         self.window().setWindowTitle("Register new compound")
         self.onlyInt = QIntValidator()
         self.populated = False
@@ -166,3 +168,8 @@ class RegScreen(QMainWindow):
         if self.dirty == False:
             dbInterface.deleteRegno(self.regno, self.token)
         loadSDF = LoadSDF(self.token)
+        
+    def gotoAddMeta(self):
+        if self.dirty == False:
+            dbInterface.deleteRegno(self.regno, self.token)
+        addMetaTags = AddMetaTags(self.token)

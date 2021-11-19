@@ -947,6 +947,19 @@ background-color: rgb(255, 204, 204)
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_7">
             <item>
+             <spacer name="verticalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
              <widget class="QLabel" name="label_6">
               <property name="text">
                <string>Navigation</string>
@@ -971,6 +984,13 @@ background-color: rgb(255, 204, 204)
              <widget class="QPushButton" name="loadsdf_btn">
               <property name="text">
                <string>Load SDF</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="addmeta_btn">
+              <property name="text">
+               <string>Add metadata tags</string>
               </property>
              </widget>
             </item>
