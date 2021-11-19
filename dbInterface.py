@@ -95,6 +95,7 @@ def getSaltLetters(saSmileFragments):
     return saSaltLetters
 
 def registerNewCompound(compound_id_numeric,
+                        molfile,
                         mf,
                         sep_mol_monoiso_mass,
                         ip_rights = '',
@@ -168,7 +169,6 @@ def registerNewBatch(compound_id_numeric,
     {chemreg_regno})
     '''
     cur.execute(sSql)
-
 
 def getMoleculeProperties(self, molfile):
     sio = sys.stderr = StringIO()
@@ -313,6 +313,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
             # First generate new compound_id
             compound_id_numeric = getNewCompoundId()
             lResult = registerNewCompound(compound_id_numeric,
+                                          molfile,
                                           C_MF,
                                           C_MONOISO,
                                           ip_rights = '',
@@ -423,6 +424,15 @@ class LoadMolfile(tornado.web.RequestHandler):
         cur.execute(sSql)
         createPngFromMolfile(regno, molfile)
         
+
+@jwtauth
+class CreateSupplier(tornado.web.RequestHandler):
+    def put(self):
+        supplierName = self.get_argument("supplier")
+        sSql = f"""insert into bcpvs.compound_suppliers
+        (name) values ({supplierName})"""
+        cur.execute(sSql)
+
 
 @jwtauth
 class CreateRegno(tornado.web.RequestHandler):
