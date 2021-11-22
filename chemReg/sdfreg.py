@@ -46,8 +46,11 @@ class LoadSDF(QDialog):
         
         libraryIds = dbInterface.getColComboData(self.token, 'library_id')
         self.library_cb.addItems(libraryIds)
+        self.library_cb.currentTextChanged.connect(self.update_librarydesc)
         self.library_cb.currentTextChanged.connect(self.check_fields)
-
+        
+        self.librarydesc_eb.setText(None)
+        
         self.upload_btn.setEnabled(False)
         self.upload_btn.clicked.connect(self.uploadSDFile)
         self.selectsdf_btn.clicked.connect(self.getSDFile)
@@ -72,6 +75,10 @@ class LoadSDF(QDialog):
             self.upload_btn.setEnabled(False)
         else:
             self.upload_btn.setEnabled(True)
+
+    def update_librarydesc(self):
+        library_name = dbInterface.getLibraryName(self.token, self.library_cb.currentText())
+        self.librarydesc_eb.setText(library_name)
 
     def parseElnIds(self):
         sIds = self.elnids_text.toPlainText()

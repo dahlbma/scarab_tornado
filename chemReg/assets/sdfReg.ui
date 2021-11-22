@@ -120,7 +120,7 @@
      <x>20</x>
      <y>20</y>
      <width>711</width>
-     <height>124</height>
+     <height>130</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -237,6 +237,18 @@
          </widget>
         </item>
         <item>
+         <widget class="QLabel" name="label_14">
+          <property name="font">
+           <font>
+            <pointsize>9</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Library description</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QLabel" name="label_6">
           <property name="font">
            <font>
@@ -270,6 +282,30 @@
            <font>
             <pointsize>9</pointsize>
            </font>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="librarydesc_eb">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>169</width>
+            <height>23</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>9</pointsize>
+           </font>
+          </property>
+          <property name="readOnly">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
