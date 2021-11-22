@@ -94,6 +94,30 @@ def getSaltLetters(saSmileFragments):
         return False
     return saSaltLetters
 
+def addStructure(database, molfile, newRegno, idColumnName):
+    #####
+    # Add the molecule to the structure tables
+    sSql = f"""
+    insert into {database} (mol, {idColumnName})
+    value
+    (mol2bin('{molfile}', 'mol'), '{newRegno}')
+    """
+    cur.execute(sSql)
+
+    sSql = f"""
+    insert into {database}_ukey select molid, uniquekey(mol) as molkey
+    from {database} where {idColumnName} = '{newRegno}'
+    """
+    cur.execute(sSql)
+
+    sSql = f"""
+    insert into {database}_key select molid, fp(mol, 'sss') as molkey
+    from {database} where {idColumnName} = '{newRegno}'
+    """
+    cur.execute(sSql)
+    #
+    #####
+
 def registerNewCompound(compound_id_numeric,
                         molfile,
                         mf,
@@ -119,7 +143,6 @@ def registerNewCompound(compound_id_numeric,
     '''
     cur.execute(sSql)
     return compound_id
-
 
 def registerNewBatch(compound_id,
                      chemreg_regno,
@@ -255,14 +278,6 @@ class chemRegAddMol(tornado.web.RequestHandler):
             logger.info(f'Unknown salt in molfile for {external_id} {errorMessage} {sSmiles}')
             return
 
-        def to_bytes(s):
-            if type(s) is bytes:
-                return s
-            elif type(s) is str or type(s) is unicode:
-                return codecs.encode(s, 'utf-8')
-            else:
-                raise TypeError("Expected bytes or string, but got %s." % type(s))
-
         ####
         # Get new regno and add nmolecule to chem_info
         newRegno = getNewRegno()
@@ -337,6 +352,8 @@ class chemRegAddMol(tornado.web.RequestHandler):
                                               C_MONOISO,
                                               ip_rights = '',
                                               compound_name = '')
+            addStructure("bcpvs.jcmol_moltable", molfile, compound_id, 'compound_id')
+
         else:
             compound_id = mols[0][0]
         registerNewBatch(compound_id,
@@ -353,29 +370,8 @@ class chemRegAddMol(tornado.web.RequestHandler):
                          external_id,
                          supplier_batch,
                          purity = -1)
-        
-        #####
-        # Add the molecule to the structure tables
-        sSql = f"""
-            insert into chem_reg.mol (mol, regno)
-            value
-            (mol2bin('{molfile}', 'mol'), {newRegno})
-        """
-        cur.execute(sSql)
 
-        sSql = f"""
-            insert into chem_reg.mol_ukey select molid, uniquekey(mol) as molkey
-            from chem_reg.mol where regno = '{newRegno}'
-        """
-        cur.execute(sSql)
-
-        sSql = f"""
-            insert into chem_reg.mol_key select molid, fp(mol, 'sss') as molkey
-            from chem_reg.mol where regno = '{newRegno}'
-        """
-        cur.execute(sSql)
-        #
-        #####
+        addStructure("chem_reg.mol", molfile, newRegno, 'regno')
         self.finish(sStatus)
           
 
@@ -414,7 +410,7 @@ class CreateMolImage(tornado.web.RequestHandler):
             createPngFromMolfile(regno, molfile[0][0])
         self.finish()
 
-        
+
 @jwtauth
 class LoadMolfile(tornado.web.RequestHandler):
     def post(self):
@@ -443,14 +439,14 @@ class LoadMolfile(tornado.web.RequestHandler):
                   where regno = {regno}"""
         cur.execute(sSql)
         createPngFromMolfile(regno, molfile)
-        
+
 
 @jwtauth
 class CreateSupplier(tornado.web.RequestHandler):
     def put(self):
         supplierName = self.get_argument("supplier")
         sSql = f"""insert into bcpvs.compound_suppliers
-        (name) values ({supplierName})"""
+        (name) values ('{supplierName}')"""
         cur.execute(sSql)
 
 
@@ -491,6 +487,7 @@ class UpdateColumn(tornado.web.RequestHandler):
         sSql = "update chem_reg.chem_info set " + column
         sSql += """= %s where regno = %s"""
         cur.execute(sSql, values)
+
 
 @jwtauth
 class RegCompound(tornado.web.RequestHandler):
@@ -554,6 +551,9 @@ class GetColComboData(tornado.web.RequestHandler):
         elif column == 'library_id':
             sSql = """SELECT library_name FROM bcpvs.compound_library
                       order by library_name"""
+        elif column == 'library_description':
+            sSql = """SELECT description FROM bcpvs.compound_library
+                      order by description"""
 
         res = sqlExec(sSql)
         self.write(res)
@@ -607,4 +607,4 @@ class CreateLibrary(tornado.web.RequestHandler):
         '{sSupplier}',
         '{sLibraryDescription}')
         """
-        cur.execute(sSql, val)
+        cur.execute(sSql)
