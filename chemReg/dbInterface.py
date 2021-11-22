@@ -111,3 +111,19 @@ def getLastBatchOfEln(token, sEln):
                      headers={'token': token})
     res = r.content.decode()
     return int(res)
+
+def getCanonicSmiles(token, smiles):
+    r = requests.get('http://esox3.scilifelab.se:8082/api/getCanonicSmiles',
+                     params={'smiles': smiles},
+                     headers={'token': token})
+    return r.content.decode()
+
+def createSalt(token, smiles):
+    r = requests.put('http://esox3.scilifelab.se:8082/api/createSalt',
+                     params={'smiles': smiles},
+                     headers={'token': token})
+    if r.status_code != 200:
+        return False, r.content
+    else:
+        return True, r.content
+

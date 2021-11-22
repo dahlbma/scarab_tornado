@@ -18,6 +18,7 @@ class AddMetaTags(QDialog):
         self.supplier_cb.setCurrentText(' ')
         
         self.wipe = True
+        self.tabWidget.setCurrentIndex(0)
         self.tabWidget.currentChanged.connect(self.tab_changed)
         
         #connect buttons
@@ -27,6 +28,16 @@ class AddMetaTags(QDialog):
         
         self.exec_()
         self.show()
+
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_Return or event.key() == QtCore.Qt.Key_Enter:
+            i = self.tabWidget.currentIndex()
+            if i == 0:
+                self.library_save()
+            elif i == 1:
+                self.supplier_save()
+            elif i == 2:
+                self.salt_save()
 
     def library_save(self):
         lib_name = self.library_name_eb.text().strip()
@@ -94,22 +105,16 @@ class AddMetaTags(QDialog):
             return
         
         # check if unique
-        #salt_low = salt_name.casefold()
-        #salts = dbInterface.getColComboData(self.token, '<salt_col>')
-        #for i in range(len(salts)):
-        #    if salts[i] is None:
-        #        continue
-        #    salts[i] = salts[i].casefold()
-        #if salt_low in salts:
-        #    send_msg("Salt already exists", f"A salt with the same name: \'{salt_name}\' already exists (case insensitive).")
-        #    return
-        
-        ok = self.confirm_dialog("Do you want to add this salt?" + f"\n Salt: {salt}")
-        if ok:
-            #send
-            #dbInterface.<add salt func>(self.token, salt)
-            send_msg("Salt added", f"Salt: \'{salt}\' added.")
-            self.salt_eb.setText(None)
+        canon_list = json.loads(dbInterface.getCanonicSmiles(self.token, salt))
+        if canon_list[0] != 'False':
+            send_msg("Salt already exists", f"A salt with the same canonic smiles: \'{canon_list[1]}\' already exists.")
+        else:
+            ok = self.confirm_dialog("Found a salt corresponding to input smiles-string. Do you want to add this salt?" + f"\n Salt: {canon_list[1]}")
+            if ok:
+                #send canonic smiles
+                dbInterface.createSalt(self.token, canon_list[1])
+                send_msg("Salt added", f"Salt: \'{canon_list[1]}\' added.")
+                self.salt_eb.setText(None)
     
     def confirm_dialog(self, text):
         # confirm dialogue
@@ -122,7 +127,6 @@ class AddMetaTags(QDialog):
         btnS = msg.button(QMessageBox.Ok)
         msg.exec_()
         if msg.clickedButton() == btnS:
-            print("ok")
             return True
         else:
             return False
