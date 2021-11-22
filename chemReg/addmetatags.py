@@ -34,6 +34,17 @@ class AddMetaTags(QDialog):
         if lib_name == "":
             send_msg("Bad input", "Please enter a library name.")
             return
+        # check if unique
+        lib_low = lib_name.casefold()
+        ll_names = dbInterface.getColComboData(self.token, 'library_description')
+        for i in range(len(ll_names)):
+            if ll_names[i] is None:
+                continue
+            ll_names[i] = ll_names[i].casefold()
+        if lib_low in ll_names:
+            send_msg("Library already exists", f"A library with the same name: \'{lib_name}\' already exists (case insensitive).")
+            return
+        
         ok = self.confirm_dialog("Do you want to add this library?" + f"\n Library name: {lib_name}" + f"\n Supplier: {sup}")
         if ok:
             #send
@@ -51,6 +62,18 @@ class AddMetaTags(QDialog):
         if sup_name == "":
             send_msg("Bad input", "Please enter a supplier name.")
             return
+        
+        # check if unique
+        sup_low = sup_name.casefold()
+        supps = dbInterface.getColComboData(self.token, 'supplier')
+        for i in range(len(supps)):
+            if supps[i] is None:
+                continue
+            supps[i] = supps[i].casefold()
+        if sup_low in supps:
+            send_msg("Supplier already exists", f"A supplier with the same name: \'{sup_name}\' already exists (case insensitive).")
+            return
+        
         ok = self.confirm_dialog("Do you want to add this supplier?" + f"\n Supplier: {sup_name}")
         if ok:
             #send
@@ -69,6 +92,18 @@ class AddMetaTags(QDialog):
         if salt == "":
             send_msg("Bad input", "Please enter a salt.")
             return
+        
+        # check if unique
+        #salt_low = salt_name.casefold()
+        #salts = dbInterface.getColComboData(self.token, '<salt_col>')
+        #for i in range(len(salts)):
+        #    if salts[i] is None:
+        #        continue
+        #    salts[i] = salts[i].casefold()
+        #if salt_low in salts:
+        #    send_msg("Salt already exists", f"A salt with the same name: \'{salt_name}\' already exists (case insensitive).")
+        #    return
+        
         ok = self.confirm_dialog("Do you want to add this salt?" + f"\n Salt: {salt}")
         if ok:
             #send
