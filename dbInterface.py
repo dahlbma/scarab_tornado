@@ -26,7 +26,7 @@ db_connection = MySQLdb.connect(
 db_connection.autocommit(True)
 cur = db_connection.cursor()
 
-sSql = f'select pkey, suffix, smiles, mf, mw from salts order by pkey'
+sSql = f'select pkey, suffix, smiles, mf, mw from chem_reg.salts order by pkey'
 cur.execute(sSql)
 salts = cur.fetchall()
 
@@ -43,6 +43,14 @@ def getNewRegno():
     cur.execute(sSql)
     pkey = cur.fetchall()[0][0] +1
     sSql = f"update chem_reg.regno_sequence set pkey={pkey}"
+    cur.execute(sSql)
+    return pkey
+
+def getNewSaltNumber():
+    sSql = "select pkey from chem_reg.salts_sequence"
+    cur.execute(sSql)
+    pkey = cur.fetchall()[0][0] +1
+    sSql = f"update chem_reg.salts_sequence set pkey={pkey}"
     cur.execute(sSql)
     return pkey
 
@@ -74,6 +82,7 @@ def createPngFromMolfile(regno, molfile):
 def getSaltLetters(saSmileFragments):
     saSaltLetters = ''
     for smile in saSmileFragments:
+        print(smile)
         mol = Chem.MolFromSmiles(smile)
         # Remove all stereochemistry from the fragment
         Chem.rdmolops.RemoveStereochemistry(mol)
@@ -227,7 +236,33 @@ def getMoleculeProperties(self, molfile):
             saSalts = getSaltLetters(saSmileFragments)
     return (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, sSmiles, '')
 
-
+@jwtauth
+class CreateSalt(tornado.web.RequestHandler):
+    def put(self):
+        sSmiles = self.get_argument("smiles")
+        iSaltNumber = getNewSaltNumber()
+        mol = Chem.MolFromSmiles(sSmiles)
+        mw = Descriptors.MolWt(mol)
+        mf = rdMolDescriptors.CalcMolFormula(mol)
+        suffix = f'X{iSaltNumber}'
+        sSql = f"""insert into chem_reg.salts (suffix, smiles, mw, mf)
+        values ('{suffix}', '{sSmiles}', {mw}, '{mf}')
+        """
+        cur.execute(sSql)
+        
+        
+@jwtauth
+class GetCanonicSmiles(tornado.web.RequestHandler):
+    def get(self):
+        sSmiles = self.get_argument("smiles")
+        sLetters = getSaltLetters([sSmiles])
+        mol = Chem.MolFromSmiles(sSmiles)
+        flattenSmile = Chem.rdmolfiles.MolToSmiles(mol)
+        canonSmile = Chem.CanonSmiles(flattenSmile)
+        sRes = json.dumps([f'{sLetters}', canonSmile])
+        self.finish(sRes)
+        
+        
 @jwtauth
 class GetLastBatchFromEln(tornado.web.RequestHandler):
     def get(self):
