@@ -3,9 +3,7 @@ from PyQt5.uic import loadUi
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QDialog, QApplication
 from PyQt5.QtWidgets import QFileDialog, QProgressBar, QMessageBox
-
 from chemreglib import *
-
 
 ip_rights_list = [None, 'External rights', 'LCBKI', 'Commercial']
 
