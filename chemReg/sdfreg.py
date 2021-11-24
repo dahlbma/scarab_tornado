@@ -213,7 +213,8 @@ class LoadSDF(QDialog):
             dTags['product'] = self.producttype_cb.currentText()
             dTags['library_id'] = self.library_cb.currentText()
             dTags['ip_rights'] = self.ip_rights_cb.currentText()
-            lStatus, sMessage = dbInterface.uploadMolFile(dTags, self.token)
+            
+            lStatus, sMessage = dbInterface.chemRegAddMolFile(dTags, self.token)
             if sMessage == b'newMolecule':
                 iNewMols += 1
             if lStatus != True:
