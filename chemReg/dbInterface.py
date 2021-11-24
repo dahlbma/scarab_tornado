@@ -1,7 +1,7 @@
 import requests
 import json
 
-def uploadMolFile(dict, token):
+def chemRegAddMolFile(dict, token):
     r = requests.post('http://esox3.scilifelab.se:8082/api/chemRegAddMol',
                       data = dict,
                       headers={'token': token})
