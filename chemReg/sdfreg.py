@@ -6,6 +6,9 @@ from PyQt5.QtWidgets import QFileDialog, QProgressBar, QMessageBox
 
 from chemreglib import *
 
+
+ip_rights_list = [None, 'External rights', 'LCBKI', 'Commercial']
+
 class LoadSDF(QDialog):
     def __init__(self, token):
         super(LoadSDF, self).__init__()
@@ -59,20 +62,26 @@ class LoadSDF(QDialog):
         self.elnids_text.textChanged.connect(self.parseElnIds)
         self.sdfname_lab.setText(' ')
 
+
+        self.ip_rights_cb.addItems(ip_rights_list)
+        self.ip_rights_cb.currentTextChanged.connect(self.check_fields)
+
         self.exec_()
         self.show()
     
     def check_fields(self):
         if self.sdfilename == None or \
-           self.submitter_cb.currentText() == '' or \
-           self.compoundtype_cb.currentText() == '' or \
-           self.project_cb.currentText() == '' or \
-           self.supplier_cb.currentText() == '' or \
-           self.solvent_cb.currentText() == '' or \
-           self.producttype_cb.currentText() == '' or \
-           self.library_cb.currentText() == '' or \
-           self.ElnIdsOK == False:
+             self.submitter_cb.currentText() == '' or \
+             self.compoundtype_cb.currentText() == '' or \
+             self.project_cb.currentText() == '' or \
+             self.supplier_cb.currentText() == '' or \
+             self.solvent_cb.currentText() == '' or \
+             self.producttype_cb.currentText() == '' or \
+             self.library_cb.currentText() == '' or \
+             self.ElnIdsOK == False or \
+             self.ip_rights_cb.currentText() == '':
             self.upload_btn.setEnabled(False)
+           
         else:
             self.upload_btn.setEnabled(True)
 
@@ -203,6 +212,7 @@ class LoadSDF(QDialog):
             dTags['solvent'] = self.solvent_cb.currentText()
             dTags['product'] = self.producttype_cb.currentText()
             dTags['library_id'] = self.library_cb.currentText()
+            dTags['ip_rights'] = self.ip_rights_cb.currentText()
             lStatus, sMessage = dbInterface.uploadMolFile(dTags, self.token)
             if sMessage == b'newMolecule':
                 iNewMols += 1
