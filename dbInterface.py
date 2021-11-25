@@ -82,7 +82,6 @@ def createPngFromMolfile(regno, molfile):
 def getSaltLetters(saSmileFragments):
     saSaltLetters = ''
     for smile in saSmileFragments:
-        print(smile)
         mol = Chem.MolFromSmiles(smile)
         # Remove all stereochemistry from the fragment
         Chem.rdmolops.RemoveStereochemistry(mol)
@@ -278,9 +277,102 @@ class GetLastBatchFromEln(tornado.web.RequestHandler):
         else:
             self.finish(b'0')
             
-        
+
 @jwtauth
-class chemRegAddMol(tornado.web.RequestHandler):
+class GetNextSdfSequence(tornado.web.RequestHandler):
+    def get(self):
+        sSql = "select pkey from chem_reg.sdfile_sequence"
+        cur.execute(sSql)
+        pkey = cur.fetchall()[0][0] +1
+        sSql = f"update chem_reg.sdfile_sequence set pkey={pkey}"
+        cur.execute(sSql)
+        self.finish(f'{pkey}')
+
+
+@jwtauth
+class GetRegnosFromSdfSequence(tornado.web.RequestHandler):
+    def get(self):
+        sdfile_sequence = self.get_argument("sdfile_sequence")
+        sSql = f'''select regno from chem_reg.chem_info
+        where sdfile_sequence = {sdfile_sequence}
+        '''
+        res = sqlExec(sSql)
+        self.finish(res)
+        
+
+@jwtauth
+class BcpvsRegCompound(tornado.web.RequestHandler):
+    def put(self):
+        regno = self.get_argument("regno")
+        sSql = f'''select regno,
+        compound_id,
+        c_mf,
+        ip_rights,
+        c_monoiso,
+        molfile,
+        jpage,
+        suffix,
+        chemist,
+        project,
+        source,
+        c_mw,
+        library_id,
+        compound_type,
+        product,
+        external_id,
+        supplier_batch,
+        purity
+        from chem_reg.chem_info
+        where regno = {regno}'''
+        cur.execute(sSql)
+        (regno,
+         compound_id,
+         c_mf,
+         ip_rights,
+         c_monoiso,
+         molfile,
+         jpage,
+         suffix,
+         chemist,
+         project,
+         source,         #  Supplier
+         c_mw,
+         library_id,
+         compound_type,
+         product,
+         external_id,
+         supplier_batch,
+         purity
+        ) = cur.fetchall()[0]
+        if compound_id == '':
+            # Register a new compound
+            compound_id_numeric = getNewCompoundId()
+            compound_id = registerNewCompound(compound_id_numeric,
+                                              molfile,
+                                              c_mf,
+                                              c_monoiso,
+                                              ip_rights,
+                                              compound_name = '')
+            addStructure("bcpvs.jcmol_moltable", molfile, compound_id, 'compound_id')
+
+        registerNewBatch(compound_id,
+                         regno,
+                         jpage,
+                         suffix,
+                         chemist,
+                         project,
+                         source,         #  Supplier
+                         c_mw,
+                         library_id,
+                         compound_type,
+                         product,
+                         external_id,
+                         supplier_batch,
+                         purity = -1)
+
+
+@jwtauth
+class ChemRegAddMol(tornado.web.RequestHandler):
     def post(self):
         molfile = self.get_body_argument('molfile')
         jpage = self.get_body_argument('jpage')
@@ -294,6 +386,8 @@ class chemRegAddMol(tornado.web.RequestHandler):
         external_id = self.get_body_argument('external_id')
         supplier_batch = self.get_body_argument('supplier_batch')
         purity = self.get_body_argument('purity')
+        ip_rights = self.get_body_argument('ip_rights')
+        sdfile_sequence = self.get_body_argument('sdfile_sequence')
 
         (C_MF,
          C_MW,
@@ -313,7 +407,24 @@ class chemRegAddMol(tornado.web.RequestHandler):
             logger.info(f'Unknown salt in molfile for {external_id} {errorMessage} {sSmiles}')
             return
 
-        ####
+        ########################
+        # Do exact match with molecule against the CBK database
+        sSql = f"""
+        select compound_id, bin2smiles(bcpvs.jcmol_moltable.mol) from
+          bcpvs.jcmol_moltable_ukey join bcpvs.jcmol_moltable on
+                 (bcpvs.jcmol_moltable.molid=bcpvs.jcmol_moltable_ukey.molid)
+        where uniquekey(mol2bin('{molfile}', 'mol'))=molkey
+        """
+        cur.execute(sSql)
+        mols = cur.fetchall()
+        sStatus = 'oldMolecule'
+        if len(mols) == 0:
+            sStatus = 'newMolecule'
+            compound_id = ''
+        else:
+            compound_id = mols[0][0]
+
+        ########################
         # Get new regno and add nmolecule to chem_info
         newRegno = getNewRegno()
         if purity == '':
@@ -322,6 +433,7 @@ class chemRegAddMol(tornado.web.RequestHandler):
         insert into chem_reg.chem_info (
         regno,
         jpage,
+        compound_id,
         rdate,
         chemist,
         compound_type,
@@ -333,15 +445,18 @@ class chemRegAddMol(tornado.web.RequestHandler):
         external_id,
         supplier_batch,
         purity,
+        ip_rights,
         C_CHNS,
         C_MF,
         C_MW,
         C_MONOISO,
         SUFFIX,
+        sdfile_sequence,
         molfile)
         values (
         '{newRegno}',
         '{jpage}',
+        '{compound_id}',
         now(),
         '{chemist}',
         '{compound_type}',
@@ -353,60 +468,18 @@ class chemRegAddMol(tornado.web.RequestHandler):
         '{external_id}',
         '{supplier_batch}',
         {purity},
+        '{ip_rights}',
         '{C_CHNS}',
         '{C_MF}',
         {C_MW},
         {C_MONOISO},
         '{saSalts}',
+        {sdfile_sequence},
         '{molfile}'
         )
         """
         cur.execute(sSql)
-        
-        ####
-        # Do exact match with molecule against the CBK database
-        sSql = f"""
-        select compound_id, bin2smiles(bcpvs.jcmol_moltable.mol) from
-          bcpvs.jcmol_moltable_ukey join bcpvs.jcmol_moltable on
-                 (bcpvs.jcmol_moltable.molid=bcpvs.jcmol_moltable_ukey.molid)
-        where uniquekey(mol2bin('{molfile}', 'mol'))=molkey
-        """
-        cur.execute(sSql)
-        mols = cur.fetchall()
-        sStatus = 'oldMolecule'
-
-        if len(mols) == 0:
-            sStatus = 'newMolecule'
-            ###
-            # It is a new molecule so we need to create it in bcpvs.compound
-            # First generate new compound_id
-            compound_id_numeric = getNewCompoundId()
-            compound_id = registerNewCompound(compound_id_numeric,
-                                              molfile,
-                                              C_MF,
-                                              C_MONOISO,
-                                              ip_rights = '',
-                                              compound_name = '')
-            addStructure("bcpvs.jcmol_moltable", molfile, compound_id, 'compound_id')
-
-        else:
-            compound_id = mols[0][0]
-        registerNewBatch(compound_id,
-                         newRegno,
-                         jpage,
-                         saSalts,
-                         chemist,
-                         project,
-                         source,         #  Supplier
-                         C_MW,
-                         library_id,
-                         compound_type,
-                         product,
-                         external_id,
-                         supplier_batch,
-                         purity = -1)
-
-        addStructure("chem_reg.mol", molfile, newRegno, 'regno')
+        addStructure("chem_reg.chem_info_mol", molfile, newRegno, 'regno')
         self.finish(sStatus)
           
 

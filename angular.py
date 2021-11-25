@@ -76,7 +76,8 @@ class login(tornado.web.RequestHandler):
 def make_app():
     return tornado.web.Application([
         (r"/login", login),
-        (r"/api/chemRegAddMol", dbInterface.chemRegAddMol),
+        (r"/api/bcpvsRegCompound", dbInterface.BcpvsRegCompound),
+        (r"/api/chemRegAddMol", dbInterface.ChemRegAddMol),
         (r"/api/search", dbInterface.Search),
         (r"/api/loadMolfile", dbInterface.LoadMolfile),
         (r"/api/update", dbInterface.UpdateColumn),
@@ -93,6 +94,8 @@ def make_app():
         (r"/api/getLibraries", dbInterface.GetLibraries),
         (r"/api/getLastBatchFromEln", dbInterface.GetLastBatchFromEln),
         (r"/api/getNextRegno", dbInterface.GetNextRegno),
+        (r"/api/getNextSdfSequence", dbInterface.GetNextSdfSequence),
+        (r"/api/getRegnosFromSequence", dbInterface.GetRegnosFromSdfSequence),
         (r"/api/getMolfile", dbInterface.GetMolfile),
         (r"/api/createMolImage", dbInterface.CreateMolImage),
         (r"/getCompound", dbInterface.GetCompound),
