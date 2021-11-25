@@ -172,6 +172,7 @@ class LoadSDF(QDialog):
         QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         sCurrentEln = self.saElnIds[iElnId]
         iBatchCount = dbInterface.getLastBatchOfEln(self.token, sCurrentEln)
+        iSdfSequence = dbInterface.getSdfSequence(self.token)
         while True:
             # Maybe run in separate thread instead, see:
             # https://www.pythonguis.com/tutorials/multithreading-pyqt-applications-qthreadpool/
@@ -211,6 +212,7 @@ class LoadSDF(QDialog):
             dTags['product'] = self.producttype_cb.currentText()
             dTags['library_id'] = self.library_cb.currentText()
             dTags['ip_rights'] = self.ip_rights_cb.currentText()
+            dTags['sdfile_sequence'] = iSdfSequence
             
             lStatus, sMessage = dbInterface.chemRegAddMolFile(dTags, self.token)
             if sMessage == b'newMolecule':
@@ -245,7 +247,7 @@ class LoadSDF(QDialog):
             
     def closeWindow(self):
         self.close()
-    
+
     def getSDFile(self):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 
                                                 '.', "SDFiles (*.sdf)")
