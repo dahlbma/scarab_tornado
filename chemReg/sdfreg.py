@@ -225,6 +225,11 @@ class LoadSDF(QDialog):
                 lError = True
         self.pbar.hide()
         QApplication.restoreOverrideCursor()
+        saRegnos = dbInterface.getRegnosFromSdfSequence(self.token, iSdfSequence)
+
+        for sReg in saRegnos:
+            dbInterface.bcpvsRegCompound(self.token, sReg)
+            
         if lError == False:
             send_msg("SDFile upload done", f'''Uploaded {self.iMolCount} compounds,
  {iNewMols} new compounds, {self.iMolCount - iNewMols} old compounds''')
