@@ -173,6 +173,7 @@ class LoadSDF(QDialog):
         sCurrentEln = self.saElnIds[iElnId]
         iBatchCount = dbInterface.getLastBatchOfEln(self.token, sCurrentEln)
         iSdfSequence = dbInterface.getSdfSequence(self.token)
+        self.event_lab.setText('Register in ChemReg')
         while True:
             # Maybe run in separate thread instead, see:
             # https://www.pythonguis.com/tutorials/multithreading-pyqt-applications-qthreadpool/
@@ -223,12 +224,24 @@ class LoadSDF(QDialog):
                 f_err_msg.write(f"{str(dTags['external_id'])} {str(sMessage)}\n")
                 f_err_msg.flush()
                 lError = True
-        self.pbar.hide()
-        QApplication.restoreOverrideCursor()
         saRegnos = dbInterface.getRegnosFromSdfSequence(self.token, iSdfSequence)
 
+        self.event_lab.setText('Register in Compound database')
+        iTickCount = 0
+        iTicks = int(self.iMolCount / 100)
+        progress = 0
         for sReg in saRegnos:
+            iTickCount += 1
+            if iTickCount == iTicks:
+                progress += 1
+                iTickCount = 0
+                self.pbar.setValue(progress)
+            QApplication.processEvents()
             dbInterface.bcpvsRegCompound(self.token, sReg)
+        self.event_lab.setText('')
+        QApplication.processEvents()
+        self.pbar.hide()
+        QApplication.restoreOverrideCursor()
             
         if lError == False:
             send_msg("SDFile upload done", f'''Uploaded {self.iMolCount} compounds,

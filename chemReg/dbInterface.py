@@ -138,7 +138,6 @@ def getRegnosFromSdfSequence(token, iSequence):
                      params={'sdfile_sequence': iSequence},
                      headers={'token': token})
     res = listify(r, False)
-    print(res)
     return res
 
 def bcpvsRegCompound(token, sReg):
