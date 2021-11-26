@@ -54,3 +54,7 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+
+# Excluded Files
+chemReg/test.py
+chemReg/test.txt
