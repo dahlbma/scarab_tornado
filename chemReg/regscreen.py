@@ -21,6 +21,7 @@ class RegScreen(QMainWindow):
         self.loadsdf_btn.clicked.connect(self.gotoLoadSdf)
         self.gotosearch_btn.clicked.connect(self.gotoSearch)
         self.addmeta_btn.clicked.connect(self.gotoAddMeta)
+        self.regcompound_btn.clicked.connect(self.regCompound)
         self.window().setWindowTitle("Register new compound")
         self.onlyInt = QIntValidator()
         self.populated = False
@@ -154,6 +155,9 @@ class RegScreen(QMainWindow):
             return
         self.dirty = True
         dbInterface.updateValue(action, value, self.token, self.regno)
+
+    def regCompound(self):
+        dbInterface.bcpvsRegCompound(self.token, self.regno)
 
     def gotoSearch(self):
         from searchscreen import SearchScreen

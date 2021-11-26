@@ -4,6 +4,8 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QDialog, QApplication
 from PyQt5.QtWidgets import QFileDialog, QProgressBar, QMessageBox
 from chemreglib import *
+import chardet
+from bs4 import UnicodeDammit
 
 ip_rights_list = [None, 'External rights', 'LCBKI', 'Commercial']
 
@@ -145,7 +147,8 @@ class LoadSDF(QDialog):
 
         for i in lList:            
             if i[0] == str.encode(self.cmpidfield_cb.currentText()):
-                dValues['external_id'] = i[1]
+                dammit = UnicodeDammit(i[1])
+                dValues['external_id'] = dammit.unicode_markup
             elif i[0] == str.encode(self.batchfield_cb.currentText()):
                 dValues['supplier_batch'] = i[1]
             elif i[0] == str.encode(self.purity_cb.currentText()):
@@ -162,7 +165,7 @@ class LoadSDF(QDialog):
         f_err_msg = open(f_err_msg_path, "w")
         lError = False
         iTickCount = 0
-        iTicks = int(self.iMolCount / 100)
+        iTicks = int(self.iMolCount / 97)
         progress = 0
         iElnId = 0
         iNewMols = 0
@@ -228,7 +231,6 @@ class LoadSDF(QDialog):
 
         self.event_lab.setText('Register in Compound database')
         iTickCount = 0
-        iTicks = int(self.iMolCount / 100)
         progress = 0
         for sReg in saRegnos:
             iTickCount += 1
