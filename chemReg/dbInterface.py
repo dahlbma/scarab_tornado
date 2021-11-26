@@ -90,7 +90,13 @@ def getNextRegno(token):
                      headers={'token': token})
     res = r.content.decode()
     return res
-    
+
+def getSdfSequence(token):
+    r = requests.get('http://esox3.scilifelab.se:8082/api/getNextSdfSequence',
+                     headers={'token': token})
+    res = r.content.decode()
+    return res
+
 def getMolFile(token, regno):
     r = requests.get('http://esox3.scilifelab.se:8082/api/getMolfile', 
                      params={'regno': regno}, 
@@ -127,3 +133,15 @@ def createSalt(token, smiles):
     else:
         return True, r.content
 
+def getRegnosFromSdfSequence(token, iSequence):
+    r = requests.get('http://esox3.scilifelab.se:8082/api/getRegnosFromSequence',
+                     params={'sdfile_sequence': iSequence},
+                     headers={'token': token})
+    res = listify(r, False)
+    return res
+
+def bcpvsRegCompound(token, sReg):
+    r = requests.put('http://esox3.scilifelab.se:8082/api/bcpvsRegCompound',
+                     params={'regno': sReg},
+                     headers={'token': token})
+    return r.content
