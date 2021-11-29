@@ -38,6 +38,17 @@ def sqlExec(sSql, values=None):
     result = [list(i) for i in cur.fetchall()]
     return json.dumps(result)
 
+def checkUniqueStructure(molfile):
+    sSql = f"""
+    select compound_id, bin2smiles(bcpvs.jcmol_moltable.mol) from
+    bcpvs.jcmol_moltable_ukey join bcpvs.jcmol_moltable on
+    (bcpvs.jcmol_moltable.molid=bcpvs.jcmol_moltable_ukey.molid)
+    where uniquekey(mol2bin('{molfile}', 'mol'))=molkey
+    """
+    cur.execute(sSql)
+    mols = cur.fetchall()
+    return mols
+
 def getNewRegno():
     sSql = "select pkey from chem_reg.regno_sequence"
     cur.execute(sSql)
@@ -77,7 +88,7 @@ def createPngFromMolfile(regno, molfile):
         # Check:
         https://sourceforge.net/p/rdkit/mailman/rdkit-discuss/thread/48DA553F-AA94-455E-98D7-71287037FE6F%40gmail.com/
         '''
-        logger.info(f"regno {regno} is nostruct")
+        logger.error(f"regno {regno} is nostruct")
 
 def getSaltLetters(saSmileFragments):
     saSaltLetters = ''
@@ -98,7 +109,7 @@ def getSaltLetters(saSmileFragments):
     if saSaltLetters == '':
         # This is an error state, there are multiple fragments in
         # the molfile but there is no match against the salt database
-        logger.info(f"Can't find salt in fragments {saSmileFragments}")
+        logger.error(f"Can't find salt in fragments {saSmileFragments}")
         return False
     return saSaltLetters
 
@@ -166,7 +177,7 @@ def registerNewBatch(compound_id,
                      supplier_id,
                      supplier_batch,
                      purity = -1):
-    
+    print(compound_id)
     sSql = f'''insert into bcpvs.batch (
     compound_id,
     notebook_ref,
@@ -344,17 +355,27 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
          supplier_batch,
          purity
         ) = cur.fetchall()[0]
-        if compound_id == '':
-            # Register a new compound
-            compound_id_numeric = getNewCompoundId()
-            compound_id = registerNewCompound(compound_id_numeric,
-                                              molfile,
-                                              c_mf,
-                                              c_monoiso,
-                                              ip_rights,
-                                              compound_name = '')
-            addStructure("bcpvs.jcmol_moltable", molfile, compound_id, 'compound_id')
 
+        if compound_id in ('', None):
+            mols = checkUniqueStructure(molfile)
+            if len(mols) != 0:
+                print(mols)
+                compound_id = mols[0][0]
+                compound_id_numeric = compound_id[3:]
+            else:
+                # Register a new compound
+                compound_id_numeric = getNewCompoundId()
+                compound_id = registerNewCompound(compound_id_numeric,
+                                                  molfile,
+                                                  c_mf,
+                                                  c_monoiso,
+                                                  ip_rights,
+                                                  compound_name = '')
+                addStructure("bcpvs.jcmol_moltable", molfile, compound_id, 'compound_id')
+        sSql = f'''update chem_reg.chem_info
+                   set compound_id='{compound_id}'
+                   where regno = {regno}'''
+        cur.execute(sSql)
         registerNewBatch(compound_id,
                          regno,
                          jpage,
@@ -369,6 +390,7 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
                          external_id,
                          supplier_batch,
                          purity = -1)
+        self.finish(b'compound_id')
 
 
 @jwtauth
@@ -399,24 +421,17 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         if C_MF == False:
             self.set_status(500)
             self.finish(f'Molfile failed {external_id} {errorMessage} {sSmiles}')
-            logger.info(f'Molfile failed {external_id} {errorMessage} {sSmiles}')
+            logger.error(f'Molfile failed {external_id} {errorMessage} {sSmiles}')
             return
         if saSalts == False:
             self.set_status(500)
             self.finish(f'Unknown salt in molfile for {external_id} {errorMessage} {sSmiles}')
-            logger.info(f'Unknown salt in molfile for {external_id} {errorMessage} {sSmiles}')
+            logger.error(f'Unknown salt in molfile for {external_id} {errorMessage} {sSmiles}')
             return
 
         ########################
         # Do exact match with molecule against the CBK database
-        sSql = f"""
-        select compound_id, bin2smiles(bcpvs.jcmol_moltable.mol) from
-          bcpvs.jcmol_moltable_ukey join bcpvs.jcmol_moltable on
-                 (bcpvs.jcmol_moltable.molid=bcpvs.jcmol_moltable_ukey.molid)
-        where uniquekey(mol2bin('{molfile}', 'mol'))=molkey
-        """
-        cur.execute(sSql)
-        mols = cur.fetchall()
+        mols = checkUniqueStructure(molfile)
         sStatus = 'oldMolecule'
         if len(mols) == 0:
             sStatus = 'newMolecule'
