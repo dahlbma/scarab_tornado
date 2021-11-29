@@ -148,12 +148,9 @@ color: black;
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="compoundid_eb">
-                  <property name="focusPolicy">
-                   <enum>Qt::StrongFocus</enum>
-                  </property>
-                  <property name="readOnly">
-                   <bool>true</bool>
+                 <widget class="QLabel" name="compoundid_lab">
+                  <property name="text">
+                   <string/>
                   </property>
                  </widget>
                 </item>

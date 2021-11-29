@@ -142,14 +142,15 @@ class RegScreen(QMainWindow):
             # save changes
             postMolFile(self, fname_path, self.regno, logging.getLogger(self.mod_name))
             displayMolfile(self)
+            updateMoleculeProperties(self)
             ok_msg.setText("Updated .mol file")
         else:
             # cancel, do nothing
             ok_msg.setText("Did not update .mol file")
         ok_msg.exec_()
         # cleanup, remove tmp.mol
-        os.remove(fname_path) 
-    
+        os.remove(fname_path)
+
     def changeEvent(self, value='', action='doNothing'):
         if action == 'doNothing':
             return
@@ -157,7 +158,8 @@ class RegScreen(QMainWindow):
         dbInterface.updateValue(action, value, self.token, self.regno)
 
     def regCompound(self):
-        dbInterface.bcpvsRegCompound(self.token, self.regno)
+        compound_id = dbInterface.bcpvsRegCompound(self.token, self.regno)
+        updateScreen(self)
 
     def gotoSearch(self):
         from searchscreen import SearchScreen

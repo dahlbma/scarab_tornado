@@ -3,7 +3,6 @@ from PyQt5.QtGui import QImage, QPixmap
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMessageBox
 
-
 ip_rights_list = [None, 'External rights', 'LCBKI', 'Commercial']
 
 def send_msg(title, text, icon=QMessageBox.Information, e=None):
@@ -78,8 +77,7 @@ def updateMoleculeProperties(self):
                                             'C_MONOISO',
                                             self.regno)
     self.monoisomass_lab.setText(monoIsoMass)
-    
-    
+
 def updateScreen(self):
     if self.populated == False:
         self.regno_eb.setText(self.regno)
@@ -128,6 +126,9 @@ def updateScreen(self):
 
         currentBatch = dbInterface.getTextColumn(self.token, 'JPAGE', self.regno)
         self.batch_eb.setText(currentBatch)
+
+        compound_id = dbInterface.getTextColumn(self.token, 'compound_id', self.regno)
+        self.compoundid_lab.setText(compound_id)
 
         submitter = dbInterface.getTextColumn(self.token, 'chemist', self.regno)
         self.submitter_cb.setCurrentText(submitter)
@@ -184,7 +185,7 @@ def updateScreen(self):
     else:
         self.editregno_btn.setEnabled(False)
         self.regno_eb.setText(None)
-        self.compoundid_eb.setText(None)
+        self.compoundid_lab.setText(None)
         self.batch_eb.setText(None)
         self.submitter_cb.setCurrentText(' ')
         self.project_cb.setCurrentText(' ')
