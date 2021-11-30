@@ -83,6 +83,7 @@ def make_app():
         (r"/api/update", dbInterface.UpdateColumn),
         (r"/api/getRegnoData", dbInterface.GetRegnoData),
         (r"/api/createRegno", dbInterface.CreateRegno),
+        (r"/api/updateRegnoBatch", dbInterface.UpdateRegnoBatch),
         (r"/api/createSalt", dbInterface.CreateSalt),
         (r"/api/createSupplier", dbInterface.CreateSupplier),
         (r"/api/createLibrary", dbInterface.CreateLibrary),

@@ -272,7 +272,7 @@ class GetCanonicSmiles(tornado.web.RequestHandler):
         sRes = json.dumps([f'{sLetters}', canonSmile])
         self.finish(sRes)
         
-        
+
 @jwtauth
 class GetLastBatchFromEln(tornado.web.RequestHandler):
     def get(self):
@@ -562,6 +562,33 @@ class LoadMolfile(tornado.web.RequestHandler):
                   where regno = {regno}"""
         cur.execute(sSql)
         createPngFromMolfile(regno, molfile)
+
+
+@jwtauth
+class UpdateRegnoBatch(tornado.web.RequestHandler):
+    def put(self):
+        regno = self.get_argument("regno")
+        batch = self.get_argument("batch")
+        sSql = f"""select compound_id from bcpvs.batch
+                   where notebook_ref = '{batch}'"""
+        cur.execute(sSql)
+        res = cur.fetchall()
+        if len(res) > 0:
+            self.set_status(500)
+            self.finish()
+        else:
+            sSql = f"""select regno from chem_reg.chem_info
+            where jpage = '{batch}' and regno != '{regno}'"""
+            cur.execute(sSql)
+            res = cur.fetchall()
+            if len(res) > 0:
+                self.set_status(500)
+                self.finish()
+            else:
+                sSql = f"""update chem_reg.chem_info
+                set jpage = '{batch}' where regno = '{regno}'"""
+                cur.execute(sSql)
+                self.finish()
 
 
 @jwtauth
