@@ -1,4 +1,4 @@
-import sys, dbInterface, os, shutil, logging
+import sys, dbInterface, os, shutil, logging, re
 from PyQt5.uic import loadUi
 from PyQt5.QtGui import QIntValidator
 from PyQt5 import QtWidgets
@@ -66,8 +66,7 @@ class RegScreen(QMainWindow):
             lambda: self.changeEvent(self.externalbatch_eb.text(), 'SUPPLIER_BATCH'))
 
         #### Batch
-        self.batch_eb.editingFinished.connect(
-            lambda: self.changeEvent(self.batch_eb.text(), 'JPAGE'))
+        self.batch_eb.editingFinished.connect(self.batchChanged)
 
         self.chrom_text.textChanged.connect(
             lambda: self.changeEvent(self.chrom_text.toPlainText(), 'CHROM_TEXT'))
@@ -151,6 +150,14 @@ class RegScreen(QMainWindow):
         # cleanup, remove tmp.mol
         os.remove(fname_path)
 
+    def batchChanged(self):
+        sBatch = self.batch_eb.text()
+        pattern = '^[a-zA-Z]{2}[0-9]{7}$'
+        if len(re.findall(pattern, sBatch)) == 1:
+            res = dbInterface.updateBatch(self.token, self.regno, sBatch)
+            if res == False:
+                send_msg("Batch Id error", f"That batch is already in use")
+        
     def changeEvent(self, value='', action='doNothing'):
         if action == 'doNothing':
             return

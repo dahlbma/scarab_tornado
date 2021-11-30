@@ -37,6 +37,15 @@ def createNewRegno(regno, token):
                      params={'regno': regno},
                      headers={'token': token})
 
+def updateBatch(token, regno, sBatch):
+    r = requests.put('http://esox3.scilifelab.se:8082/api/updateRegnoBatch',
+                     params={'regno': regno, 'batch': sBatch},
+                     headers={'token': token})
+    if r.status_code != 200:
+        return False
+    else:
+        return True
+
 def deleteRegno(regno, token):
     r = requests.put('http://esox3.scilifelab.se:8082/api/deleteRegno',
                      params={'regno': regno},
