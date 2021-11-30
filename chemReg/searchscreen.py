@@ -7,7 +7,6 @@ from chemreglib import *
 from sdfreg import LoadSDF
 from addmetatags import AddMetaTags
 
-
 class SearchScreen(QMainWindow):
     def __init__(self, token):
         super(SearchScreen, self).__init__()
@@ -42,6 +41,7 @@ class SearchScreen(QMainWindow):
 
         self.batch_search_eb.editingFinished.connect(
             lambda: self.searchEvent(self.batch_search_eb.text(), 'JPAGE'))
+
 
     def gotoLoadSdf(self):
         loadSDF = LoadSDF(self.token)

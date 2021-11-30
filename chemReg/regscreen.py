@@ -99,7 +99,7 @@ class RegScreen(QMainWindow):
 
         self.loadmol_btn.clicked.connect(self.uploadMolfile)
         self.editmol_btn.clicked.connect(self.editMolFile)
-        self.structure_lab.mouseReleaseEvent = self.editMolFile
+        #self.structure_lab.mouseReleaseEvent = self.editMolFile
 
     def changeLibraryName(self):
         library_name = dbInterface.getLibraryName(self.token, self.libraryid_cb.currentText())

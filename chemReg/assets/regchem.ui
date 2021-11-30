@@ -134,15 +134,27 @@ background-color: rgb(255, 204, 204)
                 </item>
                 <item>
                  <widget class="QLabel" name="compoundid_lab">
+                  <property name="focusPolicy">
+                   <enum>Qt::StrongFocus</enum>
+                  </property>
                   <property name="text">
                    <string/>
+                  </property>
+                  <property name="textInteractionFlags">
+                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
                   </property>
                  </widget>
                 </item>
                 <item>
                  <widget class="QLabel" name="avgmolmass_lab">
+                  <property name="focusPolicy">
+                   <enum>Qt::StrongFocus</enum>
+                  </property>
                   <property name="text">
                    <string/>
+                  </property>
+                  <property name="textInteractionFlags">
+                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
                   </property>
                  </widget>
                 </item>
@@ -238,6 +250,9 @@ background-color: rgb(255, 204, 204)
                    <widget class="QLabel" name="monoisomass_lab">
                     <property name="text">
                      <string/>
+                    </property>
+                    <property name="textInteractionFlags">
+                     <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
                     </property>
                    </widget>
                   </item>
@@ -1039,7 +1054,7 @@ background-color: rgb(255, 204, 204)
      <x>0</x>
      <y>0</y>
      <width>1240</width>
-     <height>22</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>

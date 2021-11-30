@@ -149,8 +149,18 @@ color: black;
                 </item>
                 <item>
                  <widget class="QLabel" name="compoundid_lab">
+                  <property name="focusPolicy">
+                   <enum>Qt::StrongFocus</enum>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">background-color:&quot;transparent&quot;;
+border: 1px solid black;</string>
+                  </property>
                   <property name="text">
                    <string/>
+                  </property>
+                  <property name="textInteractionFlags">
+                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
                   </property>
                  </widget>
                 </item>
@@ -1451,7 +1461,7 @@ border: 1px solid black;</string>
      <x>0</x>
      <y>0</y>
      <width>1240</width>
-     <height>22</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>
