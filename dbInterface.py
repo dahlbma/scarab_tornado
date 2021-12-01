@@ -177,7 +177,6 @@ def registerNewBatch(compound_id,
                      supplier_id,
                      supplier_batch,
                      purity = -1):
-    print(compound_id)
     sSql = f'''insert into bcpvs.batch (
     compound_id,
     notebook_ref,
@@ -359,7 +358,6 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
         if compound_id in ('', None):
             mols = checkUniqueStructure(molfile)
             if len(mols) != 0:
-                print(mols)
                 compound_id = mols[0][0]
                 compound_id_numeric = compound_id[3:]
             else:
