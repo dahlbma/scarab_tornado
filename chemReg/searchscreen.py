@@ -8,7 +8,7 @@ from sdfreg import LoadSDF
 from addmetatags import AddMetaTags
 
 class SearchScreen(QMainWindow):
-    def __init__(self, token):
+    def __init__(self, token, regno=None):
         super(SearchScreen, self).__init__()
         self.token = token
         self.mod_name = "search"
@@ -19,7 +19,10 @@ class SearchScreen(QMainWindow):
         self.dirty = False
         self.populated = False
         self.searchingInProgress = False
-        self.regno = None
+        if regno == None:
+            self.regno = None
+        else:
+            self.searchEvent(regno, 'regno')
         self.regnos = None
         self.editregno_btn.setEnabled(False)
         self.editregno_btn.clicked.connect(self.gotoEditRegno)

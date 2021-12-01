@@ -25,7 +25,7 @@ class RegScreen(QMainWindow):
         self.window().setWindowTitle("Register new compound")
         self.onlyInt = QIntValidator()
         self.populated = False
-
+        self.regcompound_btn.setEnabled(False)
         #### Regno
         if regno == None:
             self.regno = dbInterface.getNextRegno(self.token)
@@ -165,14 +165,17 @@ class RegScreen(QMainWindow):
         dbInterface.updateValue(action, value, self.token, self.regno)
 
     def regCompound(self):
+        from searchscreen import SearchScreen
         compound_id = dbInterface.bcpvsRegCompound(self.token, self.regno)
-        updateScreen(self)
+        search = SearchScreen(self.token, self.regno)
+        self.window().addWidget(search)
+        self.window().setCurrentIndex(self.window().currentIndex() + 1)
 
     def gotoSearch(self):
         from searchscreen import SearchScreen
         if self.dirty == False:
             dbInterface.deleteRegno(self.regno, self.token)
-        search = SearchScreen(self.token)
+        search = SearchScreen(self.token, self.regno)
         self.window().addWidget(search)
         self.window().setCurrentIndex(self.window().currentIndex() + 1)
 
