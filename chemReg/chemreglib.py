@@ -133,7 +133,7 @@ def updateScreen(self):
             if compound_id in (' ', None, ''):
                 self.regcompound_btn.setEnabled(True)
             else:
-                self.batch_eb.setEnabled(False)
+                self.batch_eb.setReadOnly(True)
                 self.regcompound_btn.setEnabled(False)
                 self.editmol_btn.setEnabled(False)
                 self.loadmol_btn.setEnabled(False)

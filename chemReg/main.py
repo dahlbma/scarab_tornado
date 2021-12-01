@@ -2,6 +2,7 @@ import sys, os
 from PyQt5.uic import loadUi
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5 import QtGui
 
 from chemreglib import *
 from loginscreen import LoginScreen
@@ -57,6 +58,8 @@ try:
     widget.resize(windowWidth, windowHeight)
 
     widget.show()
+    app.setWindowIcon(QtGui.QIcon('chem.ico'))
+    widget.setWindowIcon(QtGui.QIcon('chem.ico'))
     sys.exit(app.exec_())
 except Exception as e:
     logger.info(str(e))
