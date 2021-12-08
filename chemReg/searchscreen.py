@@ -26,6 +26,7 @@ class SearchScreen(QMainWindow):
         self.regnos = None
         self.editregno_btn.setEnabled(False)
         self.editregno_btn.clicked.connect(self.gotoEditRegno)
+        self.editmol_btn.clicked.connect(self.editMolFile)
         self.regno_search_eb.editingFinished.connect(
             lambda: self.searchEvent(self.regno_search_eb.text(), 'regno'))
 
@@ -45,6 +46,17 @@ class SearchScreen(QMainWindow):
         self.batch_search_eb.editingFinished.connect(
             lambda: self.searchEvent(self.batch_search_eb.text(), 'JPAGE'))
 
+    def editMolFile(self):
+        fname = "tmp.mol" # temp file name
+        fname_path = resource_path(fname) # file location / actual file name
+        print(self.regno)
+        if self.regno != None:
+            # download molfile for selected regno, write to 'tmp.mol'
+            tmp_mol_str = dbInterface.getMolFile(self.token, self.regno)
+            tmp_file = open(fname_path, "w")
+            n = tmp_file.write(tmp_mol_str)
+            tmp_file.close()
+            open_file(fname_path)
 
     def gotoLoadSdf(self):
         loadSDF = LoadSDF(self.token)
