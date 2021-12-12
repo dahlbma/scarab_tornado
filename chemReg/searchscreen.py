@@ -50,7 +50,7 @@ class SearchScreen(QMainWindow):
         loadSDF = LoadSDF(self.token)
 
     def previousRegno(self):
-        if self.regno == None:
+        if self.regno == None or self.regnos == None:
             return
         self.searchingInProgress = True
         newIndex = self.regnos.index(self.regno) -1
@@ -61,7 +61,7 @@ class SearchScreen(QMainWindow):
         self.searchingInProgress = False
         
     def nextRegno(self):
-        if self.regno == None:
+        if self.regno == None or self.regnos == None:
             return
         self.searchingInProgress = True
         newIndex = self.regnos.index(self.regno) +1

@@ -66,7 +66,7 @@ class RegScreen(QMainWindow):
             lambda: self.changeEvent(self.externalbatch_eb.text(), 'SUPPLIER_BATCH'))
 
         #### Batch
-        self.batch_eb.editingFinished.connect(self.batchChanged)
+        self.batch_eb.textChanged.connect(self.batchChanged)
 
         self.chrom_text.textChanged.connect(
             lambda: self.changeEvent(self.chrom_text.toPlainText(), 'CHROM_TEXT'))
@@ -153,11 +153,14 @@ class RegScreen(QMainWindow):
     def batchChanged(self):
         sBatch = self.batch_eb.text()
         pattern = '^[a-zA-Z]{2}[0-9]{7}$'
+
         if len(re.findall(pattern, sBatch)) == 1:
             res = dbInterface.updateBatch(self.token, self.regno, sBatch)
             if res == False:
                 send_msg("Batch Id error", f"That batch is already in use")
-        
+            elif self.compound_id in (' ', None, ''):
+                self.regcompound_btn.setEnabled(True)
+
     def changeEvent(self, value='', action='doNothing'):
         if action == 'doNothing':
             return
