@@ -127,20 +127,18 @@ def updateScreen(self):
         currentBatch = dbInterface.getTextColumn(self.token, 'JPAGE', self.regno)
         self.batch_eb.setText(currentBatch)
 
-        self.compound_id = dbInterface.getTextColumn(self.token, 'compound_id', self.regno)
-        self.compoundid_lab.setText(self.compound_id)
+        compound_id = dbInterface.getTextColumn(self.token, 'compound_id', self.regno)
+        self.compoundid_lab.setText(compound_id)
         try:
-            if self.compound_id in (' ', None, ''):
-                pass
+            if compound_id not in (' ', None, ''):
                 #self.regcompound_btn.setEnabled(True)
-            else:
                 self.batch_eb.setReadOnly(True)
                 self.regcompound_btn.setEnabled(False)
                 self.editmol_btn.setEnabled(False)
                 self.loadmol_btn.setEnabled(False)
         except Exception as e:
             pass
-        
+
         submitter = dbInterface.getTextColumn(self.token, 'chemist', self.regno)
         self.submitter_cb.setCurrentText(submitter)
         try:

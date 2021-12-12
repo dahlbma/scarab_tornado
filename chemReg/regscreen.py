@@ -98,6 +98,7 @@ class RegScreen(QMainWindow):
 
         self.loadmol_btn.clicked.connect(self.uploadMolfile)
         self.editmol_btn.clicked.connect(self.editMolFile)
+        #self.editmol_btn.setEnabled(False)
         #self.structure_lab.mouseReleaseEvent = self.editMolFile
 
     def changeLibraryName(self):
@@ -143,6 +144,8 @@ class RegScreen(QMainWindow):
             displayMolfile(self)
             updateMoleculeProperties(self)
             ok_msg.setText("Updated .mol file")
+            if self.batch_eb.text() not in ('', ' ', None):
+                self.regcompound_btn.setEnabled(True)
         else:
             # cancel, do nothing
             ok_msg.setText("Did not update .mol file")
@@ -153,14 +156,14 @@ class RegScreen(QMainWindow):
     def batchChanged(self):
         sBatch = self.batch_eb.text()
         pattern = '^[a-zA-Z]{2}[0-9]{7}$'
-
         if len(re.findall(pattern, sBatch)) == 1:
             res = dbInterface.updateBatch(self.token, self.regno, sBatch)
             if res == False:
+                self.regcompound_btn.setEnabled(False)
                 send_msg("Batch Id error", f"That batch is already in use")
-            elif self.compound_id in (' ', None, ''):
+            elif not self.structure_lab.pixmap().isNull():
                 self.regcompound_btn.setEnabled(True)
-
+        
     def changeEvent(self, value='', action='doNothing'):
         if action == 'doNothing':
             return
