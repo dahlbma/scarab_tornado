@@ -1,7 +1,7 @@
 import sys, requests, json, dbInterface, os, subprocess, platform, shutil, datetime, traceback, logging
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QApplication, QMessageBox
 
 ip_rights_list = [None, 'External rights', 'LCBKI', 'Commercial']
 
@@ -10,6 +10,7 @@ def send_msg(title, text, icon=QMessageBox.Information, e=None):
     msg.setWindowTitle(title)
     msg.setIcon(icon)
     msg.setText(text)
+    clipboard = QApplication.clipboard()
     if e is not None:
         # add clipboard btn
         msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Save)
