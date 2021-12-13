@@ -22,6 +22,7 @@ allTabs = True
 dropTable("hive.user_details")
 dropTable("hive.project_details")
 
+
 dropTable("chemspec.analytical_sum")
 dropTable("chemspec.chemspec_salt")
 dropTable("chemspec.chns_log")
@@ -124,7 +125,7 @@ dropTable("screen.ba_rec_ec50")
 dropTable("screen.hts_testsets")
 
 
-xodropTable("bcpvs.jcmol_moltable")
+dropTable("bcpvs.jcmol_moltable")
 dropTable("bcpvs.compound_library")
 dropTable("bcpvs.compound_suppliers")
 dropTable("bcpvs.compound_type")

@@ -6,6 +6,8 @@ import config
 '''
 ## Example usage:
 python register_sdfile.py chemspec chemspec_mol regno chemspec_jcmol_moltable.sdf
+python register_sdfile.py bcpvs jcmol_moltable compound_id bcpvs_jcmol_moltable.sdf
+python register_sdfile.py bcpvs jcsalt_moltable suffix bcpvs_jcsalt_moltable.sdf
 ##
 '''
 parser = argparse.ArgumentParser(description='Import a SDFile into mysql')
@@ -133,14 +135,12 @@ def getValues(sMol):
 file = open(sSDfile,'r')
 
 # Extra columns
-sCols = f"""{sMolId} varchar(20),
-            cd_molweight double,
-            cd_timestamp datetime"""
+sCols = f"""{sMolId} varchar(16) CHARACTER SET utf8mb4"""
 
 dropTables(sSchema, sTable)
 createTable(sSchema, sTable, sCols)
 
-sCols = f"""{sMolId}, cd_molweight, cd_timestamp"""
+sCols = f"""{sMolId}"""
 
 iCount = 0
 while True:
@@ -160,15 +160,34 @@ sSql = f"""
 cur.execute(sSql)
 
 sSql = f"""
-    insert into {sSchema}.{sTable}_keysim
-    select molid, fp(mol, 'sim') as molkey from {sSchema}.{sTable}
-"""
-cur.execute(sSql)
-
-sSql = f"""
     insert into {sSchema}.{sTable}_ukey
     select molid, uniquekey(mol) as molkey from {sSchema}.{sTable}
 """
 cur.execute(sSql)
 db_connection.commit()
+
+
+
+
+'''
+sSql = f"""
+    insert into {sSchema}.{sTable}_keysim
+    select molid, fp(mol, 'sim') as molkey from {sSchema}.{sTable}
+"""
+cur.execute(sSql)
+
+
+mysql> show create database bcpvs;
++----------+---------------------------------------------------------------------------------------------------------------------------------+
+| Database | Create Database                                                                                                                 |
++----------+---------------------------------------------------------------------------------------------------------------------------------+
+| bcpvs    | CREATE DATABASE `bcpvs` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */ |
++----------+---------------------------------------------------------------------------------------------------------------------------------+
+
+
+
+'''
+
+
+
 
