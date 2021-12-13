@@ -121,6 +121,13 @@ if copyTable(engineBCPVS, 'bcpvs.compound', 'compound'):
         cur.execute("""CREATE UNIQUE INDEX compound_idx ON bcpvs.compound(compound_id)""")
     except Exception as e:
         print('Faile to create index on bcpvs.compound ' + str(e))
+
+        cur.execute(f'''CREATE TABLE bcpvs.compound_id_sequence (
+        pkey int NOT NULL,
+        PRIMARY KEY (pkey))''')
+        cur.execute(f'''insert into bcpvs.compound_id_sequence set pkey = 600000''')
+ 
+    
 ##
 
 if copyTable(engineBCPVS, 'bcpvs.batch', 'batch'):
