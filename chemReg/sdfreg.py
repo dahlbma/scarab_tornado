@@ -127,7 +127,7 @@ class LoadSDF(QDialog):
     def to_bytes(self, s):
         if type(s) is bytes:
             return s
-        elif type(s) is str or type(s) is unicode:
+        elif type(s) is str:
             return codecs.encode(s, 'utf-8')
         else:
             raise TypeError("Expected bytes or string, but got %s." % type(s))
