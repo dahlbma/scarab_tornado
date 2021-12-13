@@ -26,7 +26,7 @@ cur = db_connection.cursor()
 #df1 = pt.query_to_df(query1, conn, 10000)
 
 #engineBEEHIVE = sqlalchemy.create_engine('mysql+pymysql://username:password@localhost/SCHEMA')
-engineHIVE = sqlalchemy.create_engine('mysql+pymysql://' + config.HIVE + "?charset=latin1")
+engineHIVE = sqlalchemy.create_engine('mysql+pymysql://' + config.HIVE)
 engineBCPVS = sqlalchemy.create_engine('mysql+pymysql://' + config.BCPVS)
 engineASSAY = sqlalchemy.create_engine('mysql+pymysql://' + config.ASSAY)
 engineCOOL = sqlalchemy.create_engine('mysql+pymysql://' + config.COOL)
@@ -62,7 +62,7 @@ def copyTable(sEngine, sTable, sName):
         df2.to_sql(sName, sEngine, index=False,
         dtype={'MOLFILE':  sqlalchemy.types.Text()})
         sSchemaTab = sTable.split('.')[0] + '.' + sName
-        cur.execute(f"alter table {sSchemaTab} convert to character set latin1 collate latin1_swedish_ci")
+        #cur.execute(f"alter table {sSchemaTab} convert to character set latin1 collate latin1_swedish_ci")
         bReturn = True
     except Exception as e:
         print('Error on creating: ' + sTable + ': ' + str(e))
@@ -110,7 +110,6 @@ if copyTable(engineHIVE, 'hive.project_details_lcb', 'project_details'):
         print(str(e))
         print('Error creating index on hive.project_details.pkey')
 
-
 ################################################
 # BCPVS tables
 if copyTable(engineBCPVS, 'bcpvs.compound', 'compound'):
@@ -122,6 +121,13 @@ if copyTable(engineBCPVS, 'bcpvs.compound', 'compound'):
         cur.execute("""CREATE UNIQUE INDEX compound_idx ON bcpvs.compound(compound_id)""")
     except Exception as e:
         print('Faile to create index on bcpvs.compound ' + str(e))
+
+        cur.execute(f'''CREATE TABLE bcpvs.compound_id_sequence (
+        pkey int NOT NULL,
+        PRIMARY KEY (pkey))''')
+        cur.execute(f'''insert into bcpvs.compound_id_sequence set pkey = 600000''')
+ 
+    
 ##
 
 if copyTable(engineBCPVS, 'bcpvs.batch', 'batch'):
