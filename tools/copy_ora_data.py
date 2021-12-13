@@ -26,7 +26,7 @@ cur = db_connection.cursor()
 #df1 = pt.query_to_df(query1, conn, 10000)
 
 #engineBEEHIVE = sqlalchemy.create_engine('mysql+pymysql://username:password@localhost/SCHEMA')
-engineHIVE = sqlalchemy.create_engine('mysql+pymysql://' + config.HIVE)
+engineHIVE = sqlalchemy.create_engine('mysql+pymysql://' + config.HIVE + "?charset=latin1")
 engineBCPVS = sqlalchemy.create_engine('mysql+pymysql://' + config.BCPVS)
 engineASSAY = sqlalchemy.create_engine('mysql+pymysql://' + config.ASSAY)
 engineCOOL = sqlalchemy.create_engine('mysql+pymysql://' + config.COOL)
@@ -61,6 +61,8 @@ def copyTable(sEngine, sTable, sName):
         print('copy ' + sTable)
         df2.to_sql(sName, sEngine, index=False,
         dtype={'MOLFILE':  sqlalchemy.types.Text()})
+        sSchemaTab = sTable.split('.')[0] + '.' + sName
+        cur.execute(f"alter table {sSchemaTab} convert to character set latin1 collate latin1_swedish_ci")
         bReturn = True
     except Exception as e:
         print('Error on creating: ' + sTable + ': ' + str(e))
@@ -75,6 +77,39 @@ dtype={'name_of_datefld': sqlalchemy.DateTime(),
        'name_of_floatfld': sqlalchemy.types.Float(precision=3, asdecimal=True),
        'name_of_booleanfld': sqlalchemy.types.Boolean}
 '''
+
+
+################################################
+# HIVE tables
+
+if copyTable(engineHIVE, 'hive.user_details', 'user_details'):
+    cur.execute("ALTER TABLE hive.user_details Modify column userid varchar(40)")
+    cur.execute("ALTER TABLE hive.user_details Modify column firstname varchar(40)")
+    cur.execute("ALTER TABLE hive.user_details Modify column lastname varchar(40)")
+    cur.execute("ALTER TABLE hive.user_details Modify column email varchar(80)")
+    cur.execute("ALTER TABLE hive.user_details Modify column unix_account varchar(4)")
+
+    cur.execute("ALTER TABLE hive.user_details Modify column location varchar(30)")
+    cur.execute("ALTER TABLE hive.user_details Modify column organisation varchar(50)")
+    cur.execute("ALTER TABLE hive.user_details Modify column fullname varchar(82)")
+    cur.execute("ALTER TABLE hive.user_details Modify column organization varchar(255)")
+    
+    try:
+        cur.execute("""ALTER TABLE hive.user_details CHANGE pkey pkey bigint AUTO_INCREMENT PRIMARY KEY""")
+    except Exception as e:
+        print(str(e))
+        print('Error creating index on hive.user_details.pkey')
+##
+if copyTable(engineHIVE, 'hive.project_details_lcb', 'project_details'):
+    cur.execute("ALTER TABLE hive.project_details Modify column project_name varchar(40)")
+    cur.execute("ALTER TABLE hive.project_details Modify column project_leader varchar(10)")
+
+    try:
+        cur.execute("""ALTER TABLE hive.project_details CHANGE pkey pkey bigint AUTO_INCREMENT PRIMARY KEY""")
+    except Exception as e:
+        print(str(e))
+        print('Error creating index on hive.project_details.pkey')
+
 
 ################################################
 # BCPVS tables
@@ -457,37 +492,6 @@ if copyTable(engineSFL_ASSAY, 'sfl_assay.rnai', 'rnai'):
     except Exception as e:
         print(str(e))
         print('Error creating index on sfl_assay.rnai.pkey')
-
-################################################
-# HIVE tables
-
-if copyTable(engineHIVE, 'hive.user_details', 'user_details'):
-    cur.execute("ALTER TABLE hive.user_details Modify column userid varchar(40)")
-    cur.execute("ALTER TABLE hive.user_details Modify column firstname varchar(40)")
-    cur.execute("ALTER TABLE hive.user_details Modify column lastname varchar(40)")
-    cur.execute("ALTER TABLE hive.user_details Modify column email varchar(80)")
-    cur.execute("ALTER TABLE hive.user_details Modify column unix_account varchar(4)")
-
-    cur.execute("ALTER TABLE hive.user_details Modify column location varchar(30)")
-    cur.execute("ALTER TABLE hive.user_details Modify column organisation varchar(50)")
-    cur.execute("ALTER TABLE hive.user_details Modify column fullname varchar(82)")
-    cur.execute("ALTER TABLE hive.user_details Modify column organization varchar(255)")
-    
-    try:
-        cur.execute("""ALTER TABLE hive.user_details CHANGE pkey pkey bigint AUTO_INCREMENT PRIMARY KEY""")
-    except Exception as e:
-        print(str(e))
-        print('Error creating index on hive.user_details.pkey')
-##
-if copyTable(engineHIVE, 'hive.project_details_lcb', 'project_details'):
-    cur.execute("ALTER TABLE hive.project_details Modify column project_name varchar(40)")
-    cur.execute("ALTER TABLE hive.project_details Modify column project_leader varchar(10)")
-
-    try:
-        cur.execute("""ALTER TABLE hive.project_details CHANGE pkey pkey bigint AUTO_INCREMENT PRIMARY KEY""")
-    except Exception as e:
-        print(str(e))
-        print('Error creating index on hive.project_details.pkey')
 
 ################################################
 # LOCTREE tables
@@ -1075,7 +1079,7 @@ if copyTable(engineCHEMSPEC, 'chemspec.storage_tbl', 'storage_tbl'):
 
 ################################################
 # Close
-pt.close_connection(conn)
+pt.close_connection(con)
 
 quit()
 

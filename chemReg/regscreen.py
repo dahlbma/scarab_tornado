@@ -66,7 +66,7 @@ class RegScreen(QMainWindow):
             lambda: self.changeEvent(self.externalbatch_eb.text(), 'SUPPLIER_BATCH'))
 
         #### Batch
-        self.batch_eb.editingFinished.connect(self.batchChanged)
+        self.batch_eb.textChanged.connect(self.batchChanged)
 
         self.chrom_text.textChanged.connect(
             lambda: self.changeEvent(self.chrom_text.toPlainText(), 'CHROM_TEXT'))
@@ -98,6 +98,7 @@ class RegScreen(QMainWindow):
 
         self.loadmol_btn.clicked.connect(self.uploadMolfile)
         self.editmol_btn.clicked.connect(self.editMolFile)
+        #self.editmol_btn.setEnabled(False)
         #self.structure_lab.mouseReleaseEvent = self.editMolFile
 
     def changeLibraryName(self):
@@ -143,6 +144,8 @@ class RegScreen(QMainWindow):
             displayMolfile(self)
             updateMoleculeProperties(self)
             ok_msg.setText("Updated .mol file")
+            if self.batch_eb.text() not in ('', ' ', None):
+                self.regcompound_btn.setEnabled(True)
         else:
             # cancel, do nothing
             ok_msg.setText("Did not update .mol file")
@@ -156,7 +159,10 @@ class RegScreen(QMainWindow):
         if len(re.findall(pattern, sBatch)) == 1:
             res = dbInterface.updateBatch(self.token, self.regno, sBatch)
             if res == False:
+                self.regcompound_btn.setEnabled(False)
                 send_msg("Batch Id error", f"That batch is already in use")
+            elif not self.structure_lab.pixmap().isNull():
+                self.regcompound_btn.setEnabled(True)
         
     def changeEvent(self, value='', action='doNothing'):
         if action == 'doNothing':

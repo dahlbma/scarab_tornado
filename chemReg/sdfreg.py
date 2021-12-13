@@ -62,7 +62,6 @@ class LoadSDF(QDialog):
         self.elnids_text.textChanged.connect(self.parseElnIds)
         self.sdfname_lab.setText(' ')
 
-
         self.ip_rights_cb.addItems(ip_rights_list)
         self.ip_rights_cb.currentTextChanged.connect(self.check_fields)
 
@@ -94,9 +93,11 @@ class LoadSDF(QDialog):
         saStrings = sIds.split(' ')
         iElnIdsFound = 0
         pattern = '^[a-zA-Z0-9]{6}$'
+        
         for sId in saStrings:
             if len(re.findall(pattern, sId)) == 1:
                 iElnIdsFound += 1
+        saStrings = list(set(saStrings))
         if iElnIdsFound == self.iNrElnIds and len(saStrings) == iElnIdsFound:
             self.saElnIds = saStrings
             self.ElnIdsOK = True
