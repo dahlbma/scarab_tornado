@@ -551,6 +551,12 @@ class LoadMolfile(tornado.web.RequestHandler):
             self.finish(f'Molfile failed {regno} {errorMessage}')
             print(f'Molfile failed {regno}')
             return
+        try:
+            addStructure('chem_reg.chem_info_mol', molfile, regno, 'regno')
+        except Exception as e:
+            print(str(e))
+            print(f'failed on regno {regno}')
+            return
         sSql = f"""update chem_reg.chem_info set
                    `molfile` = '{molfile}',
                     C_MF = '{C_MF}',

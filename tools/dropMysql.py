@@ -16,9 +16,11 @@ def dropTable(sTab):
     except Exception as e:
         print(e)
 
-
 allTabs = True
 #allTabs = False
+
+dropTable("hive.user_details")
+dropTable("hive.project_details")
 
 dropTable("chemspec.analytical_sum")
 dropTable("chemspec.chemspec_salt")
@@ -37,9 +39,6 @@ dropTable("chemspec.chem_info")
 
 
 dropTable("sfl_assay.rnai")
-
-dropTable("hive.user_details")
-dropTable("hive.project_details")
 
 dropTable("microtube.matrix")
 dropTable("microtube.matrix_position")
@@ -125,7 +124,7 @@ dropTable("screen.ba_rec_ec50")
 dropTable("screen.hts_testsets")
 
 
-#dropTable("bcpvs.jcmol_moltable")
+xodropTable("bcpvs.jcmol_moltable")
 dropTable("bcpvs.compound_library")
 dropTable("bcpvs.compound_suppliers")
 dropTable("bcpvs.compound_type")
