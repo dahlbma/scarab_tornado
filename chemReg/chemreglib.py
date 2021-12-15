@@ -85,6 +85,7 @@ def updateScreen(self):
         submitters = dbInterface.getColComboData(self.token, 'chemist')
         self.submitter_cb.addItems(submitters)
         try:
+            self.submitter_search_cb.clear()
             self.submitter_search_cb.addItems(submitters)
         except:
             pass
@@ -139,14 +140,12 @@ def updateScreen(self):
                 self.loadmol_btn.setEnabled(False)
         except Exception as e:
             pass
-
         submitter = dbInterface.getTextColumn(self.token, 'chemist', self.regno)
         self.submitter_cb.setCurrentText(submitter)
         try:
             self.submitter_search_cb.setCurrentText(submitter)
         except:
             pass
-
         project = dbInterface.getTextColumn(self.token, 'project', self.regno)
         self.project_cb.setCurrentText(project)
 

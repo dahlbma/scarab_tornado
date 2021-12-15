@@ -69,7 +69,9 @@ class SearchScreen(QMainWindow):
         if newIndex > -1:
             self.regno = self.regnos[newIndex]
             self.numberOfHits_lab.setText(str(newIndex +1) + " of " + str(len(self.regnos)))
+            self.populated == False
             updateScreen(self)
+            self.populated == True
         self.searchingInProgress = False
         
     def nextRegno(self):
@@ -80,7 +82,9 @@ class SearchScreen(QMainWindow):
         if newIndex < len(self.regnos):
             self.numberOfHits_lab.setText(str(newIndex +1) + " of " + str(len(self.regnos)))
             self.regno = self.regnos[newIndex]
+            self.populated == False
             updateScreen(self)
+            self.populated == True
         self.searchingInProgress = False
 
     def gotoEditRegno(self):
