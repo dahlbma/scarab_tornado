@@ -80,7 +80,6 @@ class LoadSDF(QDialog):
              self.ElnIdsOK == False or \
              self.ip_rights_cb.currentText() == '':
             self.upload_btn.setEnabled(False)
-           
         else:
             self.upload_btn.setEnabled(True)
 

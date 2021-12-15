@@ -26,6 +26,8 @@ class RegScreen(QMainWindow):
         self.onlyInt = QIntValidator()
         self.populated = False
         self.regcompound_btn.setEnabled(False)
+        self.batchOk = False
+        self.moleculeOk = False
         #### Regno
         if regno == None:
             self.regno = dbInterface.getNextRegno(self.token)
@@ -144,7 +146,8 @@ class RegScreen(QMainWindow):
             displayMolfile(self)
             updateMoleculeProperties(self)
             ok_msg.setText("Updated .mol file")
-            if self.batch_eb.text() not in ('', ' ', None):
+            self.moleculeOk = True
+            if self.batch_eb.text() not in ('', ' ', None) and self.allDataPresent():
                 self.regcompound_btn.setEnabled(True)
         else:
             # cancel, do nothing
@@ -153,21 +156,45 @@ class RegScreen(QMainWindow):
         # cleanup, remove tmp.mol
         os.remove(fname_path)
 
+    def allDataPresent(self):
+        if self.submitter_cb.currentText() == '' or \
+           self.compoundtype_cb.currentText() == '' or \
+           self.project_cb.currentText() == '' or \
+           self.product_cb.currentText() == '' or \
+           self.libraryid_cb.currentText() == '' or \
+           self.batchOk == False or \
+           self.moleculeOk == False or \
+           self.ip_rights_cb.currentText() == '':
+            return False
+        else:
+            return True
+    
     def batchChanged(self):
         sBatch = self.batch_eb.text()
         pattern = '^[a-zA-Z]{2}[0-9]{7}$'
+        self.batchOk = False
         if len(re.findall(pattern, sBatch)) == 1:
             res = dbInterface.updateBatch(self.token, self.regno, sBatch)
             if res == False:
                 self.regcompound_btn.setEnabled(False)
                 send_msg("Batch Id error", f"That batch is already in use")
-            elif not self.structure_lab.pixmap().isNull():
+            else:
+                self.batchOk = True
+
+            if self.allDataPresent():
                 self.regcompound_btn.setEnabled(True)
+        else:
+            self.regcompound_btn.setEnabled(False)
+            
         
     def changeEvent(self, value='', action='doNothing'):
         if action == 'doNothing':
             return
         self.dirty = True
+        if self.allDataPresent():
+            self.regcompound_btn.setEnabled(True)
+        else:
+            self.regcompound_btn.setEnabled(False)
         dbInterface.updateValue(action, value, self.token, self.regno)
 
     def regCompound(self):
