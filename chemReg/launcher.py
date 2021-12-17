@@ -48,12 +48,7 @@ class LauncherScreen(QDialog):
         info_dict = dict()
         try:
             with open('./ver.dat', 'r') as f:
-                for line in f:
-                    print(line)
-                    # reads each line and trims of extra the spaces 
-                    # and gives only the valid words
-                    data, description = line.strip().split(None, 1)
-                    info_dict[data] = description.strip()
+                info_dict = json.loads(f)
         except Exception as e:
             logging.getLogger(self.mod_name).error(str(e))
             # create version file
@@ -77,11 +72,11 @@ class LauncherScreen(QDialog):
                 bin_r = requests.get('<>', data={'os_name':os_name}, stream=True) # fetch chemreg dist
                 exec_path = ""
                 if os_name == 'Windows':
-                    exec_path = 'chemreg.exe'
+                    exec_path = '{}/chemreg.exe'.format(os.getcwd())
                 elif os_name == 'Linux':
-                    exec_path = './chemreg'
+                    exec_path = '{}/chemreg'.format(os.getcwd())
                 elif os_name == 'Darwin':
-                    exec_path = 'chemreg'
+                    exec_path = '{}/chemreg'.format(os.getcwd())
                 with open(exec_path, 'wb') as chemreg_file:
                     shutil.copyfileobj(bin_r.raw, chemreg_file)
                 with open('./ver.dat', 'w', encoding='utf-8') as ver_file:
