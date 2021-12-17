@@ -39,52 +39,74 @@ class LauncherScreen(QDialog):
         # return true if chemReg is outdated
         try: 
             r = requests.get('<>') # get file version
+            # turn it into a dict
+            info = json.loads(r)
         except Exception as e:
             self.status_lab.setText("ERROR no connection")
             logging.getLogger(self.mod_name).error(str(e))
-            return
+            return 2, None
         info_dict = dict()
-        with open('./ver.dat') as f:
-            for line in f:
-                # reads each line and trims of extra the spaces 
-                # and gives only the valid words
-                command, description = line.strip().split(None, 1)
-                info_dict[command] = description.strip()
+        try:
+            with open('./ver.dat', 'r') as f:
+                for line in f:
+                    print(line)
+                    # reads each line and trims of extra the spaces 
+                    # and gives only the valid words
+                    data, description = line.strip().split(None, 1)
+                    info_dict[data] = description.strip()
+        except Exception as e:
+            logging.getLogger(self.mod_name).error(str(e))
+            # create version file
+            return 1
         # check if versions match
-        ok = True if r.content == info_dict['version'] else False
-        return ok
+        ok = 0 if info['version'] == info_dict['version'] else 1
+        # ok is 0 if versions match, 1 if update is needed, 2 if no connection
+        return ok, info
 
 
     def updatefunction(self):
         # check if versions match
-        match = self.ver_check()
-        
-        if match:
-            # all is well
-            return 0
-        else:
-            # update
+        match, info = self.ver_check()
+        if match == 2:
+            # no connection to server
+            return -1
+        elif match == 1:
+            # update needed
             os_name = platform.system()
             try: 
-                r = requests.get('<>', data={'os_name':os_name}) # fetch chemreg dist
+                bin_r = requests.get('<>', data={'os_name':os_name}, stream=True) # fetch chemreg dist
+                exec_path = ""
+                if os_name == 'Windows':
+                    exec_path = 'chemreg.exe'
+                elif os_name == 'Linux':
+                    exec_path = './chemreg'
+                elif os_name == 'Darwin':
+                    exec_path = 'chemreg'
+                with open(exec_path, 'wb') as chemreg_file:
+                    shutil.copyfileobj(bin_r.raw, chemreg_file)
+                with open('./ver.dat', 'w', encoding='utf-8') as ver_file:
+                    json.dump(info, ver_file, ensure_ascii=False, indent=4)
             except Exception as e:
                 self.status_lab.setText("ERROR ")
                 logging.getLogger(self.mod_name).error(str(e))
-                return
+                return -1
+        # all is well
+        return 0
 
 
     def runfunction(self):
-        self.updatefunction()
-        os_name = platform.system()
-        if os_name == 'Windows':
-            subprocess.Popen(['chemreg.exe'], shell=True)
-        elif os_name == 'Linux':
-            subprocess.Popen(['./chemreg'], shell=True)
-        elif os_name == 'Darwin':
-            subprocess.Popen(['open', 'chemreg'], shell=True)
-        else:
-            send_msg("Error", "Can not launch chemreg, unknown OS", icon=QMessageBox.Warning)
-        QtWidgets.QApplication.instance().quit()
+        check = self.updatefunction()
+        if check != -1:
+            os_name = platform.system()
+            if os_name == 'Windows':
+                subprocess.Popen(['chemreg.exe'], shell=True)
+            elif os_name == 'Linux':
+                subprocess.Popen(['./chemreg'], shell=True)
+            elif os_name == 'Darwin':
+                subprocess.Popen(['open', 'chemreg'], shell=True)
+            else:
+                send_msg("Error", "Can not launch chemreg, unknown OS", icon=QMessageBox.Warning)
+            QtWidgets.QApplication.instance().quit()
         return
         
 
