@@ -81,7 +81,7 @@ class getVersionData(tornado.web.RequestHandler):
         # send verdat
         try:
             with open('./ver.dat', 'r') as f:
-                self.write(json.load(f))
+                self.write(json.loads(f))
                 return
         except Exception as e:
             self.set_status(500)
