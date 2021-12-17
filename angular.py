@@ -72,7 +72,44 @@ class login(tornado.web.RequestHandler):
 
     def get(self):
         pass
-        
+
+class getVersionData(tornado.web.RequestHandler):
+    def post(self):
+        pass
+
+    def get(self):
+        # send verdat
+        try:
+            with open('./ver.dat', 'r') as f:
+                self.write(json.load(f))
+                return
+        except Exception as e:
+            self.set_status(500)
+            self.write({'message': 'ver.dat not available'})
+
+class getChemReg(tornado.web.RequestHandler):
+    def post(self):
+        pass
+
+    def get(self):
+        # send chemReg
+        os_name = self.get_argument('os_name')
+        bin_file = ""
+        if os_name == 'Windows':
+            bin_file = os_name + "/chemreg.exe"
+        elif os_name == 'Linux':
+            bin_file = os_name + "/chemreg"
+        elif os_name == 'Darwin':
+            bin_file = os_name + "/chemreg"
+        else:
+            # unsupported OS
+            self.set_status(500)
+            self.write({'message': 'OS not supported'})
+        with open(bin_file, 'rb') as f:
+            self.set_status(200)
+            self.write(f)
+
+
 def make_app():
     return tornado.web.Application([
         (r"/login", login),
@@ -101,6 +138,8 @@ def make_app():
         (r"/api/createMolImage", dbInterface.CreateMolImage),
         (r"/getCompound", dbInterface.GetCompound),
         (r"/mols/(.*)", web.StaticFileHandler, {"path": "mols/"}),
+        (r"/getVersionData", getVersionData),
+        (r"/getChemRegBin", getChemReg)
     ], **settings)
 
 if __name__ == "__main__":
