@@ -48,7 +48,7 @@ class LauncherScreen(QDialog):
         info_dict = dict()
         try:
             with open('./ver.dat', 'r') as f:
-                info_dict = json.loads(f)
+                info_dict = json.load(f)
         except Exception as e:
             logging.getLogger(self.mod_name).error(str(e))
             # create version file
