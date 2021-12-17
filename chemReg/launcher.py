@@ -23,7 +23,7 @@ class LauncherScreen(QDialog):
         self.run_chemreg_btn.setDefault(True)
         self.run_chemreg_btn.setAutoDefault(True)
 
-        if self.ver_check() is False: # outdated
+        if self.ver_check() == 1: # outdated
             self.status_lab.setText("""ChemReg is outdated!<br>
             Please <b>'Update ChemReg'</b> or<br>
             <b>'Run ChemReg'</b> to Update.""")
@@ -38,7 +38,7 @@ class LauncherScreen(QDialog):
     def ver_check(self):
         # return true if chemReg is outdated
         try: 
-            r = requests.get('<>') # get file version
+            r = requests.get('http://esox3.scilifelab.se:8082/getVersionData') # get file version
             # turn it into a dict
             info = json.loads(r)
         except Exception as e:
@@ -69,7 +69,7 @@ class LauncherScreen(QDialog):
             # update needed
             os_name = platform.system()
             try: 
-                bin_r = requests.get('<>', data={'os_name':os_name}, stream=True) # fetch chemreg dist
+                bin_r = requests.get('http://esox3.scilifelab.se:8082/getChemRegBin', data={'os_name':os_name}, stream=True) # fetch chemreg dist
                 exec_path = ""
                 if os_name == 'Windows':
                     exec_path = '{}/chemreg.exe'.format(os.getcwd())

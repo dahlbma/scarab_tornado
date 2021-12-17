@@ -87,7 +87,7 @@ class getVersionData(tornado.web.RequestHandler):
             self.set_status(500)
             self.write({'message': 'ver.dat not available'})
 
-class getChemReg(tornado.web.RequestHandler):
+class getChemRegBin(tornado.web.RequestHandler):
     def post(self):
         pass
 
@@ -139,7 +139,7 @@ def make_app():
         (r"/getCompound", dbInterface.GetCompound),
         (r"/mols/(.*)", web.StaticFileHandler, {"path": "mols/"}),
         (r"/getVersionData", getVersionData),
-        (r"/getChemRegBin", getChemReg)
+        (r"/getChemRegBin", getChemRegBin)
     ], **settings)
 
 if __name__ == "__main__":
