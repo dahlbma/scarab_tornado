@@ -84,6 +84,7 @@ class getVersionData(tornado.web.RequestHandler):
                 self.write(json.loads(f))
                 return
         except Exception as e:
+            print(str(e))
             self.set_status(500)
             self.write({'message': 'ver.dat not available'})
 

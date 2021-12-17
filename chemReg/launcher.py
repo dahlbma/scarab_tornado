@@ -40,11 +40,15 @@ class LauncherScreen(QDialog):
         try: 
             r = requests.get('http://esox3.scilifelab.se:8082/getVersionData') # get file version
             # turn it into a dict
-            info = json.loads(r)
+            info = json.loads(r.content)
+            logging.info(f"recieved {info}")
         except Exception as e:
             self.status_lab.setText("ERROR no connection")
             logging.getLogger(self.mod_name).error(str(e))
+            print(2)
             return 2, None
+        if r.status_code == 500:
+            return 2, info
         info_dict = dict()
         try:
             with open('./ver.dat', 'r') as f:
@@ -52,10 +56,11 @@ class LauncherScreen(QDialog):
         except Exception as e:
             logging.getLogger(self.mod_name).error(str(e))
             # create version file
-            return 1
+            return 1, {"version":"-1"}
         # check if versions match
         ok = 0 if info['version'] == info_dict['version'] else 1
         # ok is 0 if versions match, 1 if update is needed, 2 if no connection
+        print(ok)
         return ok, info
 
 
@@ -81,6 +86,7 @@ class LauncherScreen(QDialog):
                     shutil.copyfileobj(bin_r.raw, chemreg_file)
                 with open('./ver.dat', 'w', encoding='utf-8') as ver_file:
                     json.dump(info, ver_file, ensure_ascii=False, indent=4)
+                os.chmod(exec_path, os.stat.S_IXUSR)
             except Exception as e:
                 self.status_lab.setText("ERROR ")
                 logging.getLogger(self.mod_name).error(str(e))
@@ -115,14 +121,14 @@ logger.setLevel(level)
 # console logging
 ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)
-formatter = logging.Formatter('%(name)s:%(message)s')
+formatter = logging.Formatter('%(name)s:%(filename)s:%(lineno)d:%(message)s')
 ch.setFormatter(formatter)
 
 # file logging
 file=os.path.join(".","chemreg_launcher.log")
 fh = logging.FileHandler(file)
 fh.setLevel(level)
-formatter = logging.Formatter('%(asctime)s : %(name)s:%(levelname)s : %(message)s',
+formatter = logging.Formatter('%(asctime)s : %(name)s:%(levelname)s: %(filename)s:%(lineno)d: %(message)s',
                               datefmt='%m/%d/%Y %H:%M:%S')
 fh.setFormatter(formatter)
 
@@ -130,31 +136,31 @@ logger.addHandler(ch)
 logger.addHandler(fh)
 
 
-try:
-    # base app settings
-    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "2"
-    app = QApplication(['Chem Reg Launcher'])
-    clipboard = app.clipboard()
+#try:
+# base app settings
+os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "2"
+app = QApplication(['Chem Reg Launcher'])
+clipboard = app.clipboard()
 
-    launch = LauncherScreen()
-    widget = QtWidgets.QStackedWidget()
-    widget.addWidget(launch)
+launch = LauncherScreen()
+widget = QtWidgets.QStackedWidget()
+widget.addWidget(launch)
 
-    desktop = QApplication.desktop()
-    windowHeight = 340
-    windowWidth = 508
+desktop = QApplication.desktop()
+windowHeight = 340
+windowWidth = 508
 
-    #windowHeight = int(round(0.5 * desktop.screenGeometry().height(), -1))
-    #if windowHeight > 800:
-    #    windowHeight = 800
+#windowHeight = int(round(0.5 * desktop.screenGeometry().height(), -1))
+#if windowHeight > 800:
+#    windowHeight = 800
 
-    #windowWidth = int(round((1200/800) * windowHeight, -1))
+#windowWidth = int(round((1200/800) * windowHeight, -1))
 
-    widget.resize(windowWidth, windowHeight)
+widget.resize(windowWidth, windowHeight)
 
-    widget.show()
-    app.setWindowIcon(QtGui.QIcon('asssets/chem.ico'))
-    widget.setWindowIcon(QtGui.QIcon('assets/chem.ico'))
-    sys.exit(app.exec_())
-except Exception as e:
-    logger.info(str(e))
+widget.show()
+app.setWindowIcon(QtGui.QIcon('asssets/chem.ico'))
+widget.setWindowIcon(QtGui.QIcon('assets/chem.ico'))
+sys.exit(app.exec_())
+#except Exception as e:
+#    logger.info(str(e))

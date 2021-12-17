@@ -28,7 +28,7 @@ ch.setFormatter(formatter)
 file=os.path.join(".","chemreg.log")
 fh = logging.FileHandler(file)
 fh.setLevel(level)
-formatter = logging.Formatter('%(asctime)s : %(name)s:%(levelname)s : %(message)s',
+formatter = logging.Formatter('%(asctime)s : %(name)s:%(levelname)s: %(filename)s:%(lineno)d: %(message)s',
                               datefmt='%m/%d/%Y %H:%M:%S')
 fh.setFormatter(formatter)
 
