@@ -83,13 +83,14 @@ class LauncherScreen(QDialog):
                 with open(exec_path, 'wb') as chemreg_file:
                     shutil.copyfileobj(bin_r.raw, chemreg_file)
                 os.chmod(exec_path, 0o775)
-                with open('./ver.dat', 'w', encoding='utf-8') as ver_file:
-                    json.dump(info, ver_file, ensure_ascii=False, indent=4)
+                
             except Exception as e:
                 self.status_lab.setText("ERROR ")
                 logging.getLogger(self.mod_name).error(str(e))
                 return -1
         # all is well
+        with open('./ver.dat', 'w', encoding='utf-8') as ver_file:
+            json.dump(info, ver_file, ensure_ascii=False, indent=4)
         return 0
 
 
