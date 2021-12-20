@@ -95,6 +95,14 @@ class LauncherScreen(QDialog):
                 logger.info(str(e))
                 return -1
         # all is well
+        try:
+            r = requests.get('http://esox3.scilifelab.se:8082/getVersionData') # get file version
+            # turn it into a dict
+            info = json.loads(r.content)
+            logger.info(f"recieved {info}")
+        except Exception as e:
+            self.status_lab.setText("ERROR no connection")
+            logger(self.mod_name).error(str(e))
         with open('./ver.dat', 'w', encoding='utf-8') as ver_file:
             json.dump(info, ver_file, ensure_ascii=False, indent=4)
         return 0
