@@ -106,9 +106,10 @@ class getChemRegBin(tornado.web.RequestHandler):
             # unsupported OS
             self.set_status(500)
             self.write({'message': 'OS not supported'})
+            return
         with open(bin_file, 'rb') as f:
             self.set_status(200)
-            self.write(f)
+            self.write(f.read())
 
 
 def make_app():
