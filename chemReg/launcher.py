@@ -85,7 +85,7 @@ class LauncherScreen(QDialog):
                     exec_path = '{}/chemreg'.format(os.getcwd())
                 with open(exec_path, 'wb') as chemreg_file:
                     shutil.copyfileobj(bin_r.raw, chemreg_file)
-                    logging.info(f"Updated chemreg, file version: {info['version']}")
+                    logging.info("Updated chemreg")
                 
                 os.chmod(exec_path, 0o775)
 
