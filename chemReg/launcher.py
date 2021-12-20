@@ -45,7 +45,6 @@ class LauncherScreen(QDialog):
         except Exception as e:
             self.status_lab.setText("ERROR no connection")
             logging.getLogger(self.mod_name).error(str(e))
-            print(2)
             return 2, None
         if r.status_code == 500:
             return 2, info
@@ -60,7 +59,6 @@ class LauncherScreen(QDialog):
         # check if versions match
         ok = 0 if info['version'] == info_dict['version'] else 1
         # ok is 0 if versions match, 1 if update is needed, 2 if no connection
-        print(ok)
         return ok, info
 
 
@@ -84,9 +82,9 @@ class LauncherScreen(QDialog):
                     exec_path = '{}/chemreg'.format(os.getcwd())
                 with open(exec_path, 'wb') as chemreg_file:
                     shutil.copyfileobj(bin_r.raw, chemreg_file)
+                os.chmod(exec_path, 0o775)
                 with open('./ver.dat', 'w', encoding='utf-8') as ver_file:
                     json.dump(info, ver_file, ensure_ascii=False, indent=4)
-                os.chmod(exec_path, os.stat.S_IXUSR)
             except Exception as e:
                 self.status_lab.setText("ERROR ")
                 logging.getLogger(self.mod_name).error(str(e))
