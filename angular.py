@@ -84,7 +84,7 @@ class getVersionData(tornado.web.RequestHandler):
                 self.write(json.load(f))
                 return
         except Exception as e:
-            print(str(e))
+            logger.error(str(e))
             self.set_status(500)
             self.write({'message': 'ver.dat not available'})
 
@@ -107,9 +107,13 @@ class getChemRegBin(tornado.web.RequestHandler):
             self.set_status(500)
             self.write({'message': 'OS not supported'})
             return
-        with open(bin_file, 'rb') as f:
-            self.set_status(200)
-            self.write(f.read())
+        try:
+            with open(bin_file, 'rb') as f:
+                logger.info("sending bin file")
+                self.set_status(200)
+                self.write(f.read())
+        except Exception as e:
+            logger.error(f"Did not send bin file, error: {str(e)}")
 
 
 def make_app():

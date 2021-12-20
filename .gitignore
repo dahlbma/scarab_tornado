@@ -1,5 +1,6 @@
 config.py
 Linux/
+ver.dat
 mols/
 *.sdf
 *.mol
@@ -59,3 +60,5 @@ docs/_build/
 # Excluded Files
 chemReg/test.py
 chemReg/test.txt
+chemReg/ver.dat
+chemReg/chemreg

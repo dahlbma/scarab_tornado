@@ -14,7 +14,7 @@ class LauncherScreen(QDialog):
     def __init__(self):
         super(LauncherScreen, self).__init__()
         self.mod_name = "launcher"
-        logger = logging.getLogger(self.mod_name)
+        #logger = logging.getLogger(self.mod_name)
         loadUi(resource_path("assets/launcher.ui"), self)
         self.update_chemreg_btn.clicked.connect(self.updatefunction)
         self.update_chemreg_btn.setDefault(False)
@@ -41,10 +41,10 @@ class LauncherScreen(QDialog):
             r = requests.get('http://esox3.scilifelab.se:8082/getVersionData') # get file version
             # turn it into a dict
             info = json.loads(r.content)
-            logging.info(f"recieved {info}")
+            logger.info(f"recieved {info}")
         except Exception as e:
             self.status_lab.setText("ERROR no connection")
-            logging.getLogger(self.mod_name).error(str(e))
+            logger(self.mod_name).error(str(e))
             return 2, None
         if r.status_code == 500:
             return 2, info
@@ -53,7 +53,7 @@ class LauncherScreen(QDialog):
             with open('./ver.dat', 'r') as f:
                 info_dict = json.load(f)
         except Exception as e:
-            logging.getLogger(self.mod_name).error(str(e))
+            logger.error(str(e))
             # create version file
             return 1, {"version":"-1"}
         # check if versions match
@@ -65,6 +65,9 @@ class LauncherScreen(QDialog):
     def updatefunction(self):
         # check if versions match
         match, info = self.ver_check()
+        if self.frc_update_chb.isChecked():
+            logger.info("Force update")
+            match = 1
         if match == 2:
             # no connection to server
             return -1
@@ -82,11 +85,14 @@ class LauncherScreen(QDialog):
                     exec_path = '{}/chemreg'.format(os.getcwd())
                 with open(exec_path, 'wb') as chemreg_file:
                     shutil.copyfileobj(bin_r.raw, chemreg_file)
+                    logging.info(f"Updated chemreg, file version: {info['version']}")
+                
                 os.chmod(exec_path, 0o775)
+
                 
             except Exception as e:
                 self.status_lab.setText("ERROR ")
-                logging.getLogger(self.mod_name).error(str(e))
+                logger.info(str(e))
                 return -1
         # all is well
         with open('./ver.dat', 'w', encoding='utf-8') as ver_file:
