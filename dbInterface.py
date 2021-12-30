@@ -9,7 +9,6 @@ from rdkit import Chem
 from rdkit.Chem import Draw
 from rdkit.Chem import Descriptors
 from rdkit.Chem import rdMolDescriptors
-from rdkit.Chem.SaltRemover import SaltRemover
 from molmass import Formula
 from io import StringIO
 import sys
@@ -27,8 +26,10 @@ db_connection.autocommit(True)
 cur = db_connection.cursor()
 
 sSql = f'select pkey, suffix, smiles, mf, mw from chem_reg.salts order by pkey'
+#sSql = f'select smiles, suffix from chem_reg.salts order by pkey'
 cur.execute(sSql)
 salts = cur.fetchall()
+
 
 def sqlExec(sSql, values=None):
     if values == None:
@@ -38,12 +39,12 @@ def sqlExec(sSql, values=None):
     result = [list(i) for i in cur.fetchall()]
     return json.dumps(result)
 
-def checkUniqueStructure(molfile):
+def checkUniqueStructure(smiles):
     sSql = f"""
     select compound_id, bin2smiles(bcpvs.jcmol_moltable.mol) from
     bcpvs.jcmol_moltable_ukey join bcpvs.jcmol_moltable on
     (bcpvs.jcmol_moltable.molid=bcpvs.jcmol_moltable_ukey.molid)
-    where uniquekey(mol2bin('{molfile}', 'mol'))=molkey
+    where uniquekey(mol2bin('{smiles}', 'smiles'))=molkey
     """
     cur.execute(sSql)
     mols = cur.fetchall()
@@ -84,34 +85,33 @@ def createPngFromMolfile(regno, molfile):
     try:
         Draw.MolToFile(m, f'mols/{regno}.png', size=(280, 280))
     except:
-        '''
-        # Check:
-        https://sourceforge.net/p/rdkit/mailman/rdkit-discuss/thread/48DA553F-AA94-455E-98D7-71287037FE6F%40gmail.com/
-        '''
         logger.error(f"regno {regno} is nostruct")
 
 def getSaltLetters(saSmileFragments):
     saSaltLetters = ''
+    saRemainderSmailes = list()
     for smile in saSmileFragments:
         mol = Chem.MolFromSmiles(smile)
         # Remove all stereochemistry from the fragment
         Chem.rdmolops.RemoveStereochemistry(mol)
         flattenSmile = Chem.rdmolfiles.MolToSmiles(mol)
         canonSmile = Chem.CanonSmiles(flattenSmile)
-        for salt in salts:
-            saltMol = Chem.MolFromSmiles(salt[2])
-            Chem.rdmolops.RemoveStereochemistry(saltMol)
-            saltSmile = salt[2]
-            if canonSmile == saltSmile:
-                saSaltLetters += salt[1]
-                break
-
-    if saSaltLetters == '':
+        sSql = f"select suffix from chem_reg.salts where smiles='{flattenSmile}'"
+        cur.execute(sSql)
+        suffix = cur.fetchall()
+        if len(suffix) == 0:
+            saRemainderSmailes.append(smile)
+        else:
+            saSaltLetters += suffix[0][0]
+    
+    sRemainderSmile = '.'.join(saRemainderSmailes)
+    if saSaltLetters == '' or len(saRemainderSmailes) > 1:
         # This is an error state, there are multiple fragments in
         # the molfile but there is no match against the salt database
         logger.error(f"Can't find salt in fragments {saSmileFragments}")
-        return False
-    return saSaltLetters
+        return False, saRemainderSmailes
+
+    return saSaltLetters, sRemainderSmile
 
 def addStructure(database, molfile, newRegno, idColumnName):
     #####
@@ -225,25 +225,26 @@ def getMoleculeProperties(self, molfile):
         print(str(e))
         return (False, False, False, False, False, '', f'{sio.getvalue()}')
     sSmiles = Chem.MolToSmiles(mol)
+    print(f'All smiles: {sSmiles}')
     if sSmiles == '':
         return (False, False, False, False, False, '', 'Empty molfile')
+    saRemainderSmile = ''
+    saSmileFragments = sSmiles.split('.')
+    saSalts = ''
+    if len(saSmileFragments) > 1:
+        saSalts, saRemainderSmile = getSaltLetters(saSmileFragments)
+        if saSalts == False:
+            return (False, False, False, False, False, '', saRemainderSmile)
+        #for smileFrag in saSmileFragments:
+    if saRemainderSmile != '':
+        resSmiles = saRemainderSmile
+    else:
+        resSmiles = sSmiles
+    #######################
+    ## Old code here
     C_MW = Descriptors.MolWt(mol)
     C_MONOISO = Descriptors.ExactMolWt(mol)
-
-    remover = SaltRemover()
-    res = remover.StripMol(mol)
-    numAtoms = mol.GetNumAtoms()
-    salt = []
-    saSalts = ''
-    if res.GetNumAtoms() != numAtoms:
-        res_mw = Descriptors.MolWt(res)
-            
-        saltMass = C_MW - res_mw
-        sSmiles = Chem.MolToSmiles(mol)
-        saSmileFragments = sSmiles.split('.')
-        if len(saSmileFragments) > 1:
-            saSalts = getSaltLetters(saSmileFragments)
-    return (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, sSmiles, '')
+    return (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, resSmiles, '')
 
 @jwtauth
 class CreateSalt(tornado.web.RequestHandler):
@@ -258,13 +259,13 @@ class CreateSalt(tornado.web.RequestHandler):
         values ('{suffix}', '{sSmiles}', {mw}, '{mf}')
         """
         cur.execute(sSql)
-        
-        
+
+
 @jwtauth
 class GetCanonicSmiles(tornado.web.RequestHandler):
     def get(self):
         sSmiles = self.get_argument("smiles")
-        sLetters = getSaltLetters([sSmiles])
+        sLetters, saRemainderSmile = getSaltLetters([sSmiles])
         mol = Chem.MolFromSmiles(sSmiles)
         flattenSmile = Chem.rdmolfiles.MolToSmiles(mol)
         canonSmile = Chem.CanonSmiles(flattenSmile)
@@ -354,9 +355,10 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
          supplier_batch,
          purity
         ) = cur.fetchall()[0]
-
+        mol = Chem.MolFromMolBlock(molfile)
+        sSmiles = Chem.MolToSmiles(mol)
         if compound_id in ('', None):
-            mols = checkUniqueStructure(molfile)
+            mols = checkUniqueStructure(sSmiles)
             if len(mols) != 0:
                 compound_id = mols[0][0]
                 compound_id_numeric = compound_id[3:]
@@ -408,7 +410,7 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         purity = self.get_body_argument('purity')
         ip_rights = self.get_body_argument('ip_rights')
         sdfile_sequence = self.get_body_argument('sdfile_sequence')
-
+        
         (C_MF,
          C_MW,
          C_MONOISO,
@@ -416,6 +418,7 @@ class ChemRegAddMol(tornado.web.RequestHandler):
          saSalts,
          sSmiles,
          errorMessage) = getMoleculeProperties(self, molfile)
+
         if C_MF == False:
             self.set_status(500)
             self.finish(f'Molfile failed {external_id} {errorMessage} {sSmiles}')
@@ -429,7 +432,7 @@ class ChemRegAddMol(tornado.web.RequestHandler):
 
         ########################
         # Do exact match with molecule against the CBK database
-        mols = checkUniqueStructure(molfile)
+        mols = checkUniqueStructure(sSmiles)
         sStatus = 'oldMolecule'
         if len(mols) == 0:
             sStatus = 'newMolecule'
