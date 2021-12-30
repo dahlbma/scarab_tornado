@@ -228,11 +228,13 @@ class LoadSDF(QDialog):
                 f_err_msg.flush()
                 lError = True
         saRegnos = dbInterface.getRegnosFromSdfSequence(self.token, iSdfSequence)
-
+        print(saRegnos)
+        print(iSdfSequence)
         self.event_lab.setText('Register in Compound database')
         iTickCount = 0
         progress = 0
         for sReg in saRegnos:
+            print(sReg)
             iTickCount += 1
             if iTickCount == iTicks:
                 progress += 1
