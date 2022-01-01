@@ -111,7 +111,7 @@ class RegScreen(QMainWindow):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 
                                                 '.', "Molfiles (*.mol)")
         if fname[0] != '':
-            postMolFile(self, fname[0], self.regno, logging.getLogger(self.mod_name))
+            res, sMessage = postMolFile(self, fname[0], self.regno, logging.getLogger(self.mod_name))
             displayMolfile(self)
             updateMoleculeProperties(self)
             
@@ -142,7 +142,11 @@ class RegScreen(QMainWindow):
         ok_msg.setWindowTitle("Edit " + fname)
         if (msg.clickedButton() == btnS):
             # save changes
-            postMolFile(self, fname_path, self.regno, logging.getLogger(self.mod_name))
+            res, sMessage = postMolFile(self, fname_path, self.regno, logging.getLogger(self.mod_name))
+            if res == False:
+                send_msg("Structure error", f"{sMessage}")
+                os.remove(fname_path)
+                return
             displayMolfile(self)
             updateMoleculeProperties(self)
             ok_msg.setText("Updated .mol file")

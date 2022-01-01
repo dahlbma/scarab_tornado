@@ -60,7 +60,11 @@ def postMolFile(self, fname, regno, logger):
     f = {'file': open(fname, 'rb'), 'regno': regno}
     r = requests.post('http://esox3.scilifelab.se:8082/api/loadMolfile',
                       headers={'token': self.token}, files=f)
-
+    if r.status_code != 200:
+        return False, r.content
+    else:
+        return True, r.content
+    
 def updateMoleculeProperties(self):
     avgMolMass = dbInterface.getTextColumn(self.token,
                                            'C_MW',
