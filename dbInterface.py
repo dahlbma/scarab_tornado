@@ -25,11 +25,9 @@ db_connection = MySQLdb.connect(
 db_connection.autocommit(True)
 cur = db_connection.cursor()
 
-sSql = f'select pkey, suffix, smiles, mf, mw from chem_reg.salts order by pkey'
-#sSql = f'select smiles, suffix from chem_reg.salts order by pkey'
-cur.execute(sSql)
-salts = cur.fetchall()
-
+#sSql = f'select pkey, suffix, smiles, mf, mw from chem_reg.salts order by pkey'
+#cur.execute(sSql)
+#salts = cur.fetchall()
 
 def sqlExec(sSql, values=None):
     if values == None:
@@ -222,10 +220,8 @@ def getMoleculeProperties(self, molfile):
         molmassFormula = Formula(C_MF.replace('-', ''))
         C_CHNS = getAtomicComposition(molmassFormula.composition())
     except Exception as e:
-        print(str(e))
         return (False, False, False, False, False, '', f'{sio.getvalue()}')
     sSmiles = Chem.MolToSmiles(mol)
-    print(f'All smiles: {sSmiles}')
     if sSmiles == '':
         return (False, False, False, False, False, '', 'Empty molfile')
     saRemainderSmile = ''
@@ -234,7 +230,7 @@ def getMoleculeProperties(self, molfile):
     if len(saSmileFragments) > 1:
         saSalts, saRemainderSmile = getSaltLetters(saSmileFragments)
         if saSalts == False:
-            return (False, False, False, False, False, '', saRemainderSmile)
+            return (False, False, False, False, False, '', f'Unknown salt {saRemainderSmile}')
         #for smileFrag in saSmileFragments:
     if saRemainderSmile != '':
         resSmiles = saRemainderSmile
@@ -243,7 +239,8 @@ def getMoleculeProperties(self, molfile):
     #######################
     ## Old code here
     C_MW = Descriptors.MolWt(mol)
-    C_MONOISO = Descriptors.ExactMolWt(mol)
+    mono_iso_mol = Chem.MolFromSmiles(resSmiles)
+    C_MONOISO = Descriptors.ExactMolWt(mono_iso_mol)
     return (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, resSmiles, '')
 
 @jwtauth
@@ -355,8 +352,18 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
          supplier_batch,
          purity
         ) = cur.fetchall()[0]
-        mol = Chem.MolFromMolBlock(molfile)
-        sSmiles = Chem.MolToSmiles(mol)
+
+        (C_MF,
+         C_MW,
+         C_MONOISO,
+         C_CHNS,
+         saSalts,
+         sSmiles,
+         errorMessage) = getMoleculeProperties(self, molfile)
+
+        #mol = Chem.MolFromMolBlock(molfile)
+        #sSmiles = Chem.MolToSmiles(mol)
+        
         if compound_id in ('', None):
             mols = checkUniqueStructure(sSmiles)
             if len(mols) != 0:
@@ -367,11 +374,14 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
                 compound_id_numeric = getNewCompoundId()
                 compound_id = registerNewCompound(compound_id_numeric,
                                                   molfile,
-                                                  c_mf,
-                                                  c_monoiso,
+                                                  C_MF,
+                                                  C_MONOISO,
                                                   ip_rights,
                                                   compound_name = '')
-                addStructure("bcpvs.jcmol_moltable", molfile, compound_id, 'compound_id')
+                addStructure("bcpvs.jcmol_moltable",
+                             molfile,
+                             compound_id,
+                             'compound_id')
         sSql = f'''update chem_reg.chem_info
                    set compound_id='{compound_id}'
                    where regno = {regno}'''
@@ -379,7 +389,7 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
         registerNewBatch(compound_id,
                          regno,
                          jpage,
-                         suffix,
+                         saSalts,
                          chemist,
                          project,
                          source,         #  Supplier
@@ -565,7 +575,8 @@ class LoadMolfile(tornado.web.RequestHandler):
                     C_MF = '{C_MF}',
                     C_MW = {C_MW},
                     C_MONOISO = {C_MONOISO},
-                    C_CHNS = '{C_CHNS}'
+                    C_CHNS = '{C_CHNS}',
+                    suffix = '{saSalts}'
                   where regno = {regno}"""
         cur.execute(sSql)
         createPngFromMolfile(regno, molfile)
