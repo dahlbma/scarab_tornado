@@ -116,7 +116,7 @@ if copyTable(engineHIVE, 'hive.project_details_lcb', 'project_details'):
 ################################################
 # BCPVS tables
 if copyTable(engineBCPVS, 'bcpvs.compound', 'compound'):
-    cur.execute("ALTER TABLE bcpvs.compound Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE bcpvs.compound Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE bcpvs.compound Modify column suffix varchar(5)")
     cur.execute("ALTER TABLE bcpvs.compound Modify column ip_rights varchar(30)")
     cur.execute("ALTER TABLE bcpvs.compound Modify column mf varchar(200)")
@@ -134,7 +134,7 @@ if copyTable(engineBCPVS, 'bcpvs.compound', 'compound'):
 ##
 
 if copyTable(engineBCPVS, 'bcpvs.batch', 'batch'):
-    cur.execute("ALTER TABLE bcpvs.batch Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE bcpvs.batch Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE bcpvs.batch Modify column notebook_ref varchar(16)")
     cur.execute("ALTER TABLE bcpvs.batch Modify column submitter varchar(30)")
     cur.execute("ALTER TABLE bcpvs.batch Modify column project varchar(30)")
@@ -187,7 +187,7 @@ if copyTable(engineBCPVS, 'bcpvs.batch', 'batch'):
 
 ##
 #if copyTable(engineBCPVS, 'bcpvs.jcmol_moltable', 'jcmol_moltable'):
-#    cur.execute("ALTER TABLE bcpvs.jcmol_moltable Modify column compound_id varchar(16)")
+#    cur.execute("ALTER TABLE bcpvs.jcmol_moltable Modify column compound_id varchar(26)")
 #
 #    try:
 #        cur.execute("""ALTER TABLE bcpvs.jcmol_moltable CHANGE cd_id cd_id bigint AUTO_INCREMENT PRIMARY KEY""")
@@ -220,7 +220,7 @@ if copyTable(engineBCPVS, 'bcpvs.cryst_solvent', 'cryst_solvent'):
 ##
 if copyTable(engineBCPVS, 'bcpvs.external_id', 'external_id'):
     cur.execute("ALTER TABLE bcpvs.external_id Modify column external_id varchar(100)")
-    cur.execute("ALTER TABLE bcpvs.external_id Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE bcpvs.external_id Modify column compound_id varchar(26)")
 
     cur.execute("""create table bcpvs.external_id_invalid as 
     (select * from bcpvs.external_id where compound_id not in (
@@ -247,7 +247,7 @@ if copyTable(engineBCPVS, 'bcpvs.ip_rights_values', 'ip_rights_values'):
     cur.execute("ALTER TABLE bcpvs.ip_rights_values Modify column ip_rights varchar(15)")
 ##
 if copyTable(engineBCPVS, 'bcpvs.lcb_batch', 'lcb_batch'):
-    cur.execute("ALTER TABLE bcpvs.lcb_batch Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE bcpvs.lcb_batch Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE bcpvs.lcb_batch Modify column notebook_ref varchar(16)")
 ##
 if copyTable(engineBCPVS, 'bcpvs.molmass', 'molmass'):
@@ -268,7 +268,7 @@ if copyTable(engineBCPVS, 'bcpvs.screening_suppliers', 'screening_suppliers'):
         print('Faile to create index on bcpvs.screening_suppliers ' + str(e))
 ##
 if copyTable(engineBCPVS, 'bcpvs.structure_change_log', 'structure_change_log'):
-    cur.execute("ALTER TABLE bcpvs.structure_change_log Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE bcpvs.structure_change_log Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE bcpvs.structure_change_log
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
@@ -276,7 +276,7 @@ if copyTable(engineBCPVS, 'bcpvs.structure_change_log', 'structure_change_log'):
 ################################################
 # SCREEN tables
 if copyTable(engineSCREEN, 'screen.aa_cyp3a4_stab', 'aa_cyp3a4_stab'):
-    cur.execute("ALTER TABLE screen.aa_cyp3a4_stab Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.aa_cyp3a4_stab Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE screen.aa_cyp3a4_stab Modify column compound_batch varchar(20)")
     cur.execute("ALTER TABLE screen.aa_cyp3a4_stab Modify column project varchar(20)")
 
@@ -284,7 +284,7 @@ if copyTable(engineSCREEN, 'screen.aa_cyp3a4_stab', 'aa_cyp3a4_stab'):
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.aa_elph_1', 'aa_elph_1'):
-    cur.execute("ALTER TABLE screen.aa_elph_1 Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.aa_elph_1 Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE screen.aa_elph_1 Modify column compound_batch varchar(20)")
     cur.execute("ALTER TABLE screen.aa_elph_1 Modify column project varchar(20)")
 
@@ -292,160 +292,160 @@ if copyTable(engineSCREEN, 'screen.aa_elph_1', 'aa_elph_1'):
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.aa_ez4u_screen', 'aa_ez4u_screen'):
-    cur.execute("ALTER TABLE screen.aa_ez4u_screen Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.aa_ez4u_screen Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.aa_ez4u_screen
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.aa_induction', 'aa_induction'):
-    cur.execute("ALTER TABLE screen.aa_induction Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.aa_induction Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.aa_induction
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.aa_ips', 'aa_ips'):
-    cur.execute("ALTER TABLE screen.aa_ips Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.aa_ips Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE screen.aa_ips Modify column compound_batch varchar(16)")
 
     cur.execute("""ALTER TABLE screen.aa_ips
                    ADD FOREIGN KEY (compound_batch) REFERENCES bcpvs.batch(notebook_ref)""")
 ##
 if copyTable(engineSCREEN, 'screen.aa_ltssolubility', 'aa_ltssolubility'):
-    cur.execute("ALTER TABLE screen.aa_ltssolubility Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.aa_ltssolubility Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.aa_ltssolubility
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.aa_metstab', 'aa_metstab'):
-    cur.execute("ALTER TABLE screen.aa_metstab Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.aa_metstab Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.aa_metstab
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.aa_mmt_ames', 'aa_mmt_ames'):
-    cur.execute("ALTER TABLE screen.aa_mmt_ames Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.aa_mmt_ames Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.aa_mmt_ames
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.aa_p450inhib', 'aa_p450inhib'):
-    cur.execute("ALTER TABLE screen.aa_p450inhib Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.aa_p450inhib Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.aa_p450inhib
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.aa_permeabilitet', 'aa_permeabilitet'):
-    cur.execute("ALTER TABLE screen.aa_permeabilitet Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.aa_permeabilitet Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.aa_permeabilitet
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.aa_pka', 'aa_pka'):
-    cur.execute("ALTER TABLE screen.aa_pka Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.aa_pka Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.aa_pka
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.aa_protein_binding', 'aa_protein_binding'):
-    cur.execute("ALTER TABLE screen.aa_protein_binding Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.aa_protein_binding Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.aa_protein_binding
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.aa_solubility', 'aa_solubility'):
-    cur.execute("ALTER TABLE screen.aa_solubility Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.aa_solubility Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE screen.aa_solubility Modify column compound_batch varchar(16)")
 
     cur.execute("""ALTER TABLE screen.aa_solubility
                    ADD FOREIGN KEY (compound_batch) REFERENCES bcpvs.batch(notebook_ref)""")
 ##
 if copyTable(engineSCREEN, 'screen.aa_spec_analysis', 'aa_spec_analysis'):
-    cur.execute("ALTER TABLE screen.aa_spec_analysis Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.aa_spec_analysis Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.aa_spec_analysis
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.ba_binding_sp', 'ba_binding_sp'):
-    cur.execute("ALTER TABLE screen.ba_binding_sp Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.ba_binding_sp Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.ba_binding_sp
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.ba_ca_ic50', 'ba_ca_ic50'):
-    cur.execute("ALTER TABLE screen.ba_ca_ic50 Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.ba_ca_ic50 Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.ba_ca_ic50
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.ba_ca_sp', 'ba_ca_sp'):
-    cur.execute("ALTER TABLE screen.ba_ca_sp Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.ba_ca_sp Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.ba_ca_sp
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.ba_camp_efficacy', 'ba_camp_efficacy'):
-    cur.execute("ALTER TABLE screen.ba_camp_efficacy Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.ba_camp_efficacy Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.ba_camp_efficacy
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.ba_cell_sp', 'ba_cell_sp'):
-    cur.execute("ALTER TABLE screen.ba_cell_sp Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.ba_cell_sp Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.ba_cell_sp
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.ba_enz_inh_comp', 'ba_enz_inh_comp'):
-    cur.execute("ALTER TABLE screen.ba_enz_inh_comp Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.ba_enz_inh_comp Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.ba_enz_inh_comp
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.ba_enzyme_sp', 'ba_enzyme_sp'):
-    cur.execute("ALTER TABLE screen.ba_enzyme_sp Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.ba_enzyme_sp Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.ba_enzyme_sp
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.ba_functional_dr', 'ba_functional_dr'):
-    cur.execute("ALTER TABLE screen.ba_functional_dr Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.ba_functional_dr Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.ba_functional_dr
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.ba_herg_dr', 'ba_herg_dr'):
-    cur.execute("ALTER TABLE screen.ba_herg_dr Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.ba_herg_dr Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.ba_herg_dr
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.ba_herg_sp', 'ba_herg_sp'):
-    cur.execute("ALTER TABLE screen.ba_herg_sp Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.ba_herg_sp Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.ba_herg_sp
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.ba_hit_88', 'ba_hit_88'):
-    cur.execute("ALTER TABLE screen.ba_hit_88 Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.ba_hit_88 Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.ba_hit_88
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.ba_hts_80_2', 'ba_hts_80_2'):
-    cur.execute("ALTER TABLE screen.ba_hts_80_2 Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.ba_hts_80_2 Modify column compound_id varchar(26)")
 
     cur.execute("""ALTER TABLE screen.ba_hts_80_2
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 ##
 if copyTable(engineSCREEN, 'screen.ba_radio_sp', 'ba_radio_sp'):
-    cur.execute("ALTER TABLE screen.ba_radio_sp Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.ba_radio_sp Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE screen.ba_radio_sp Modify column compound_batch varchar(16)")
 
     cur.execute("""ALTER TABLE screen.ba_radio_sp
                    ADD FOREIGN KEY (compound_batch) REFERENCES bcpvs.batch(notebook_ref)""")
 ##
 if copyTable(engineSCREEN, 'screen.ba_rec_ec50', 'ba_rec_ec50'):
-    cur.execute("ALTER TABLE screen.ba_rec_ec50 Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE screen.ba_rec_ec50 Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE screen.ba_rec_ec50 Modify column compound_batch varchar(16)")
 
     cur.execute("""ALTER TABLE screen.ba_rec_ec50
@@ -598,9 +598,8 @@ if copyTable(engineMICROTUBE, 'microtube.tube_changes', 'tube_changes'):
 if copyTable(engineCOOL, 'cool.config', 'config'):
     cur.execute("ALTER TABLE cool.config Modify column config_id varchar(7)")
     cur.execute("ALTER TABLE cool.config Modify column well varchar(10)")
-    cur.execute("ALTER TABLE cool.config Modify column compound_id varchar(16)")
+    cur.execute("ALTER TABLE cool.config Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE cool.config Modify column notebook_ref varchar(42)")
-    cur.execute("ALTER TABLE cool.config Modify column compound_id varchar(16)")
 ##
 
 if copyTable(engineCOOL, 'cool.config_key', 'config_key'):
@@ -652,7 +651,7 @@ if copyTable(engineCOOL, 'cool.solubility_problem', 'solubility_problem'):
 
 ##
 if copyTable(engineASSAY, 'assay.lcb_sp', 'lcb_sp'):
-    cur.execute("ALTER TABLE assay.lcb_sp Modify column compound_id varchar(15)")
+    cur.execute("ALTER TABLE assay.lcb_sp Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.lcb_sp Modify column compound_batch varchar(15)")
     cur.execute("ALTER TABLE assay.lcb_sp Modify column project varchar(40)")
     cur.execute("ALTER TABLE assay.lcb_sp Modify column target varchar(40)")
@@ -686,7 +685,7 @@ if copyTable(engineASSAY, 'assay.assay_types', 'assay_types'):
 ##
 if copyTable(engineASSAY, 'assay.ba_bf_camp_dr', 'ba_bf_camp_dr'):
     cur.execute("ALTER TABLE assay.ba_bf_camp_dr Modify column compound_batch varchar(15)")
-    cur.execute("ALTER TABLE assay.ba_bf_camp_dr Modify column compound_id varchar(20)")
+    cur.execute("ALTER TABLE assay.ba_bf_camp_dr Modify column compound_id varchar(26)")
 
     cur.execute("ALTER TABLE assay.ba_bf_camp_dr Modify column project varchar(40)")
     cur.execute("ALTER TABLE assay.ba_bf_camp_dr Modify column method varchar(20)")
@@ -707,7 +706,7 @@ if copyTable(engineASSAY, 'assay.ba_bf_camp_dr', 'ba_bf_camp_dr'):
 ##
 if copyTable(engineASSAY, 'assay.ba_bf_camp_sp', 'ba_bf_camp_sp'):
     cur.execute("ALTER TABLE assay.ba_bf_camp_sp Modify column compound_batch varchar(15)")
-    cur.execute("ALTER TABLE assay.ba_bf_camp_sp Modify column compound_id varchar(20)")
+    cur.execute("ALTER TABLE assay.ba_bf_camp_sp Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.ba_bf_camp_sp Modify column project varchar(20)")
     cur.execute("ALTER TABLE assay.ba_bf_camp_sp Modify column method varchar(20)")
     cur.execute("ALTER TABLE assay.ba_bf_camp_sp Modify column target varchar(20)")
@@ -727,7 +726,7 @@ if copyTable(engineASSAY, 'assay.ba_bf_camp_sp', 'ba_bf_camp_sp'):
 ##
 if copyTable(engineASSAY, 'assay.ba_biofocus_dr', 'ba_biofocus_dr'):
     cur.execute("ALTER TABLE assay.ba_biofocus_dr Modify column compound_batch varchar(15)")
-    cur.execute("ALTER TABLE assay.ba_biofocus_dr Modify column compound_id varchar(20)")
+    cur.execute("ALTER TABLE assay.ba_biofocus_dr Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.ba_biofocus_dr Modify column project varchar(20)")
     cur.execute("ALTER TABLE assay.ba_biofocus_dr Modify column method varchar(20)")
     cur.execute("ALTER TABLE assay.ba_biofocus_dr Modify column target varchar(20)")
@@ -747,7 +746,7 @@ if copyTable(engineASSAY, 'assay.ba_biofocus_dr', 'ba_biofocus_dr'):
 ##
 if copyTable(engineASSAY, 'assay.ba_biofocus_sp', 'ba_biofocus_sp'):
     cur.execute("ALTER TABLE assay.ba_biofocus_sp Modify column compound_batch varchar(15)")
-    cur.execute("ALTER TABLE assay.ba_biofocus_sp Modify column compound_id varchar(20)")
+    cur.execute("ALTER TABLE assay.ba_biofocus_sp Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.ba_biofocus_sp Modify column project varchar(20)")
     cur.execute("ALTER TABLE assay.ba_biofocus_sp Modify column method varchar(20)")
     cur.execute("ALTER TABLE assay.ba_biofocus_sp Modify column target varchar(20)")
@@ -768,7 +767,7 @@ if copyTable(engineASSAY, 'assay.ba_biofocus_sp', 'ba_biofocus_sp'):
 ##
 if copyTable(engineASSAY, 'assay.ba_mds_dr', 'ba_mds_dr'):
     cur.execute("ALTER TABLE assay.ba_mds_dr Modify column compound_batch varchar(15)")
-    cur.execute("ALTER TABLE assay.ba_mds_dr Modify column compound_id varchar(20)")
+    cur.execute("ALTER TABLE assay.ba_mds_dr Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.ba_mds_dr Modify column project varchar(20)")
     cur.execute("ALTER TABLE assay.ba_mds_dr Modify column target varchar(80)")
     cur.execute("ALTER TABLE assay.ba_mds_dr Modify column species varchar(20)")
@@ -796,7 +795,7 @@ if copyTable(engineASSAY, 'assay.cerep_assays', 'cerep_assays'):
 ##
 if copyTable(engineASSAY, 'assay.cerep_functional_dr', 'cerep_functional_dr'):
     cur.execute("ALTER TABLE assay.cerep_functional_dr Modify column compound_batch varchar(15)")
-    cur.execute("ALTER TABLE assay.cerep_functional_dr Modify column compound_id varchar(20)")
+    cur.execute("ALTER TABLE assay.cerep_functional_dr Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.cerep_functional_dr Modify column project varchar(20)")
     cur.execute("ALTER TABLE assay.cerep_functional_dr Modify column target varchar(80)")
     cur.execute("ALTER TABLE assay.cerep_functional_dr Modify column operator varchar(20)")
@@ -815,7 +814,7 @@ if copyTable(engineASSAY, 'assay.cerep_functional_dr', 'cerep_functional_dr'):
 ##
 if copyTable(engineASSAY, 'assay.cerep_functional_sp', 'cerep_functional_sp'):
     cur.execute("ALTER TABLE assay.cerep_functional_sp Modify column compound_batch varchar(15)")
-    cur.execute("ALTER TABLE assay.cerep_functional_sp Modify column compound_id varchar(20)")
+    cur.execute("ALTER TABLE assay.cerep_functional_sp Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.cerep_functional_sp Modify column project varchar(20)")
     cur.execute("ALTER TABLE assay.cerep_functional_sp Modify column target varchar(80)")
     cur.execute("ALTER TABLE assay.cerep_functional_sp Modify column operator varchar(20)")
@@ -834,7 +833,7 @@ if copyTable(engineASSAY, 'assay.cerep_functional_sp', 'cerep_functional_sp'):
 ##
 if copyTable(engineASSAY, 'assay.cerep_ki', 'cerep_ki'):
     cur.execute("ALTER TABLE assay.cerep_ki Modify column compound_batch varchar(15)")
-    cur.execute("ALTER TABLE assay.cerep_ki Modify column compound_id varchar(20)")
+    cur.execute("ALTER TABLE assay.cerep_ki Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.cerep_ki Modify column project varchar(20)")
     cur.execute("ALTER TABLE assay.cerep_ki Modify column target varchar(80)")
     cur.execute("ALTER TABLE assay.cerep_ki Modify column operator varchar(20)")
@@ -861,7 +860,7 @@ if copyTable(engineASSAY, 'assay.cerep_receptors', 'cerep_receptors'):
 ##
 if copyTable(engineASSAY, 'assay.cerep_screen', 'cerep_screen'):
     cur.execute("ALTER TABLE assay.cerep_screen Modify column compound_batch varchar(15)")
-    cur.execute("ALTER TABLE assay.cerep_screen Modify column compound_id varchar(20)")
+    cur.execute("ALTER TABLE assay.cerep_screen Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.cerep_screen Modify column project varchar(20)")
     cur.execute("ALTER TABLE assay.cerep_screen Modify column target varchar(80)")
     cur.execute("ALTER TABLE assay.cerep_screen Modify column operator varchar(20)")
@@ -888,7 +887,7 @@ if copyTable(engineASSAY, 'assay.detection_types', 'detection_types'):
 ##
 if copyTable(engineASSAY, 'assay.lcb_dr', 'lcb_dr'):
     cur.execute("ALTER TABLE assay.lcb_dr Modify column compound_batch varchar(15)")
-    cur.execute("ALTER TABLE assay.lcb_dr Modify column compound_id varchar(20)")
+    cur.execute("ALTER TABLE assay.lcb_dr Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.lcb_dr Modify column project varchar(40)")
     cur.execute("ALTER TABLE assay.lcb_dr Modify column assay_type varchar(20)")
     cur.execute("ALTER TABLE assay.lcb_dr Modify column detection_type varchar(20)")
@@ -918,7 +917,7 @@ if copyTable(engineASSAY, 'assay.lcb_dr', 'lcb_dr'):
 ##
 if copyTable(engineASSAY, 'assay.lcb_sp_schneider_cysm', 'lcb_sp_schneider_cysm'):
     cur.execute("ALTER TABLE assay.lcb_sp_schneider_cysm Modify column compound_batch varchar(15)")
-    cur.execute("ALTER TABLE assay.lcb_sp_schneider_cysm Modify column compound_id varchar(20)")
+    cur.execute("ALTER TABLE assay.lcb_sp_schneider_cysm Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.lcb_sp_schneider_cysm Modify column project varchar(40)")
     cur.execute("ALTER TABLE assay.lcb_sp_schneider_cysm Modify column target varchar(80)")
     cur.execute("ALTER TABLE assay.lcb_sp_schneider_cysm Modify column assay_type varchar(20)")
@@ -949,7 +948,7 @@ if copyTable(engineASSAY, 'assay.lcb_sp_schneider_cysm', 'lcb_sp_schneider_cysm'
 ##
 if copyTable(engineASSAY, 'assay.metabolite', 'metabolite'):
     cur.execute("ALTER TABLE assay.metabolite Modify column compound_batch varchar(15)")
-    cur.execute("ALTER TABLE assay.metabolite Modify column compound_id varchar(20)")
+    cur.execute("ALTER TABLE assay.metabolite Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.metabolite Modify column project varchar(40)")
     cur.execute("ALTER TABLE assay.metabolite Modify column operator varchar(20)")
     cur.execute("ALTER TABLE assay.metabolite Modify column notebook_ref varchar(20)")
@@ -967,7 +966,7 @@ if copyTable(engineASSAY, 'assay.metabolite', 'metabolite'):
 ##
 if copyTable(engineASSAY, 'assay.upstate_sp', 'upstate_sp'):
     cur.execute("ALTER TABLE assay.upstate_sp Modify column compound_batch varchar(15)")
-    cur.execute("ALTER TABLE assay.upstate_sp Modify column compound_id varchar(20)")
+    cur.execute("ALTER TABLE assay.upstate_sp Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.upstate_sp Modify column project varchar(40)")
     cur.execute("ALTER TABLE assay.upstate_sp Modify column target varchar(80)")
     cur.execute("ALTER TABLE assay.upstate_sp Modify column method varchar(20)")
