@@ -2,6 +2,9 @@ set icmdb "verbose" 1
 s = 'password'
 connect icmdb 'administrator' s
 
+Delete these from jcmol_moltable.sdf:
+BVT016996C
+
 
 load icmdb mol "chem.sdf" "Databases/localhost" "chem_reg" "BeeHive/chem_reg"
 load icmdb mol "jcmol_moltable.sdf" "Databases/localhost" "bcpvs" "BeeHive/Compound"
@@ -53,29 +56,22 @@ JCMOL_MOLTABLE_MOL
 JCMOL_MOLTABLE_MOL_key
 JCMOL_MOLTABLE_MOL_keysim
 
-delete from JCMOL_MOLTABLE where compound_id = 'BVT016996C';
-delete from JCMOL_MOLTABLE_MOL where compound_id = 'BVT016996C';
-delete from JCMOL_MOLTABLE_MOL_key where compound_id = 'BVT016996C';
-delete from JCMOL_MOLTABLE_MOL_keysim where compound_id = 'BVT016996C';
-
 
 ALTER TABLE JCMOL_MOLTABLE_MOL DROP FOREIGN KEY JCMOL_MOLTABLE_MOL_FK;
 ALTER TABLE JCMOL_MOLTABLE_MOL_key DROP FOREIGN KEY JCMOL_MOLTABLE_MOL_key_FK;
 ALTER TABLE JCMOL_MOLTABLE_MOL_keysim DROP FOREIGN KEY JCMOL_MOLTABLE_MOL_keysim_FK;
 
 
-ALTER TABLE bcpvs.JCMOL_MOLTABLE Modify column COMPOUND_ID varchar(16);
-ALTER TABLE bcpvs.JCMOL_MOLTABLE_MOL Modify column COMPOUND_ID varchar(16);
-ALTER TABLE bcpvs.JCMOL_MOLTABLE_MOL_key Modify column COMPOUND_ID varchar(16);
-ALTER TABLE bcpvs.JCMOL_MOLTABLE_MOL_keysim Modify column COMPOUND_ID varchar(16);
+ALTER TABLE bcpvs.JCMOL_MOLTABLE Modify column COMPOUND_ID varchar(26);
+ALTER TABLE bcpvs.JCMOL_MOLTABLE_MOL Modify column COMPOUND_ID varchar(26);
+ALTER TABLE bcpvs.JCMOL_MOLTABLE_MOL_key Modify column COMPOUND_ID varchar(26);
+ALTER TABLE bcpvs.JCMOL_MOLTABLE_MOL_keysim Modify column COMPOUND_ID varchar(26);
 
 
-ALTER TABLE bcpvs.JCMOL_MOLTABLE add FOREIGN KEY (COMPOUND_ID) REFERENCES bcpvs.compound(compound_id);
+ALTER TABLE bcpvs.JCMOL_MOLTABLE add FOREIGN KEY (COMPOUND_ID) REFERENCES bcpvs.compound(compound_id) ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE bcpvs.JCMOL_MOLTABLE_MOL add FOREIGN KEY (COMPOUND_ID) REFERENCES bcpvs.JCMOL_MOLTABLE(compound_id);
 ALTER TABLE bcpvs.JCMOL_MOLTABLE_MOL_key add FOREIGN KEY (COMPOUND_ID) REFERENCES bcpvs.JCMOL_MOLTABLE_MOL(compound_id);
 ALTER TABLE bcpvs.JCMOL_MOLTABLE_MOL_keysim add FOREIGN KEY (COMPOUND_ID) REFERENCES bcpvs.JCMOL_MOLTABLE_MOL(compound_id);
-
-
 
 
 
