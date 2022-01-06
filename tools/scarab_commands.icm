@@ -4,6 +4,7 @@ connect icmdb 'administrator' s
 
 
 load icmdb mol "chem.sdf" "Databases/localhost" "chem_reg" "BeeHive/chem_reg"
+load icmdb mol "jcmol_moltable.sdf" "Databases/localhost" "bcpvs" "BeeHive/Compound"
 
 
 load icmdb database "Databases/localhost" "bcpvs" table={"compound"} "BeeHive/Compound" gui
