@@ -1,0 +1,87 @@
+set icmdb "verbose" 1
+s = 'password'
+connect icmdb 'administrator' s
+
+
+load icmdb mol "chem.sdf" "Databases/localhost" "chem_reg" "BeeHive/chem_reg"
+
+
+load icmdb database "Databases/localhost" "bcpvs" table={"compound"} "BeeHive/Compound" gui
+
+load icmdb database "Databases/localhost" "chem_reg" table={"chem_info_mol"} "BeeHive/chem_reg" gui
+load icmdb database "Databases/localhost" "chem_reg" table={"chem_info_mol_key"} "BeeHive/chem_reg" gui
+load icmdb database "Databases/localhost" "chem_reg" table={"chem_info_mol_ukey"} "BeeHive/chem_reg" gui
+
+
+
+
+CREATE TABLE `JCMOL_MOLTABLE` (
+  `MOL` longtext CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `COMPOUND_ID` varchar(26) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  UNIQUE KEY `JCMOL_MOLTABLE_ind` (`COMPOUND_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+CREATE TABLE `JCMOL_MOLTABLE_MOL` (
+  `COMPOUND_ID` varchar(26) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `mol` mediumblob,
+  UNIQUE KEY `JCMOL_MOLTABLE_MOL_ind` (`COMPOUND_ID`),
+  CONSTRAINT `JCMOL_MOLTABLE_MOL_FK` FOREIGN KEY (`COMPOUND_ID`) REFERENCES `JCMOL_MOLTABLE` (`COMPOUND_ID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+CREATE TABLE `JCMOL_MOLTABLE_MOL_key` (
+  `COMPOUND_ID` varchar(26) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `molkey` binary(192) DEFAULT NULL,
+  UNIQUE KEY `JCMOL_MOLTABLE_MOL_key_ind` (`COMPOUND_ID`),
+  KEY `JCMOL_MOLTABLE_MOL_key_ind_0` (`molkey`),
+  CONSTRAINT `JCMOL_MOLTABLE_MOL_key_FK` FOREIGN KEY (`COMPOUND_ID`) REFERENCES `JCMOL_MOLTABLE_MOL` (`COMPOUND_ID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+CREATE TABLE `JCMOL_MOLTABLE_MOL_keysim` (
+  `COMPOUND_ID` varchar(26) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `molkey` binary(192) DEFAULT NULL,
+  UNIQUE KEY `JCMOL_MOLTABLE_MOL_keysim_ind` (`COMPOUND_ID`),
+  CONSTRAINT `JCMOL_MOLTABLE_MOL_keysim_FK` FOREIGN KEY (`COMPOUND_ID`) REFERENCES `JCMOL_MOLTABLE_MOL` (`COMPOUND_ID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+JCMOL_MOLTABLE
+JCMOL_MOLTABLE_MOL
+JCMOL_MOLTABLE_MOL_key
+JCMOL_MOLTABLE_MOL_keysim
+
+delete from JCMOL_MOLTABLE where compound_id = 'BVT016996C';
+delete from JCMOL_MOLTABLE_MOL where compound_id = 'BVT016996C';
+delete from JCMOL_MOLTABLE_MOL_key where compound_id = 'BVT016996C';
+delete from JCMOL_MOLTABLE_MOL_keysim where compound_id = 'BVT016996C';
+
+
+ALTER TABLE JCMOL_MOLTABLE_MOL DROP FOREIGN KEY JCMOL_MOLTABLE_MOL_FK;
+ALTER TABLE JCMOL_MOLTABLE_MOL_key DROP FOREIGN KEY JCMOL_MOLTABLE_MOL_key_FK;
+ALTER TABLE JCMOL_MOLTABLE_MOL_keysim DROP FOREIGN KEY JCMOL_MOLTABLE_MOL_keysim_FK;
+
+
+ALTER TABLE bcpvs.JCMOL_MOLTABLE Modify column COMPOUND_ID varchar(16);
+ALTER TABLE bcpvs.JCMOL_MOLTABLE_MOL Modify column COMPOUND_ID varchar(16);
+ALTER TABLE bcpvs.JCMOL_MOLTABLE_MOL_key Modify column COMPOUND_ID varchar(16);
+ALTER TABLE bcpvs.JCMOL_MOLTABLE_MOL_keysim Modify column COMPOUND_ID varchar(16);
+
+
+ALTER TABLE bcpvs.JCMOL_MOLTABLE add FOREIGN KEY (COMPOUND_ID) REFERENCES bcpvs.compound(compound_id);
+ALTER TABLE bcpvs.JCMOL_MOLTABLE_MOL add FOREIGN KEY (COMPOUND_ID) REFERENCES bcpvs.JCMOL_MOLTABLE(compound_id);
+ALTER TABLE bcpvs.JCMOL_MOLTABLE_MOL_key add FOREIGN KEY (COMPOUND_ID) REFERENCES bcpvs.JCMOL_MOLTABLE_MOL(compound_id);
+ALTER TABLE bcpvs.JCMOL_MOLTABLE_MOL_keysim add FOREIGN KEY (COMPOUND_ID) REFERENCES bcpvs.JCMOL_MOLTABLE_MOL(compound_id);
+
+
+
+
+
+
+CREATE TABLE `JCMOL_MOLTABLE` (
+  `MOL` longtext CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `COMPOUND_ID` varchar(16) DEFAULT NULL,
+  UNIQUE KEY `JCMOL_MOLTABLE_ind` (`COMPOUND_ID`),
+  CONSTRAINT `JCMOL_MOLTABLE_ibfk_1` FOREIGN KEY (`COMPOUND_ID`) REFERENCES `compound` (`compound_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
