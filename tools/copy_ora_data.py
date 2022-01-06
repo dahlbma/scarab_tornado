@@ -652,7 +652,7 @@ if copyTable(engineCOOL, 'cool.solubility_problem', 'solubility_problem'):
 ##
 if copyTable(engineASSAY, 'assay.lcb_sp', 'lcb_sp'):
     cur.execute("ALTER TABLE assay.lcb_sp Modify column compound_id varchar(26)")
-    cur.execute("ALTER TABLE assay.lcb_sp Modify column compound_batch varchar(15)")
+    cur.execute("ALTER TABLE assay.lcb_sp Modify column compound_batch varchar(16)")
     cur.execute("ALTER TABLE assay.lcb_sp Modify column project varchar(40)")
     cur.execute("ALTER TABLE assay.lcb_sp Modify column target varchar(40)")
     cur.execute("ALTER TABLE assay.lcb_sp Modify column operator varchar(40)")
@@ -684,7 +684,7 @@ if copyTable(engineASSAY, 'assay.assay_types', 'assay_types'):
         print('Error creating index on assay.assay_types.pkey')
 ##
 if copyTable(engineASSAY, 'assay.ba_bf_camp_dr', 'ba_bf_camp_dr'):
-    cur.execute("ALTER TABLE assay.ba_bf_camp_dr Modify column compound_batch varchar(15)")
+    cur.execute("ALTER TABLE assay.ba_bf_camp_dr Modify column compound_batch varchar(16)")
     cur.execute("ALTER TABLE assay.ba_bf_camp_dr Modify column compound_id varchar(26)")
 
     cur.execute("ALTER TABLE assay.ba_bf_camp_dr Modify column project varchar(40)")
@@ -705,7 +705,7 @@ if copyTable(engineASSAY, 'assay.ba_bf_camp_dr', 'ba_bf_camp_dr'):
 
 ##
 if copyTable(engineASSAY, 'assay.ba_bf_camp_sp', 'ba_bf_camp_sp'):
-    cur.execute("ALTER TABLE assay.ba_bf_camp_sp Modify column compound_batch varchar(15)")
+    cur.execute("ALTER TABLE assay.ba_bf_camp_sp Modify column compound_batch varchar(16)")
     cur.execute("ALTER TABLE assay.ba_bf_camp_sp Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.ba_bf_camp_sp Modify column project varchar(20)")
     cur.execute("ALTER TABLE assay.ba_bf_camp_sp Modify column method varchar(20)")
@@ -725,7 +725,7 @@ if copyTable(engineASSAY, 'assay.ba_bf_camp_sp', 'ba_bf_camp_sp'):
         print('Error creating index on assay.ba_bf_camp_sp.pkey')
 ##
 if copyTable(engineASSAY, 'assay.ba_biofocus_dr', 'ba_biofocus_dr'):
-    cur.execute("ALTER TABLE assay.ba_biofocus_dr Modify column compound_batch varchar(15)")
+    cur.execute("ALTER TABLE assay.ba_biofocus_dr Modify column compound_batch varchar(16)")
     cur.execute("ALTER TABLE assay.ba_biofocus_dr Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.ba_biofocus_dr Modify column project varchar(20)")
     cur.execute("ALTER TABLE assay.ba_biofocus_dr Modify column method varchar(20)")
@@ -745,7 +745,7 @@ if copyTable(engineASSAY, 'assay.ba_biofocus_dr', 'ba_biofocus_dr'):
         print('Error creating index on assay.ba_biofocus_dr')
 ##
 if copyTable(engineASSAY, 'assay.ba_biofocus_sp', 'ba_biofocus_sp'):
-    cur.execute("ALTER TABLE assay.ba_biofocus_sp Modify column compound_batch varchar(15)")
+    cur.execute("ALTER TABLE assay.ba_biofocus_sp Modify column compound_batch varchar(16)")
     cur.execute("ALTER TABLE assay.ba_biofocus_sp Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.ba_biofocus_sp Modify column project varchar(20)")
     cur.execute("ALTER TABLE assay.ba_biofocus_sp Modify column method varchar(20)")
@@ -766,7 +766,7 @@ if copyTable(engineASSAY, 'assay.ba_biofocus_sp', 'ba_biofocus_sp'):
 
 ##
 if copyTable(engineASSAY, 'assay.ba_mds_dr', 'ba_mds_dr'):
-    cur.execute("ALTER TABLE assay.ba_mds_dr Modify column compound_batch varchar(15)")
+    cur.execute("ALTER TABLE assay.ba_mds_dr Modify column compound_batch varchar(16)")
     cur.execute("ALTER TABLE assay.ba_mds_dr Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.ba_mds_dr Modify column project varchar(20)")
     cur.execute("ALTER TABLE assay.ba_mds_dr Modify column target varchar(80)")
@@ -794,7 +794,7 @@ if copyTable(engineASSAY, 'assay.cerep_assays', 'cerep_assays'):
 
 ##
 if copyTable(engineASSAY, 'assay.cerep_functional_dr', 'cerep_functional_dr'):
-    cur.execute("ALTER TABLE assay.cerep_functional_dr Modify column compound_batch varchar(15)")
+    cur.execute("ALTER TABLE assay.cerep_functional_dr Modify column compound_batch varchar(16)")
     cur.execute("ALTER TABLE assay.cerep_functional_dr Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.cerep_functional_dr Modify column project varchar(20)")
     cur.execute("ALTER TABLE assay.cerep_functional_dr Modify column target varchar(80)")
@@ -813,7 +813,7 @@ if copyTable(engineASSAY, 'assay.cerep_functional_dr', 'cerep_functional_dr'):
         print('Error creating index on assay.cerep_functional_dr')
 ##
 if copyTable(engineASSAY, 'assay.cerep_functional_sp', 'cerep_functional_sp'):
-    cur.execute("ALTER TABLE assay.cerep_functional_sp Modify column compound_batch varchar(15)")
+    cur.execute("ALTER TABLE assay.cerep_functional_sp Modify column compound_batch varchar(16)")
     cur.execute("ALTER TABLE assay.cerep_functional_sp Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.cerep_functional_sp Modify column project varchar(20)")
     cur.execute("ALTER TABLE assay.cerep_functional_sp Modify column target varchar(80)")
@@ -832,7 +832,7 @@ if copyTable(engineASSAY, 'assay.cerep_functional_sp', 'cerep_functional_sp'):
         print('Error creating index on assay.cerep_functional_sp')
 ##
 if copyTable(engineASSAY, 'assay.cerep_ki', 'cerep_ki'):
-    cur.execute("ALTER TABLE assay.cerep_ki Modify column compound_batch varchar(15)")
+    cur.execute("ALTER TABLE assay.cerep_ki Modify column compound_batch varchar(16)")
     cur.execute("ALTER TABLE assay.cerep_ki Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.cerep_ki Modify column project varchar(20)")
     cur.execute("ALTER TABLE assay.cerep_ki Modify column target varchar(80)")
@@ -859,7 +859,7 @@ if copyTable(engineASSAY, 'assay.cerep_receptors', 'cerep_receptors'):
         print('Error creating index on assay.cerep_receptors')
 ##
 if copyTable(engineASSAY, 'assay.cerep_screen', 'cerep_screen'):
-    cur.execute("ALTER TABLE assay.cerep_screen Modify column compound_batch varchar(15)")
+    cur.execute("ALTER TABLE assay.cerep_screen Modify column compound_batch varchar(16)")
     cur.execute("ALTER TABLE assay.cerep_screen Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.cerep_screen Modify column project varchar(20)")
     cur.execute("ALTER TABLE assay.cerep_screen Modify column target varchar(80)")
@@ -886,7 +886,7 @@ if copyTable(engineASSAY, 'assay.detection_types', 'detection_types'):
         print('Error creating index on assay.detection_types')
 ##
 if copyTable(engineASSAY, 'assay.lcb_dr', 'lcb_dr'):
-    cur.execute("ALTER TABLE assay.lcb_dr Modify column compound_batch varchar(15)")
+    cur.execute("ALTER TABLE assay.lcb_dr Modify column compound_batch varchar(16)")
     cur.execute("ALTER TABLE assay.lcb_dr Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.lcb_dr Modify column project varchar(40)")
     cur.execute("ALTER TABLE assay.lcb_dr Modify column assay_type varchar(20)")
@@ -916,7 +916,7 @@ if copyTable(engineASSAY, 'assay.lcb_dr', 'lcb_dr'):
         print('Error creating index on assay.lcb_dr')
 ##
 if copyTable(engineASSAY, 'assay.lcb_sp_schneider_cysm', 'lcb_sp_schneider_cysm'):
-    cur.execute("ALTER TABLE assay.lcb_sp_schneider_cysm Modify column compound_batch varchar(15)")
+    cur.execute("ALTER TABLE assay.lcb_sp_schneider_cysm Modify column compound_batch varchar(16)")
     cur.execute("ALTER TABLE assay.lcb_sp_schneider_cysm Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.lcb_sp_schneider_cysm Modify column project varchar(40)")
     cur.execute("ALTER TABLE assay.lcb_sp_schneider_cysm Modify column target varchar(80)")
@@ -947,7 +947,7 @@ if copyTable(engineASSAY, 'assay.lcb_sp_schneider_cysm', 'lcb_sp_schneider_cysm'
 
 ##
 if copyTable(engineASSAY, 'assay.metabolite', 'metabolite'):
-    cur.execute("ALTER TABLE assay.metabolite Modify column compound_batch varchar(15)")
+    cur.execute("ALTER TABLE assay.metabolite Modify column compound_batch varchar(16)")
     cur.execute("ALTER TABLE assay.metabolite Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.metabolite Modify column project varchar(40)")
     cur.execute("ALTER TABLE assay.metabolite Modify column operator varchar(20)")
@@ -965,7 +965,7 @@ if copyTable(engineASSAY, 'assay.metabolite', 'metabolite'):
         print('Error creating index on assay.metabolite')
 ##
 if copyTable(engineASSAY, 'assay.upstate_sp', 'upstate_sp'):
-    cur.execute("ALTER TABLE assay.upstate_sp Modify column compound_batch varchar(15)")
+    cur.execute("ALTER TABLE assay.upstate_sp Modify column compound_batch varchar(16)")
     cur.execute("ALTER TABLE assay.upstate_sp Modify column compound_id varchar(26)")
     cur.execute("ALTER TABLE assay.upstate_sp Modify column project varchar(40)")
     cur.execute("ALTER TABLE assay.upstate_sp Modify column target varchar(80)")
