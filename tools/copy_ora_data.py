@@ -94,7 +94,7 @@ if copyTable(engineHIVE, 'hive.user_details', 'user_details'):
     cur.execute("ALTER TABLE hive.user_details Modify column fullname varchar(82)")
     cur.execute("ALTER TABLE hive.user_details Modify column organization varchar(255)")
     cur.execute("""update hive.user_details set organization = 'chemistry' where userid in
-                   ('ANGUST', 'MAHARA', 'SLAS', 'DAHLBMA', 'BISJO')"""
+                   ('ANGUST', 'MAHARA', 'SLAS', 'DAHLBMA', 'BISJO')""")
     
     try:
         cur.execute("""ALTER TABLE hive.user_details CHANGE pkey pkey bigint AUTO_INCREMENT PRIMARY KEY""")
