@@ -230,7 +230,13 @@ def getMoleculeProperties(self, molfile):
     if len(saSmileFragments) > 1:
         saSalts, saRemainderSmile = getSaltLetters(saSmileFragments)
         if saSalts == False:
-            return (False, False, False, False, False, '', f'Unknown salt {saRemainderSmile}')
+            return (False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    '',
+                    f'Unknown salt {saRemainderSmile}')
         #for smileFrag in saSmileFragments:
     if saRemainderSmile != '':
         resSmiles = saRemainderSmile
