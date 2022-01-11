@@ -103,7 +103,10 @@ class SearchScreen(QMainWindow):
             self.searchValue = value
             self.searchStr = action + ' = ' + value
             self.searchStr_lab.setText(self.searchStr)
-            self.regnos = dbInterface.searchValue(action, value, self.token)
+            self.regnos = []
+            tmpInts = dbInterface.searchValue(action, value, self.token)
+            for tmpRegno in tmpInts:
+                self.regnos.append(str(tmpRegno))
             if len(self.regnos) > 0:
                 sString = "1 of " + str(len(self.regnos))
                 self.numberOfHits_lab.setText(sString)
