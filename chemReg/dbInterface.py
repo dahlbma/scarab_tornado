@@ -98,7 +98,7 @@ def getNextRegno(token):
     r = requests.get('http://esox3.scilifelab.se:8082/api/getNextRegno',
                      headers={'token': token})
     res = r.content.decode()
-    return res
+    return str(res)
 
 def getSdfSequence(token):
     r = requests.get('http://esox3.scilifelab.se:8082/api/getNextSdfSequence',

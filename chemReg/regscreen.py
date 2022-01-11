@@ -33,8 +33,8 @@ class RegScreen(QMainWindow):
             self.regno = dbInterface.getNextRegno(self.token)
             dbInterface.createNewRegno(self.regno, self.token)
         else:
-            self.regno = regno
-        self.regno_eb.setText(self.regno)
+            self.regno = str(regno)
+        self.regno_eb.setText(str(self.regno))
 
         updateScreen(self)
         self.populated = True

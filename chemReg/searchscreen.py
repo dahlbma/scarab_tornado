@@ -67,7 +67,7 @@ class SearchScreen(QMainWindow):
         self.searchingInProgress = True
         newIndex = self.regnos.index(self.regno) -1
         if newIndex > -1:
-            self.regno = self.regnos[newIndex]
+            self.regno = str(self.regnos[newIndex])
             self.numberOfHits_lab.setText(str(newIndex +1) + " of " + str(len(self.regnos)))
             self.populated == False
             updateScreen(self)
@@ -81,7 +81,7 @@ class SearchScreen(QMainWindow):
         newIndex = self.regnos.index(self.regno) +1
         if newIndex < len(self.regnos):
             self.numberOfHits_lab.setText(str(newIndex +1) + " of " + str(len(self.regnos)))
-            self.regno = self.regnos[newIndex]
+            self.regno = str(self.regnos[newIndex])
             self.populated == False
             updateScreen(self)
             self.populated == True
@@ -107,7 +107,7 @@ class SearchScreen(QMainWindow):
             if len(self.regnos) > 0:
                 sString = "1 of " + str(len(self.regnos))
                 self.numberOfHits_lab.setText(sString)
-                self.regno = self.regnos[0]
+                self.regno = str(self.regnos[0])
             else:
                 sString = "0 of " + str(len(self.regnos))
                 self.numberOfHits_lab.setText(sString)

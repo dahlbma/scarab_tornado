@@ -85,7 +85,7 @@ def updateMoleculeProperties(self):
 
 def updateScreen(self):
     if self.populated == False:
-        self.regno_eb.setText(self.regno)
+        self.regno_eb.setText(str(self.regno))
         submitters = dbInterface.getColComboData(self.token, 'chemist')
         self.submitter_cb.addItems(submitters)
         try:
@@ -113,7 +113,7 @@ def updateScreen(self):
             self.editregno_btn.setEnabled(True)
         except:
             pass
-        self.regno_eb.setText(self.regno)
+        self.regno_eb.setText(str(self.regno))
         
         createdDate = dbInterface.getTextColumn(self.token, 'rdate', self.regno)
         self.date_lab.setText(createdDate)
