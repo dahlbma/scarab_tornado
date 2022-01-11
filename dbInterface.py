@@ -44,6 +44,25 @@ def checkUniqueStructure(smiles):
     (bcpvs.jcmol_moltable.molid=bcpvs.jcmol_moltable_ukey.molid)
     where uniquekey(mol2bin('{smiles}', 'smiles'))=molkey
     """
+
+
+    sSql = f"""
+    SELECT 
+    T3.`COMPOUND_ID` 'compound_id', bin2smiles(T1.`MOL`) 'mol'
+    FROM
+    (SELECT NULL) ONE_ROW_TAB_
+    STRAIGHT_JOIN
+    `bcpvs`.`JCMOL_MOLTABLE_MOL_key` T2 ON T2.`molkey` = FP(MOL2BIN('{smiles}',
+    'smiles'),
+    'sss')
+    STRAIGHT_JOIN
+    `bcpvs`.`JCMOL_MOLTABLE_MOL` T1 ON T2.`COMPOUND_ID` = T1.`COMPOUND_ID`
+    AND UNIQUEKEY('{smiles}') = UNIQUEKEY(T1.`mol`)
+    STRAIGHT_JOIN
+    `bcpvs`.`JCMOL_MOLTABLE` T3 ON T1.`COMPOUND_ID` = T3.`COMPOUND_ID`
+    ORDER BY T3.`COMPOUND_ID` DESC
+    """
+    print(sSql)
     cur.execute(sSql)
     mols = cur.fetchall()
     return mols
@@ -114,22 +133,39 @@ def getSaltLetters(saSmileFragments):
 def addStructure(database, molfile, newRegno, idColumnName):
     #####
     # Add the molecule to the structure tables
+    print(molfile)
+    print(database, idColumnName, newRegno)
     sSql = f"""
     insert into {database} (mol, {idColumnName})
+    value
+    ('{molfile}', '{newRegno}')
+    """
+    cur.execute(sSql)
+    
+    sSql = f"""
+    insert into {database}_MOL (mol, {idColumnName})
     value
     (mol2bin('{molfile}', 'mol'), '{newRegno}')
     """
     cur.execute(sSql)
 
+    '''
     sSql = f"""
     insert into {database}_ukey select molid, uniquekey(mol) as molkey
     from {database} where {idColumnName} = '{newRegno}'
     """
     cur.execute(sSql)
+    '''
 
     sSql = f"""
-    insert into {database}_key select molid, fp(mol, 'sss') as molkey
-    from {database} where {idColumnName} = '{newRegno}'
+    insert into {database}_MOL_keysim select {idColumnName}, fp(mol, 'sim') as molkey
+    from {database}_MOL where {idColumnName} = '{newRegno}'
+    """
+    cur.execute(sSql)
+
+    sSql = f"""
+    insert into {database}_MOL_key select {idColumnName}, fp(mol, 'sss') as molkey
+    from {database}_MOL where {idColumnName} = '{newRegno}'
     """
     cur.execute(sSql)
     #
@@ -384,7 +420,7 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
                                                   C_MONOISO,
                                                   ip_rights,
                                                   compound_name = '')
-                addStructure("bcpvs.jcmol_moltable",
+                addStructure("bcpvs.JCMOL_MOLTABLE",
                              molfile,
                              compound_id,
                              'compound_id')
@@ -511,7 +547,8 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         )
         """
         cur.execute(sSql)
-        addStructure("chem_reg.chem_info_mol", molfile, newRegno, 'regno')
+        #addStructure("chem_reg.chem_info_mol", molfile, newRegno, 'regno')
+        addStructure("chem_reg.CHEM", molfile, newRegno, 'regno')
         self.finish(sStatus)
           
 
@@ -571,7 +608,8 @@ class LoadMolfile(tornado.web.RequestHandler):
             print(f'Molfile failed {regno}')
             return
         try:
-            addStructure('chem_reg.chem_info_mol', molfile, regno, 'regno')
+            #addStructure('chem_reg.chem_info_mol', molfile, regno, 'regno')
+            addStructure('chem_reg.CHEM', molfile, regno, 'regno')
         except Exception as e:
             print(str(e))
             print(f'failed on regno {regno}')
