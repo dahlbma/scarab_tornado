@@ -25,10 +25,6 @@ db_connection = MySQLdb.connect(
 db_connection.autocommit(True)
 cur = db_connection.cursor()
 
-#sSql = f'select pkey, suffix, smiles, mf, mw from chem_reg.salts order by pkey'
-#cur.execute(sSql)
-#salts = cur.fetchall()
-
 def sqlExec(sSql, values=None):
     if values == None:
         cur.execute(sSql)
@@ -62,7 +58,6 @@ def checkUniqueStructure(smiles):
     `bcpvs`.`JCMOL_MOLTABLE` T3 ON T1.`COMPOUND_ID` = T3.`COMPOUND_ID`
     ORDER BY T3.`COMPOUND_ID` DESC
     """
-    print(sSql)
     cur.execute(sSql)
     mols = cur.fetchall()
     return mols
@@ -133,8 +128,8 @@ def getSaltLetters(saSmileFragments):
 def addStructure(database, molfile, newRegno, idColumnName):
     #####
     # Add the molecule to the structure tables
-    print(molfile)
-    print(database, idColumnName, newRegno)
+    #print(molfile)
+    #print(database, idColumnName, newRegno)
     sSql = f"""
     insert into {database} (mol, {idColumnName})
     value
@@ -294,8 +289,12 @@ class CreateSalt(tornado.web.RequestHandler):
         mw = Descriptors.MolWt(mol)
         mf = rdMolDescriptors.CalcMolFormula(mol)
         suffix = f'X{iSaltNumber}'
-        sSql = f"""insert into chem_reg.salts (suffix, smiles, mw, mf)
-        values ('{suffix}', '{sSmiles}', {mw}, '{mf}')
+        sio = StringIO()
+        with Chem.SDWriter(sio) as w:
+            w.write(mol)
+        molfile = sio.getvalue()
+        sSql = f"""insert into chem_reg.salts (suffix, smiles, mw, mf, molfile)
+        values ('{suffix}', '{sSmiles}', {mw}, '{mf}', '{molfile}')
         """
         cur.execute(sSql)
 
@@ -605,7 +604,7 @@ class LoadMolfile(tornado.web.RequestHandler):
         if C_MF == False:
             self.set_status(500)
             self.finish(f'Molfile failed {regno} {errorMessage}')
-            print(f'Molfile failed {regno}')
+            #print(f'Molfile failed {regno}')
             return
         try:
             #addStructure('chem_reg.chem_info_mol', molfile, regno, 'regno')
