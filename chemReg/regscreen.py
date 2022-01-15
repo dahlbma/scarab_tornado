@@ -129,6 +129,9 @@ class RegScreen(QMainWindow):
             tmp_file.close()
         retcode = open_file(fname_path)
         # confirm dialogue
+
+        # This needs to pop up after the moledit is closed
+        # use python watchdog to monitor the file status
         msg = QMessageBox()
         msg.setWindowTitle("Edit " + fname)
         msg.setIcon(QMessageBox.Question)
@@ -137,6 +140,7 @@ class RegScreen(QMainWindow):
         msg.setDefaultButton(QMessageBox.Save)
         btnS = msg.button(QMessageBox.Save)
         msg.exec_()
+
         ok_msg = QMessageBox()
         ok_msg.setStandardButtons(QMessageBox.Ok)
         ok_msg.setWindowTitle("Edit " + fname)

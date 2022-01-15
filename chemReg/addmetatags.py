@@ -105,11 +105,15 @@ class AddMetaTags(QDialog):
             return
         
         # check if unique
-        canon_list = json.loads(dbInterface.getCanonicSmiles(self.token, salt))
+        try:
+            canon_list = json.loads(dbInterface.getCanonicSmiles(self.token, salt))
+        except:
+            send_msg("Error in SMILES string", f"Something is wrong in SMILES string: {salt}")
+            return
         if canon_list[0] != 'False':
             send_msg("Salt already exists", f"A salt with the same canonic smiles: \'{canon_list[1]}\' already exists.")
         else:
-            ok = self.confirm_dialog("Found a salt corresponding to input smiles-string. Do you want to add this salt?" + f"\n Salt: {canon_list[1]}")
+            ok = self.confirm_dialog("Do you want to add this salt?" + f"\n Salt: {canon_list[1]}")
             if ok:
                 #send canonic smiles
                 dbInterface.createSalt(self.token, canon_list[1])

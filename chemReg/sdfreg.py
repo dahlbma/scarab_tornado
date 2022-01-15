@@ -121,6 +121,7 @@ class LoadSDF(QDialog):
                 
             sMol += line
             if b'$$$$' in line:
+                sMol = sMol.decode(errors='replace')
                 return sMol
         return ""
 
@@ -133,8 +134,7 @@ class LoadSDF(QDialog):
             raise TypeError("Expected bytes or string, but got %s." % type(s))
     
     def getTags(self, sMol):
-        sPrevLine = ""
-        pattern = b'>\s*<(.+)>\n(.*)\n'
+        pattern = b'>\s*<(.+)>.*\n(.*)\n'
         saTags = re.findall(pattern, sMol)
         return saTags
     
@@ -289,7 +289,7 @@ class LoadSDF(QDialog):
             sMol += line
             if b'$$$$' in line:
                 break
-        sMol = sMol.decode()
+        sMol = sMol.decode(errors='replace')
         pattern = '>\s*<(.+)>'
         saTags = re.findall(pattern, sMol)
         saTags.insert(0, '')
