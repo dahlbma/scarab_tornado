@@ -115,9 +115,10 @@ class LoadSDF(QDialog):
             line = sFile.readline()
             line = line.replace(b'\r\n', b'\n')
             line = line.replace(b"'", b"")
+            
             # RDKit can't handle empty first line in molfile
-            if iCount == 1 and line in (b'\n', b' \n', b''):
-                line = b'id\n'
+            if iCount == 1:
+                line = b'id' + line
                 
             sMol += line
             if b'$$$$' in line:
