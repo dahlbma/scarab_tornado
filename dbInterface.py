@@ -35,14 +35,6 @@ def sqlExec(sSql, values=None):
 
 def checkUniqueStructure(smiles):
     sSql = f"""
-    select compound_id, bin2smiles(bcpvs.jcmol_moltable.mol) from
-    bcpvs.jcmol_moltable_ukey join bcpvs.jcmol_moltable on
-    (bcpvs.jcmol_moltable.molid=bcpvs.jcmol_moltable_ukey.molid)
-    where uniquekey(mol2bin('{smiles}', 'smiles'))=molkey
-    """
-
-
-    sSql = f"""
     SELECT 
     T3.`COMPOUND_ID` 'compound_id', bin2smiles(T1.`MOL`) 'mol'
     FROM
@@ -243,16 +235,25 @@ def registerNewBatch(compound_id,
 
 
 def getMoleculeProperties(self, molfile):
+    sSql = f'''select bin2smiles(mol2bin('{molfile}')) smiles'''
+    cur.execute(sSql)
+    res = cur.fetchall()
+    if res[0][0] == None:
+        print(molfile)
+    sSmiles = (res[0][0]).decode()
+    
     sio = sys.stderr = StringIO()
     Chem.WrapLogs()
-    mol = Chem.MolFromMolBlock(molfile)
+    mol = Chem.MolFromSmiles(sSmiles)
+    #mol = Chem.MolFromMolBlock(molfile)
     try:
         C_MF = rdMolDescriptors.CalcMolFormula(mol)
         molmassFormula = Formula(C_MF.replace('-', ''))
         C_CHNS = getAtomicComposition(molmassFormula.composition())
     except Exception as e:
         return (False, False, False, False, False, '', f'{sio.getvalue()}')
-    sSmiles = Chem.MolToSmiles(mol)
+    
+    #sSmiles = Chem.MolToSmiles(mol)
     if sSmiles == '':
         return (False, False, False, False, False, '', 'Empty molfile')
     saRemainderSmile = ''
@@ -402,11 +403,14 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
          sSmiles,
          errorMessage) = getMoleculeProperties(self, molfile)
 
-        #mol = Chem.MolFromMolBlock(molfile)
-        #sSmiles = Chem.MolToSmiles(mol)
+        mol = Chem.MolFromMolBlock(molfile)
+        sSmiles = Chem.MolToSmiles(mol)
         
         if compound_id in ('', None):
             mols = checkUniqueStructure(sSmiles)
+            if external_id == 'KAN0004700':
+                print(mols)
+                
             if len(mols) != 0:
                 compound_id = mols[0][0]
                 compound_id_numeric = compound_id[3:]
