@@ -404,13 +404,9 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
          errorMessage) = getMoleculeProperties(self, molfile)
 
         mol = Chem.MolFromMolBlock(molfile)
-        sSmiles = Chem.MolToSmiles(mol)
         
         if compound_id in ('', None):
             mols = checkUniqueStructure(sSmiles)
-            if external_id == 'KAN0004700':
-                print(mols)
-                
             if len(mols) != 0:
                 compound_id = mols[0][0]
                 compound_id_numeric = compound_id[3:]
