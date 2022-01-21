@@ -41,10 +41,12 @@ dropTable("chemspec.chem_info")
 
 dropTable("sfl_assay.rnai")
 
+dropTable("microtube.matrix_tube_invalid")
+dropTable("microtube.matrix_tube")
 dropTable("microtube.matrix")
 dropTable("microtube.matrix_position")
-dropTable("microtube.matrix_tube")
 dropTable("microtube.tube")
+dropTable("microtube.tube_invalid")
 dropTable("microtube.tube_changes")
 #dropTable("microtube.tube_log")
 
@@ -90,7 +92,9 @@ dropTable("assay.lcb_sp_invalid")
 
 dropTable("glass.globals")
 dropTable("glass.vial_log")
+dropTable("glass.vial_log_invalid")
 dropTable("glass.vial")
+dropTable("glass.vial_invalid")
 dropTable("glass.hive_stats")
 
 
@@ -125,7 +129,10 @@ dropTable("screen.ba_rec_ec50")
 dropTable("screen.hts_testsets")
 
 
-dropTable("bcpvs.jcmol_moltable")
+dropTable("bcpvs.JCMOL_MOLTABLE_MOL_keysim")
+dropTable("bcpvs.JCMOL_MOLTABLE_MOL_key")
+dropTable("bcpvs.JCMOL_MOLTABLE_MOL")
+dropTable("bcpvs.JCMOL_MOLTABLE")
 dropTable("bcpvs.compound_library")
 dropTable("bcpvs.compound_suppliers")
 dropTable("bcpvs.compound_type")

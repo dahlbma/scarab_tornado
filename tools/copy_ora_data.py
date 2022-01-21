@@ -474,9 +474,25 @@ if copyTable(engineGLASS, 'glass.hive_stats', 'hive_stats'):
 ##
 if copyTable(engineGLASS, 'glass.vial', 'vial'):
     cur.execute("ALTER TABLE glass.vial Modify column vial_id varchar(7)")
-    cur.execute("ALTER TABLE glass.vial Modify column notebook_ref varchar(30)")
     cur.execute("ALTER TABLE glass.vial Modify column location varchar(40)")
     cur.execute("ALTER TABLE glass.vial Modify column pos varchar(8)")
+
+
+    cur.execute("""create table glass.vial_invalid as 
+    (select * from glass.vial where notebook_ref not in (
+    select notebook_ref from bcpvs.batch))""")
+    
+    cur.execute("""delete from glass.vial where notebook_ref in 
+    (select notebook_ref from
+    (select distinct(notebook_ref) from glass.vial where notebook_ref not in 
+    (select notebook_ref from bcpvs.batch))tmpTbl)
+    """)
+
+    cur.execute("ALTER TABLE glass.vial Modify column notebook_ref varchar(16)")
+    
+    cur.execute("""ALTER TABLE glass.vial
+                   ADD FOREIGN KEY (notebook_ref) REFERENCES bcpvs.batch(notebook_ref)""")
+
     try:
         cur.execute("""ALTER TABLE glass.vial CHANGE vial_id vial_id varchar(7) PRIMARY KEY""")
     except Exception as e:
@@ -485,6 +501,18 @@ if copyTable(engineGLASS, 'glass.vial', 'vial'):
 ##
 if copyTable(engineGLASS, 'glass.vial_log', 'vial_log'):
     cur.execute("ALTER TABLE glass.vial_log Modify column vial_id varchar(7)")
+
+    cur.execute("""create table glass.vial_log_invalid as 
+    (select * from glass.vial_log where vial_id not in (
+    select vial_id from glass.vial))""")
+    
+    cur.execute("""delete from glass.vial_log where vial_id in 
+    (select vial_id from
+    (select distinct(vial_id) from glass.vial_log where vial_id not in 
+    (select vial_id from glass.vial))tmpTbl)
+    """)
+
+    
     cur.execute("""ALTER TABLE glass.vial_log
                    ADD FOREIGN KEY (vial_id) REFERENCES glass.vial(vial_id)""")
 
@@ -543,7 +571,7 @@ if copyTable(engineLOCTREE, 'loctree.subpositions', 'subpositions'):
 if copyTable(engineMICROTUBE, 'microtube.matrix', 'matrix'):
     cur.execute("ALTER TABLE microtube.matrix Modify column matrix_id varchar(40)")
     cur.execute("ALTER TABLE microtube.matrix Modify column location varchar(80)")
-
+    cur.execute("""CREATE UNIQUE INDEX matrix_id_ix on microtube.matrix(matrix_id)""")
     try:
         cur.execute("""ALTER TABLE microtube.matrix CHANGE pkey pkey bigint AUTO_INCREMENT PRIMARY KEY""")
     except Exception as e:
@@ -559,27 +587,56 @@ if copyTable(engineMICROTUBE, 'microtube.matrix_position', 'matrix_position'):
         print(str(e))
         print('Error creating index on microtube.matrix_position.seq')
 ##
-if copyTable(engineMICROTUBE, 'microtube.matrix_tube', 'matrix_tube'):
-    cur.execute("ALTER TABLE microtube.matrix_tube Modify column matrix_id varchar(40)")
-    cur.execute("ALTER TABLE microtube.matrix_tube Modify column position varchar(10)")
-    cur.execute("ALTER TABLE microtube.matrix_tube Modify column tube_id varchar(10)")
-
-    try:
-        cur.execute("""ALTER TABLE microtube.matrix_tube CHANGE pkey pkey bigint AUTO_INCREMENT PRIMARY KEY""")
-    except Exception as e:
-        print(str(e))
-        print('Error creating index on microtube.matrix_tube.pkey')
-##
 if copyTable(engineMICROTUBE, 'microtube.tube', 'tube'):
     cur.execute("ALTER TABLE microtube.tube Modify column location varchar(60)")
-    cur.execute("ALTER TABLE microtube.tube Modify column notebook_ref varchar(30)")
+    cur.execute("ALTER TABLE microtube.tube Modify column notebook_ref varchar(16)")
     cur.execute("ALTER TABLE microtube.tube Modify column tube_id varchar(10)")
+
+    cur.execute("""CREATE UNIQUE INDEX tube_id_ix on microtube.tube(tube_id);""")
+    
+    cur.execute("""create table microtube.tube_invalid as 
+    (select * from microtube.tube where notebook_ref not in (
+    select notebook_ref from bcpvs.batch))""")
+    
+    cur.execute("""delete from microtube.tube where notebook_ref in 
+    (select notebook_ref from
+    (select distinct(notebook_ref) from microtube.tube where notebook_ref not in 
+    (select notebook_ref from bcpvs.batch))tmpTbl)
+    """)
+
+    cur.execute("""ALTER TABLE microtube.tube
+                   ADD FOREIGN KEY (notebook_ref) REFERENCES bcpvs.batch(notebook_ref)""")
 
     try:
         cur.execute("""ALTER TABLE microtube.tube CHANGE pkey pkey bigint AUTO_INCREMENT PRIMARY KEY""")
     except Exception as e:
         print(str(e))
         print('Error creating index on microtube.tube.pkey')
+##
+if copyTable(engineMICROTUBE, 'microtube.matrix_tube', 'matrix_tube'):
+    cur.execute("ALTER TABLE microtube.matrix_tube Modify column matrix_id varchar(40)")
+    cur.execute("ALTER TABLE microtube.matrix_tube Modify column position varchar(10)")
+    cur.execute("ALTER TABLE microtube.matrix_tube Modify column tube_id varchar(10)")
+
+    cur.execute("""create table microtube.matrix_tube_invalid as 
+    (select * from microtube.matrix_tube where tube_id not in (
+    select tube_id from microtube.tube))""")
+    
+    cur.execute("""delete from microtube.matrix_tube where tube_id in 
+    (select tube_id from
+    (select distinct(tube_id) from microtube.matrix_tube where tube_id not in 
+    (select tube_id from microtube.tube))tmpTbl)
+    """)
+
+    cur.execute("""ALTER TABLE microtube.matrix_tube
+                   ADD FOREIGN KEY (tube_id) REFERENCES microtube.tube(tube_id)""")
+    cur.execute("""ALTER TABLE microtube.matrix_tube
+                   ADD FOREIGN KEY (matrix_id) REFERENCES microtube.matrix(matrix_id)""")
+    try:
+        cur.execute("""ALTER TABLE microtube.matrix_tube CHANGE pkey pkey bigint AUTO_INCREMENT PRIMARY KEY""")
+    except Exception as e:
+        print(str(e))
+        print('Error creating index on microtube.matrix_tube.pkey')
 ##
 if copyTable(engineMICROTUBE, 'microtube.tube_changes', 'tube_changes'):
     cur.execute("ALTER TABLE microtube.tube_changes Modify column location varchar(60)")
