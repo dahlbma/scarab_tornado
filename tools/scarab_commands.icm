@@ -10,8 +10,32 @@ load icmdb mol "chem.sdf" "Databases/localhost" "chem_reg" "BeeHive/chem_reg"
 load icmdb mol "jcmol_moltable.sdf" "Databases/localhost" "bcpvs" "BeeHive/Compound"
 
 
-load icmdb database "Databases/localhost" "bcpvs" table={"compound"} "BeeHive/Compound" gui
+#####################################
+## Reset chem_reg database
 
+delete from chem_reg.CHEM_MOL_keysim;
+delete from chem_reg.CHEM_MOL_key;
+delete from chem_reg.CHEM_MOL;
+delete from chem_reg.CHEM;
+delete from chem_reg.chem_info;
+delete from chem_reg.salts where suffix like 'X%';
+update chem_reg.salts_sequence set pkey = 1;
+update chem_reg.regno_sequence set pkey = 2000000;
+
+update bcpvs.compound_id_sequence set pkey = 600000;
+ALTER TABLE bcpvs.JCMOL_MOLTABLE ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id);
+
+
+#####################################
+
+delete icmdb tree="BeeHive/Compound Center/Matrix/matrix"
+load icmdb database "Databases/localhost" "microtube" table={"matrix"} "BeeHive/Compound Center/Matrix"
+load icmdb database "Databases/localhost" "microtube" table={"matrix_position"} "BeeHive/Compound Center/Matrix"
+load icmdb database "Databases/localhost" "microtube" table={"matrix_tube"} "BeeHive/Compound Center/Matrix"
+load icmdb database "Databases/localhost" "microtube" table={"tube"} "BeeHive/Compound Center/Matrix"
+
+
+load icmdb database "Databases/localhost" "bcpvs" table={"compound"} "BeeHive/Compound" gui
 load icmdb database "Databases/localhost" "chem_reg" table={"chem_info_mol"} "BeeHive/chem_reg" gui
 load icmdb database "Databases/localhost" "chem_reg" table={"chem_info_mol_key"} "BeeHive/chem_reg" gui
 load icmdb database "Databases/localhost" "chem_reg" table={"chem_info_mol_ukey"} "BeeHive/chem_reg" gui
