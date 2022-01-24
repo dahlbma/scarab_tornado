@@ -21,6 +21,7 @@ delete from chem_reg.chem_info;
 delete from chem_reg.salts where suffix like 'X%';
 update chem_reg.salts_sequence set pkey = 1;
 update chem_reg.regno_sequence set pkey = 2000000;
+update bcpvs.library_id_sequence set pkey = 3000;
 
 update bcpvs.compound_id_sequence set pkey = 600000;
 ALTER TABLE bcpvs.JCMOL_MOLTABLE ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id);
