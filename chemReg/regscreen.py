@@ -114,14 +114,6 @@ class RegScreen(QMainWindow):
             res, sMessage = postMolFile(self, fname[0], self.regno, logging.getLogger(self.mod_name))
             displayMolfile(self)
             updateMoleculeProperties(self)
-    
-    
-    class Event(LoggingEventHandler):
-        def on_closed(self, event):
-            print(f"{self.fname_path} closed")
-            RegScreen.test_msg() 
-    
-    
 
     def editMolFile(self, event=None):
         self.fname = "tmp.mol" # temp file name
