@@ -5,10 +5,6 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
-from watchdog.observers import Observer
-from watchdog.events import LoggingEventHandler
-
-
 from chemreglib import *
 from sdfreg import LoadSDF
 from addmetatags import AddMetaTags
