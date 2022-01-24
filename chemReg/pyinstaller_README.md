@@ -1,11 +1,15 @@
 # Pyinstaller how-to
-Install python, along with the following packages using pip or your favourite package manager:
-* PyQt5
-* requests
-* pyinstaller
+Install Python 3.8 and pip, along with the requirements listed in 'requirements.txt'.
 
-Now, to compile main.py simply invoke
+To compile main.py simply invoke
   
   `pyinstaller main.spec`
 
+Make sure that you are using Python 3.8, along with the requirements listed in requirements.txt.
+To make sure you are compiling with Python 3.8, try:
+
+  `py -3.8 -m PyInstaller main.spec`
+
 Which will create two directories: `build` \& `dist`, with `dist` containing the executable `chemreg`.
+
+To install the launcher, use the same commands with 'main.spec' changed to 'launcher.spec'.

@@ -114,43 +114,40 @@ class RegScreen(QMainWindow):
             res, sMessage = postMolFile(self, fname[0], self.regno, logging.getLogger(self.mod_name))
             displayMolfile(self)
             updateMoleculeProperties(self)
-            
+
     def editMolFile(self, event=None):
-        fname = "tmp.mol" # temp file name
-        fname_path = resource_path(fname) # file location / actual file name
+        self.fname = "tmp.mol" # temp file name
+        self.fname_path = resource_path(self.fname) # file location / actual file name
         if self.structure_lab.pixmap().isNull():
             # no loaded mol, copying template
-            shutil.copy(resource_path("nostruct.mol"), fname_path)
+            shutil.copy(resource_path("nostruct.mol"), self.fname_path)
         else:
             # download molfile for selected regno, write to 'tmp.mol'
             tmp_mol_str = dbInterface.getMolFile(self.token, self.regno)
-            tmp_file = open(fname_path, "w")
+            tmp_file = open(self.fname_path, "w")
             n = tmp_file.write(tmp_mol_str)
             tmp_file.close()
-        retcode = open_file(fname_path)
+        retcode = open_file(self.fname_path)
         # confirm dialogue
+        self.fs_watcher = QtCore.QFileSystemWatcher([self.fname_path])
+        self.fs_watcher.fileChanged.connect(self.test_msg)
 
-        # This needs to pop up after the moledit is closed
-        # use python watchdog to monitor the file status
+    def test_msg(self):
+        self.fs_watcher = None
         msg = QMessageBox()
-        msg.setWindowTitle("Edit " + fname)
+        msg.setWindowTitle("Edit " + self.fname)
         msg.setIcon(QMessageBox.Question)
         msg.setText("Do you want to save .mol-file changes to the database?")
         msg.setStandardButtons(QMessageBox.Save | QMessageBox.Cancel)
         msg.setDefaultButton(QMessageBox.Save)
         btnS = msg.button(QMessageBox.Save)
         msg.exec_()
-
         ok_msg = QMessageBox()
         ok_msg.setStandardButtons(QMessageBox.Ok)
-        ok_msg.setWindowTitle("Edit " + fname)
+        ok_msg.setWindowTitle("Edit " + self.fname)
         if (msg.clickedButton() == btnS):
             # save changes
-            res, sMessage = postMolFile(self, fname_path, self.regno, logging.getLogger(self.mod_name))
-            if res == False:
-                send_msg("Structure error", f"{sMessage}")
-                os.remove(fname_path)
-                return
+            postMolFile(self, self.fname_path, self.regno, logging.getLogger(self.mod_name))
             displayMolfile(self)
             updateMoleculeProperties(self)
             ok_msg.setText("Updated .mol file")
@@ -159,10 +156,12 @@ class RegScreen(QMainWindow):
                 self.regcompound_btn.setEnabled(True)
         else:
             # cancel, do nothing
-            ok_msg.setText("Did not update .mol file")
+            ok_msg.setText("Did not update .mol file in database. 'tmp.mol' deleted.")
         ok_msg.exec_()
         # cleanup, remove tmp.mol
-        os.remove(fname_path)
+        os.remove(self.fname_path)
+        self.fname = None
+        self.fname_path = None
 
     def allDataPresent(self):
         if self.submitter_cb.currentText() == '' or \
