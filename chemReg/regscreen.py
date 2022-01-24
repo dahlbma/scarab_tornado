@@ -133,6 +133,7 @@ class RegScreen(QMainWindow):
         self.fs_watcher.fileChanged.connect(self.test_msg)
 
     def test_msg(self):
+        self.fs_watcher = None
         msg = QMessageBox()
         msg.setWindowTitle("Edit " + self.fname)
         msg.setIcon(QMessageBox.Question)
@@ -161,7 +162,6 @@ class RegScreen(QMainWindow):
         os.remove(self.fname_path)
         self.fname = None
         self.fname_path = None
-        self.fs_watcher = None
 
     def allDataPresent(self):
         if self.submitter_cb.currentText() == '' or \
