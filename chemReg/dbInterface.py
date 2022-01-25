@@ -1,8 +1,10 @@
 import requests
 import json
 
+baseUrl = 'https://esox3.scilifelab.se/vialdb/'
+
 def chemRegAddMolFile(dict, token):
-    r = requests.post('http://esox3.scilifelab.se:8082/api/chemRegAddMol',
+    r = requests.post(f'{baseUrl}api/chemRegAddMol',
                       data = dict,
                       headers={'token': token})
     if r.status_code != 200:
@@ -21,24 +23,24 @@ def listify(data, addBlank=True):
     return cleanList
 
 def searchValue(target, value, token):
-    r = requests.get('http://esox3.scilifelab.se:8082/api/search',
+    r = requests.get(f'{baseUrl}api/search',
                      params={'column': target, 'value': value},
                      headers={'token': token})
     cleanList = listify(r, False)
     return cleanList
 
 def updateValue(target, value, token, regno):
-    r = requests.put('http://esox3.scilifelab.se:8082/api/update',
+    r = requests.put(f'{baseUrl}api/update',
                      params={'column': target, 'value': value, 'regno': regno},
                      headers={'token': token})
 
 def createNewRegno(regno, token):
-    r = requests.put('http://esox3.scilifelab.se:8082/api/createRegno',
+    r = requests.put(f'{baseUrl}api/createRegno',
                      params={'regno': regno},
                      headers={'token': token})
 
 def updateBatch(token, regno, sBatch):
-    r = requests.put('http://esox3.scilifelab.se:8082/api/updateRegnoBatch',
+    r = requests.put(f'{baseUrl}api/updateRegnoBatch',
                      params={'regno': regno, 'batch': sBatch},
                      headers={'token': token})
     if r.status_code != 200:
@@ -47,26 +49,26 @@ def updateBatch(token, regno, sBatch):
         return True
 
 def deleteRegno(regno, token):
-    r = requests.put('http://esox3.scilifelab.se:8082/api/deleteRegno',
+    r = requests.put(f'{baseUrl}api/deleteRegno',
                      params={'regno': regno},
                      headers={'token': token})
 
 def getTextColumn(token, column, regno):
-    r = requests.get('http://esox3.scilifelab.se:8082/api/getTextColumn',
+    r = requests.get(f'{baseUrl}api/getTextColumn',
                      params={'column': column, 'regno': regno},
                      headers={'token': token})
     cleanList = listify(r, False)
     return cleanList[0]
     
 def getColComboData(token, column):
-    r = requests.get('http://esox3.scilifelab.se:8082/api/getColComboData',
+    r = requests.get(f'{baseUrl}api/getColComboData',
                      params={'column': column},
                      headers={'token': token})
     cleanList = listify(r)
     return cleanList
 
 def getLibraryName(token, library_id):
-    r = requests.get('http://esox3.scilifelab.se:8082/api/getLibraryName',
+    r = requests.get(f'{baseUrl}api/getLibraryName',
                      params={'library_id': library_id},
                      headers={'token': token})
     cleanList = listify(r, False)
@@ -77,7 +79,7 @@ def getLibraryName(token, library_id):
     return cleanList
 
 def createLibrary(token, library_name, supplier):
-    r = requests.put('http://esox3.scilifelab.se:8082/api/createLibrary',
+    r = requests.put(f'{baseUrl}api/createLibrary',
                      params={'library_name': library_name, 'supplier': supplier},
                      headers={'token': token})
     if r.status_code != 200:
@@ -86,7 +88,7 @@ def createLibrary(token, library_name, supplier):
         return True, r.content
     
 def createSupplier(token, supplier):
-    r = requests.put('http://esox3.scilifelab.se:8082/api/createSupplier',
+    r = requests.put(f'{baseUrl}api/createSupplier',
                      params={'supplier': supplier},
                      headers={'token': token})
     if r.status_code != 200:
@@ -95,46 +97,73 @@ def createSupplier(token, supplier):
         return True, r.content
 
 def getNextRegno(token):
-    r = requests.get('http://esox3.scilifelab.se:8082/api/getNextRegno',
+    r = requests.get(f'{baseUrl}api/getNextRegno',
                      headers={'token': token})
     res = r.content.decode()
     return str(res)
 
 def getSdfSequence(token):
-    r = requests.get('http://esox3.scilifelab.se:8082/api/getNextSdfSequence',
+    r = requests.get(f'{baseUrl}api/getNextSdfSequence',
                      headers={'token': token})
     res = r.content.decode()
     return res
 
 def getMolFile(token, regno):
-    r = requests.get('http://esox3.scilifelab.se:8082/api/getMolfile', 
+    r = requests.get(f'{baseUrl}api/getMolfile', 
                      params={'regno': regno}, 
                      headers={'token': token})
     res = r.content.decode()
     return res
     
 def createMolImage(token, regno):
-    r = requests.get('http://esox3.scilifelab.se:8082/api/createMolImage',
+    r = requests.get(f'{baseUrl}api/createMolImage',
                      params={'regno': regno},
                      headers={'token': token})
     res = r.content.decode()
     return res
 
+def postMolfile(token, molfile):
+    r = requests.post(f'{baseUrl}api/loadMolfile',
+                      headers={'token': token},
+                      files=molfile)
+    return r
+
+def login(user, password):
+    r = requests.post(f'{baseUrl}login',
+                      data = {'username':user,
+                              'password':password})
+    return r
+
+def getVersion():
+    r = requests.get(f'{baseUrl}getVersionData') # get file version
+    return r
+
+def getChemRegBinary(os_name):
+    r = requests.get(f'{baseUrl}getChemRegBin',
+                     data={'os_name':os_name},
+                     stream=True) # fetch chemreg dist
+    return r
+
+def getMolImage(regno):
+    r = requests.get(f'{baseUrl}mols/{regno}.png')
+    res = r.content
+    return res
+
 def getLastBatchOfEln(token, sEln):
-    r = requests.get('http://esox3.scilifelab.se:8082/api/getLastBatchFromEln',
+    r = requests.get(f'{baseUrl}api/getLastBatchFromEln',
                      params={'eln': sEln},
                      headers={'token': token})
     res = r.content.decode()
     return int(res)
 
 def getCanonicSmiles(token, smiles):
-    r = requests.get('http://esox3.scilifelab.se:8082/api/getCanonicSmiles',
+    r = requests.get(f'{baseUrl}api/getCanonicSmiles',
                      params={'smiles': smiles},
                      headers={'token': token})
     return r.content.decode()
 
 def createSalt(token, smiles):
-    r = requests.put('http://esox3.scilifelab.se:8082/api/createSalt',
+    r = requests.put(f'{baseUrl}api/createSalt',
                      params={'smiles': smiles},
                      headers={'token': token})
     if r.status_code != 200:
@@ -143,14 +172,14 @@ def createSalt(token, smiles):
         return True, r.content
 
 def getRegnosFromSdfSequence(token, iSequence):
-    r = requests.get('http://esox3.scilifelab.se:8082/api/getRegnosFromSequence',
+    r = requests.get(f'{baseUrl}api/getRegnosFromSequence',
                      params={'sdfile_sequence': iSequence},
                      headers={'token': token})
     res = listify(r, False)
     return res
 
 def bcpvsRegCompound(token, sReg):
-    r = requests.put('http://esox3.scilifelab.se:8082/api/bcpvsRegCompound',
+    r = requests.put(f'{baseUrl}api/bcpvsRegCompound',
                      params={'regno': sReg},
                      headers={'token': token})
     return r.content

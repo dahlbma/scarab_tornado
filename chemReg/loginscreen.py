@@ -32,8 +32,7 @@ class LoginScreen(QDialog):
             self.errorlabel.setText("")
         
         try:
-            r = requests.post('http://esox3.scilifelab.se:8082/login',
-                              data = {'username':user, 'password':password})
+            r = dbInterface.login(user, password)
         except Exception as e:
             self.errorlabel.setText("Bad Connection")
             send_msg("Error Message", str(e), QMessageBox.Warning, e)

@@ -49,17 +49,15 @@ def open_file(filename):
 
 def displayMolfile(self):
     dbInterface.createMolImage(self.token, self.regno)
-    sFile = "http://esox3.scilifelab.se:8082/mols/" + self.regno + ".png"
     image = QImage()
     self.structure_lab.setScaledContents(True)
-    image.loadFromData(requests.get(sFile).content)
+    image.loadFromData(dbInterface.getMolImage(self.regno))
     self.structure_lab.setPixmap(QPixmap(image))
 
 def postMolFile(self, fname, regno, logger):
     logger.info("posting file %s to server", fname)
     f = {'file': open(fname, 'rb'), 'regno': regno}
-    r = requests.post('http://esox3.scilifelab.se:8082/api/loadMolfile',
-                      headers={'token': self.token}, files=f)
+    r = dbInterface.postMolfile(self.token, f)
     if r.status_code != 200:
         return False, r.content
     else:

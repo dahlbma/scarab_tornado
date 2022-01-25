@@ -38,7 +38,7 @@ class LauncherScreen(QDialog):
     def ver_check(self):
         # return true if chemReg is outdated
         try: 
-            r = requests.get('http://esox3.scilifelab.se:8082/getVersionData') # get file version
+            r = dbInterface.getVersion()
             # turn it into a dict
             info = json.loads(r.content)
             logger.info(f"recieved {info}")
@@ -75,7 +75,7 @@ class LauncherScreen(QDialog):
             # update needed
             os_name = platform.system()
             try: 
-                bin_r = requests.get('http://esox3.scilifelab.se:8082/getChemRegBin', data={'os_name':os_name}, stream=True) # fetch chemreg dist
+                bin_r = dbInterface.getChemRegBinary(os_name)
                 exec_path = ""
                 if os_name == 'Windows':
                     exec_path = '{}/chemreg.exe'.format(os.getcwd())
@@ -96,7 +96,7 @@ class LauncherScreen(QDialog):
                 return -1
         # all is well
         try:
-            r = requests.get('http://esox3.scilifelab.se:8082/getVersionData') # get file version
+            r = dbInterface.getVersion()
             # turn it into a dict
             info = json.loads(r.content)
             logger.info(f"recieved {info}")
