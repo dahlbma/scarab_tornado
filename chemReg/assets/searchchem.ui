@@ -1213,6 +1213,33 @@ border: 1px solid black;</string>
            </layout>
           </item>
           <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <item>
+             <widget class="QLabel" name="label_24">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Solvent</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="solvent_cb">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="focusPolicy">
+               <enum>Qt::StrongFocus</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
            <spacer name="verticalSpacer_10">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
@@ -1461,7 +1488,7 @@ border: 1px solid black;</string>
      <x>0</x>
      <y>0</y>
      <width>1240</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

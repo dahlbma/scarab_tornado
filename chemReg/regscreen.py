@@ -98,6 +98,9 @@ class RegScreen(QMainWindow):
         self.comments_text.textChanged.connect(
             lambda: self.changeEvent(self.comments_text.toPlainText(), 'COMMENTS'))
 
+        self.solvent_cb.currentTextChanged.connect(
+            lambda x: self.changeEvent(x, 'solvent'))
+
         self.loadmol_btn.clicked.connect(self.uploadMolfile)
         self.editmol_btn.clicked.connect(self.editMolFile)
         #self.editmol_btn.setEnabled(False)

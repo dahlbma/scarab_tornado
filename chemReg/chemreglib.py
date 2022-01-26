@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QApplication, QMessageBox
 
 ip_rights_list = [None, 'External rights', 'LCBKI', 'Commercial']
 
+
 def send_msg(title, text, icon=QMessageBox.Information, e=None):
     msg = QMessageBox()
     msg.setWindowTitle(title)
@@ -104,6 +105,9 @@ def updateScreen(self):
         self.libraryid_cb.addItems(libraryIds)
         
         self.ip_rights_cb.addItems(ip_rights_list)
+
+        solvents = dbInterface.getColComboData(self.token, 'solvent')
+        self.solvent_cb.addItems(solvents)
     
     # Set current values for this regno
     if self.regno != None:
@@ -192,6 +196,9 @@ def updateScreen(self):
                                               self.regno)
         self.ip_rights_cb.setCurrentText(ip_rights)
 
+        solvent = dbInterface.getTextColumn(self.token, 'solvent', self.regno)
+        self.solvent_cb.setCurrentText(solvent)
+
         displayMolfile(self)
     else:
         self.editregno_btn.setEnabled(False)
@@ -218,6 +225,7 @@ def updateScreen(self):
         self.avgmolmass_lab.setText(None)
         self.date_lab.setText(None)
         self.structure_lab.clear()
+        self.solvent_cb.setCurrentText(' ')
         # search buttons
         try:
             self.regno_search_eb.setText(None)
