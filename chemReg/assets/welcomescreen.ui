@@ -72,6 +72,26 @@ border-radius: 10px;
        </widget>
       </item>
       <item>
+       <spacer name="verticalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QComboBox" name="server_cb">
+        <property name="styleSheet">
+         <string notr="true">background-color: rgba(85, 170, 255, 255)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer name="verticalSpacer_7">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
