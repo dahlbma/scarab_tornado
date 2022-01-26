@@ -27,6 +27,21 @@ update bcpvs.compound_id_sequence set pkey = 600000;
 ALTER TABLE bcpvs.JCMOL_MOLTABLE ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id);
 
 
+## Update test databases
+update chem_reg_test.salts_sequence set pkey = 1;
+update chem_reg_test.regno_sequence set pkey = 2000000;
+update bcpvs_test.library_id_sequence set pkey = 3000;
+update bcpvs_test.compound_id_sequence set pkey = 600000;
+
+insert into chem_reg_test.sdfile_sequence select * from chem_reg.sdfile_sequence;
+insert into chem_reg_test.regno_sequence select * from chem_reg.regno_sequence;
+insert into bcpvs_test.compound_type select * from bcpvs.compound_type;
+insert into bcpvs_test.compound_id_sequence select * from bcpvs.compound_id_sequence;
+insert into bcpvs_test.compound_suppliers select * from bcpvs.compound_suppliers;
+insert into bcpvs_test.compound_library select * from bcpvs.compound_library;
+insert into bcpvs_test.product_type select * from bcpvs.product_type;
+
+
 #####################################
 
 delete icmdb tree="BeeHive/Compound Center/Matrix/matrix"

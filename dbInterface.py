@@ -17,6 +17,8 @@ import codecs
 logger = logging.getLogger(__name__)
 chemregDB = 'chem_reg'
 bcpvsDB = 'bcpvs'
+chemregDB = 'chem_reg_test'
+bcpvsDB = 'bcpvs_test'
 
 db_connection = MySQLdb.connect(
     host=config.database['host'],
@@ -31,16 +33,6 @@ def res2json():
     result = [list(i) for i in cur.fetchall()]
     return json.dumps(result)
 
-def sqlExec2(sSql, values=None):
-    if values == None:
-        cur.execute(sSql)
-    else:
-        cur.execute(sSql, values)
-    
-    result = [list(i) for i in cur.fetchall()]
-    return json.dumps(result)
-
-
 def checkUniqueStructure(smiles):
     sSql = f"""
     SELECT 
@@ -48,14 +40,14 @@ def checkUniqueStructure(smiles):
     FROM
     (SELECT NULL) ONE_ROW_TAB_
     STRAIGHT_JOIN
-    `bcpvs`.`JCMOL_MOLTABLE_MOL_key` T2 ON T2.`molkey` = FP(MOL2BIN('{smiles}',
+    {bcpvsDB}.`JCMOL_MOLTABLE_MOL_key` T2 ON T2.`molkey` = FP(MOL2BIN('{smiles}',
     'smiles'),
     'sss')
     STRAIGHT_JOIN
-    `bcpvs`.`JCMOL_MOLTABLE_MOL` T1 ON T2.`COMPOUND_ID` = T1.`COMPOUND_ID`
+    {bcpvsDB}.`JCMOL_MOLTABLE_MOL` T1 ON T2.`COMPOUND_ID` = T1.`COMPOUND_ID`
     AND UNIQUEKEY('{smiles}') = UNIQUEKEY(T1.`mol`)
     STRAIGHT_JOIN
-    `bcpvs`.`JCMOL_MOLTABLE` T3 ON T1.`COMPOUND_ID` = T3.`COMPOUND_ID`
+    {bcpvsDB}.`JCMOL_MOLTABLE` T3 ON T1.`COMPOUND_ID` = T3.`COMPOUND_ID`
     ORDER BY T3.`COMPOUND_ID` DESC
     """
     cur.execute(sSql)
@@ -79,10 +71,10 @@ def getNewSaltNumber():
     return pkey
 
 def getNewCompoundId():
-    sSql = "select pkey from bcpvs.compound_id_sequence"
+    sSql = f"select pkey from {bcpvsDB}.compound_id_sequence"
     cur.execute(sSql)
     pkey = cur.fetchall()[0][0] +1
-    sSql = f"update bcpvs.compound_id_sequence set pkey={pkey}"
+    sSql = f"update {bcpvsDB}.compound_id_sequence set pkey={pkey}"
     cur.execute(sSql)
     return pkey
 
@@ -174,7 +166,7 @@ def registerNewCompound(compound_id_numeric,
                         compound_name = ''):
     compound_id = f'CBK{compound_id_numeric}'
     sSql = f'''
-    insert into bcpvs.compound (
+    insert into {bcpvsDB}.compound (
     compound_id,
     compound_id_numeric,
     created_date,
@@ -206,7 +198,7 @@ def registerNewBatch(compound_id,
                      supplier_id,
                      supplier_batch,
                      purity = -1):
-    sSql = f'''insert into bcpvs.batch (
+    sSql = f'''insert into {bcpvsDB}.batch (
     compound_id,
     notebook_ref,
     suffix,
@@ -325,7 +317,7 @@ class GetLastBatchFromEln(tornado.web.RequestHandler):
     def get(self):
         sEln = self.get_argument("eln")
         eln_id = sEln[0:5]
-        sSql = f'''select notebook_ref from bcpvs.batch
+        sSql = f'''select notebook_ref from {bcpvsDB}.batch
         where notebook_ref like '{eln_id}%\' order by notebook_ref desc'''
         cur.execute(sSql)
         cRes = cur.fetchall()
@@ -354,7 +346,8 @@ class GetRegnosFromSdfSequence(tornado.web.RequestHandler):
         sSql = f'''select regno from {chemregDB}.chem_info
         where sdfile_sequence = {sdfile_sequence}
         '''
-        res = sqlExec2(sSql)
+        cur.execute(sSql)
+        res = res2json()
         self.finish(res)
         
 
@@ -427,7 +420,7 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
                                                   C_MONOISO,
                                                   ip_rights,
                                                   compound_name = '')
-                addStructure("bcpvs.JCMOL_MOLTABLE",
+                addStructure(f"{bcpvsDB}.JCMOL_MOLTABLE",
                              molfile,
                              compound_id,
                              'compound_id')
@@ -640,7 +633,7 @@ class UpdateRegnoBatch(tornado.web.RequestHandler):
     def put(self):
         regno = self.get_argument("regno")
         batch = self.get_argument("batch")
-        sSql = f"""select compound_id from bcpvs.batch
+        sSql = f"""select compound_id from {bcpvsDB}.batch
                    where notebook_ref = '{batch}'"""
         cur.execute(sSql)
         res = cur.fetchall()
@@ -666,7 +659,7 @@ class UpdateRegnoBatch(tornado.web.RequestHandler):
 class CreateSupplier(tornado.web.RequestHandler):
     def put(self):
         supplierName = self.get_argument("supplier")
-        sSql = f"""insert into bcpvs.compound_suppliers
+        sSql = f"""insert into {bcpvsDB}.compound_suppliers
         (name) values ('{supplierName}')"""
         cur.execute(sSql)
 
@@ -761,18 +754,18 @@ class GetColComboData(tornado.web.RequestHandler):
             sSql = """select fullname from hive.user_details
             where ORGANIZATION = 'chemistry'"""
         elif column == 'compound_type':
-            sSql = "select type from bcpvs.compound_type order by type"
+            sSql = f"select type from {bcpvsDB}.compound_type order by type"
         elif column == 'product':
-            sSql = "SELECT type FROM bcpvs.product_type order by type"
+            sSql = f"SELECT type FROM {bcpvsDB}.product_type order by type"
         elif column == 'supplier':
-            sSql = "SELECT name FROM bcpvs.compound_suppliers order by name"
+            sSql = f"SELECT name FROM {bcpvsDB}.compound_suppliers order by name"
         elif column == 'solvent':
             sSql = "SELECT solvent FROM chemspec.solvent_tbl order by solvent"
         elif column == 'library_id':
-            sSql = """SELECT library_name FROM bcpvs.compound_library
+            sSql = f"""SELECT library_name FROM {bcpvsDB}.compound_library
                       order by library_name"""
         elif column == 'library_description':
-            sSql = """SELECT description FROM bcpvs.compound_library
+            sSql = f"""SELECT description FROM {bcpvsDB}.compound_library
                       order by description"""
         cur.execute(sSql)
         res = res2json()
@@ -783,10 +776,10 @@ class GetColComboData(tornado.web.RequestHandler):
 class GetLibraryName(tornado.web.RequestHandler):
     def get(self):
         library_id = self.get_argument("library_id")
-        values = (library_id, )
-        sSql = """SELECT description FROM bcpvs.compound_library
-                  where library_name = %s"""
-        res = sqlExec2(sSql, values)
+        sSql = f"""SELECT description FROM {bcpvsDB}.compound_library
+                  where library_name = '{library_id}'"""
+        cur.execute(sSql)
+        res = res2json()
         self.write(res)
 
 
@@ -794,7 +787,8 @@ class GetLibraryName(tornado.web.RequestHandler):
 class GetLibraries(tornado.web.RequestHandler):
     def get(self):
         sSql = "select fullname from hive.user_details where ORGANIZATION = 'chemistry'"
-        res = sqlExec2(sSql)
+        cur.execute(sSql)
+        res = res2json()
         self.write(res)
 
 
@@ -811,15 +805,15 @@ class CreateLibrary(tornado.web.RequestHandler):
         sLibraryDescription = self.get_argument("library_name")
         sSupplier = self.get_argument("supplier")
 
-        sSql = "select pkey from bcpvs.library_id_sequence"
+        sSql = "select pkey from {bcpvsDB}.library_id_sequence"
         cur.execute(sSql)
         pkey = cur.fetchall()[0][0] +1
-        sSql = f"update bcpvs.library_id_sequence set pkey={pkey}"
+        sSql = f"update {bcpvsDB}.library_id_sequence set pkey={pkey}"
         cur.execute(sSql)
 
         library_id = f'Lib-{pkey}'
         
-        sSql = f"""insert into bcpvs.compound_library
+        sSql = f"""insert into {bcpvsDB}.compound_library
         (library_name,
         supplier,
         description) values
