@@ -351,13 +351,34 @@ background-color: rgb(255, 204, 204)
                 <item>
                  <layout class="QVBoxLayout" name="verticalLayout_17">
                   <item>
-                   <widget class="QComboBox" name="submitter_cb"/>
+                   <widget class="QComboBox" name="submitter_cb">
+                    <property name="styleSheet">
+                     <string notr="true">border-style: solid;
+border-color: rgb(32, 74, 135);
+border-width: 3px;
+border-radius: 5px;</string>
+                    </property>
+                   </widget>
                   </item>
                   <item>
-                   <widget class="QLineEdit" name="batch_eb"/>
+                   <widget class="QLineEdit" name="batch_eb">
+                    <property name="styleSheet">
+                     <string notr="true">border-style: solid;
+border-color: rgb(32, 74, 135);
+border-width: 3px;
+border-radius: 5px;</string>
+                    </property>
+                   </widget>
                   </item>
                   <item>
-                   <widget class="QComboBox" name="project_cb"/>
+                   <widget class="QComboBox" name="project_cb">
+                    <property name="styleSheet">
+                     <string notr="true">border-style: solid;
+border-color: rgb(32, 74, 135);
+border-width: 3px;
+border-radius: 5px;</string>
+                    </property>
+                   </widget>
                   </item>
                  </layout>
                 </item>
@@ -434,13 +455,34 @@ background-color: rgb(255, 204, 204)
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_12">
                 <item>
-                 <widget class="QComboBox" name="compoundtype_cb"/>
+                 <widget class="QComboBox" name="compoundtype_cb">
+                  <property name="styleSheet">
+                   <string notr="true">border-style: solid;
+border-color: rgb(32, 74, 135);
+border-width: 3px;
+border-radius: 5px;</string>
+                  </property>
+                 </widget>
                 </item>
                 <item>
-                 <widget class="QComboBox" name="product_cb"/>
+                 <widget class="QComboBox" name="product_cb">
+                  <property name="styleSheet">
+                   <string notr="true">border-style: solid;
+border-color: rgb(32, 74, 135);
+border-width: 3px;
+border-radius: 5px;</string>
+                  </property>
+                 </widget>
                 </item>
                 <item>
-                 <widget class="QComboBox" name="libraryid_cb"/>
+                 <widget class="QComboBox" name="libraryid_cb">
+                  <property name="styleSheet">
+                   <string notr="true">border-style: solid;
+border-color: rgb(32, 74, 135);
+border-width: 3px;
+border-radius: 5px;</string>
+                  </property>
+                 </widget>
                 </item>
                 <item>
                  <widget class="QLineEdit" name="librarydesc_eb">
@@ -892,6 +934,12 @@ background-color: rgb(255, 204, 204)
               <property name="focusPolicy">
                <enum>Qt::StrongFocus</enum>
               </property>
+              <property name="styleSheet">
+               <string notr="true">border-style: solid;
+border-color: rgb(32, 74, 135);
+border-width: 3px;
+border-radius: 5px;</string>
+              </property>
              </widget>
             </item>
            </layout>
@@ -1054,7 +1102,7 @@ background-color: rgb(255, 204, 204)
      <x>0</x>
      <y>0</y>
      <width>1240</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

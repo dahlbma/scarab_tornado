@@ -164,6 +164,42 @@ class RegScreen(QMainWindow):
         self.fname_path = None
 
     def allDataPresent(self):
+        st_sh = "border-style: solid;\nborder-color: rgb(32, 74, 135);\nborder-width: 3px;\nborder-radius: 5px;"
+        if self.submitter_cb.currentText() == '':
+            self.submitter_cb.setStyleSheet(st_sh)
+        else:
+            self.submitter_cb.setStyleSheet("")
+        
+        if self.compoundtype_cb.currentText() == '':
+            self.compoundtype_cb.setStyleSheet(st_sh)
+        else:
+            self.compoundtype_cb.setStyleSheet("")
+        
+        if self.project_cb.currentText() == '':
+            self.project_cb.setStyleSheet(st_sh)
+        else:
+            self.project_cb.setStyleSheet("")
+        
+        if self.product_cb.currentText() == '':
+            self.product_cb.setStyleSheet(st_sh)
+        else:
+            self.product_cb.setStyleSheet("")
+        
+        if self.libraryid_cb.currentText() == '':
+            self.libraryid_cb.setStyleSheet(st_sh)
+        else:
+            self.libraryid_cb.setStyleSheet("")
+        
+        if self.batchOk == False:
+            self.batch_eb.setStyleSheet(st_sh)
+        else:
+            self.batch_eb.setStyleSheet("")
+        
+        if self.ip_rights_cb.currentText() == '':
+            self.ip_rights_cb.setStyleSheet(st_sh)
+        else:
+            self.ip_rights_cb.setStyleSheet("")
+
         if self.submitter_cb.currentText() == '' or \
            self.compoundtype_cb.currentText() == '' or \
            self.project_cb.currentText() == '' or \
