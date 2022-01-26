@@ -27,13 +27,7 @@ db_connection = MySQLdb.connect(
 db_connection.autocommit(True)
 cur = db_connection.cursor()
 
-def sqlExec(sSql, values=None):
-    '''
-    if values == None:
-        cur.execute(sSql)
-    else:
-        cur.execute(sSql, values)
-    '''
+def res2json():
     result = [list(i) for i in cur.fetchall()]
     return json.dumps(result)
 
@@ -574,7 +568,7 @@ class Search(tornado.web.RequestHandler):
         sSql = f"select regno from {chemregDB}.chem_info where {column} = '{value}'"
         print(sSql)
         cur.execute(sSql)
-        res = sqlExec(sSql)
+        res = res2json()
         self.write(res)
 
 
@@ -586,7 +580,7 @@ class GetRegnoData(tornado.web.RequestHandler):
         values = (regno, )        
         sSql = f"select {column} from {chemregDB}.chem_info where regno = {regno}"
         cur.execute(sSql)
-        res = sqlExec(sSql)
+        res = res2json()
         self.write(res)
 
 
@@ -751,7 +745,7 @@ class GetTextColumn(tornado.web.RequestHandler):
         sSql = f"""select cast({column} as char)
                 from {chemregDB}.chem_info where regno = {regno}"""
         cur.execute(sSql)
-        res = sqlExec(sSql)
+        res = res2json()
         self.write(res)
 
 
@@ -781,7 +775,7 @@ class GetColComboData(tornado.web.RequestHandler):
             sSql = """SELECT description FROM bcpvs.compound_library
                       order by description"""
         cur.execute(sSql)
-        res = sqlExec(sSql)
+        res = res2json()
         self.write(res)
 
 
