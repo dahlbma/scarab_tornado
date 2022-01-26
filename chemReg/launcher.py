@@ -63,9 +63,17 @@ class LauncherScreen(QDialog):
 
 
     def updatefunction(self):
+        os_name = platform.system()
+        exec_path = ""
+        if os_name == 'Windows':
+            exec_path = '{}/chemreg.exe'.format(os.getcwd())
+        elif os_name == 'Linux':
+            exec_path = '{}/chemreg'.format(os.getcwd())
+        elif os_name == 'Darwin':
+            exec_path = '{}/chemreg'.format(os.getcwd())
         # check if versions match
         match, info = self.ver_check()
-        if self.frc_update_chb.isChecked():
+        if self.frc_update_chb.isChecked() or not os.path.isfile(exec_path):
             logger.info("Force update")
             match = 1
         if match == 2:
@@ -73,23 +81,16 @@ class LauncherScreen(QDialog):
             return -1
         elif match == 1:
             # update needed
-            os_name = platform.system()
+            
             try: 
                 bin_r = dbInterface.getChemRegBinary(os_name)
-                exec_path = ""
-                if os_name == 'Windows':
-                    exec_path = '{}/chemreg.exe'.format(os.getcwd())
-                elif os_name == 'Linux':
-                    exec_path = '{}/chemreg'.format(os.getcwd())
-                elif os_name == 'Darwin':
-                    exec_path = '{}/chemreg'.format(os.getcwd())
+                
                 with open(exec_path, 'wb') as chemreg_file:
                     shutil.copyfileobj(bin_r.raw, chemreg_file)
                     logging.info("Updated chemreg")
                 
                 os.chmod(exec_path, 0o775)
-
-                
+  
             except Exception as e:
                 self.status_lab.setText("ERROR ")
                 logger.info(str(e))
