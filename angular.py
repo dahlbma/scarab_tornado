@@ -106,9 +106,9 @@ class getChemRegBin(tornado.web.RequestHandler):
 
     def get(self):
         # send chemReg
-
+        os_name = self.get_argument('os_name')
         # tentative
-        #os_name = self.get_argument('os_name')
+        
         #
         #if not (os_name == 'Windows' or os_name == 'Linux' or os_name == 'Darwin'):
         #    # unsupported OS
