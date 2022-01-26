@@ -79,6 +79,18 @@ class getVersionData(tornado.web.RequestHandler):
 
     def get(self):
         # send verdat
+
+        # tentative
+        #os_name = self.get_argument('os_name')
+        ## query db for version
+        #sSql = f'''select version
+        #           from `chem_reg`.`chemreg_dist`
+        #           where os = {os_name};
+        #        '''
+        #cur.execute(sSql)
+        #res = cur.fetchall()
+        #self.write({"version": f'{res[0][0]}'})
+
         try:
             with open('./ver.dat', 'r') as f:
                 self.write(json.load(f))
@@ -94,7 +106,28 @@ class getChemRegBin(tornado.web.RequestHandler):
 
     def get(self):
         # send chemReg
-        os_name = self.get_argument('os_name')
+
+        # tentative
+        #os_name = self.get_argument('os_name')
+        #
+        #if not (os_name == 'Windows' or os_name == 'Linux' or os_name == 'Darwin'):
+        #    # unsupported OS
+        #    self.set_status(500)
+        #    self.write({'message': 'OS not supported'})
+        #    return
+        #try:
+        #    sSql = f'''select program
+        #           from chem_reg.chemreg_dist
+        #           where os = {os_name};
+        #        '''
+        #    cur.execute(sSql)
+        #    res = cur.fetchall()
+        #    logger.info("sending bin file")
+        #    self.set_status(200)
+        #    self.write(res[0][0])
+        #except Exception as e:
+        #    logger.error(f"Did not send bin file, error: {str(e)}")
+
         bin_file = ""
         if os_name == 'Windows':
             bin_file = os_name + "/chemreg.exe"
@@ -144,8 +177,8 @@ def make_app():
         (r"/api/createMolImage", dbInterface.CreateMolImage),
         (r"/getCompound", dbInterface.GetCompound),
         (r"/mols/(.*)", web.StaticFileHandler, {"path": "mols/"}),
-        (r"/getVersionData", getVersionData),
-        (r"/getChemRegBin", getChemRegBin)
+        (r"/getVersionData", getVersionData), # dbInterface.
+        (r"/getChemRegBin", getChemRegBin) # dbInterface.
     ], **settings)
 
 if __name__ == "__main__":
