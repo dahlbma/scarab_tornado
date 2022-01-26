@@ -15,23 +15,31 @@ import sys
 import codecs
 
 logger = logging.getLogger(__name__)
+chemregDB = 'chem_reg'
+bcpvsDB = 'bcpvs'
 
 db_connection = MySQLdb.connect(
     host=config.database['host'],
     user=config.database['user'],
     passwd=config.database['password'],
-    database='chem_reg'
+    database=chemregDB
 )
 db_connection.autocommit(True)
 cur = db_connection.cursor()
 
-def sqlExec(sSql, values=None):
+def res2json():
+    result = [list(i) for i in cur.fetchall()]
+    return json.dumps(result)
+
+def sqlExec2(sSql, values=None):
     if values == None:
         cur.execute(sSql)
     else:
         cur.execute(sSql, values)
+    
     result = [list(i) for i in cur.fetchall()]
     return json.dumps(result)
+
 
 def checkUniqueStructure(smiles):
     sSql = f"""
@@ -55,18 +63,18 @@ def checkUniqueStructure(smiles):
     return mols
 
 def getNewRegno():
-    sSql = "select pkey from chem_reg.regno_sequence"
+    sSql = f"select pkey from {chemregDB}.regno_sequence"
     cur.execute(sSql)
     pkey = cur.fetchall()[0][0] +1
-    sSql = f"update chem_reg.regno_sequence set pkey={pkey}"
+    sSql = f"update {chemregDB}.regno_sequence set pkey={pkey}"
     cur.execute(sSql)
     return pkey
 
 def getNewSaltNumber():
-    sSql = "select pkey from chem_reg.salts_sequence"
+    sSql = f"select pkey from {chemregDB}.salts_sequence"
     cur.execute(sSql)
     pkey = cur.fetchall()[0][0] +1
-    sSql = f"update chem_reg.salts_sequence set pkey={pkey}"
+    sSql = f"update {chemregDB}.salts_sequence set pkey={pkey}"
     cur.execute(sSql)
     return pkey
 
@@ -100,7 +108,7 @@ def getSaltLetters(saSmileFragments):
         Chem.rdmolops.RemoveStereochemistry(mol)
         flattenSmile = Chem.rdmolfiles.MolToSmiles(mol)
         canonSmile = Chem.CanonSmiles(flattenSmile)
-        sSql = f"select suffix from chem_reg.salts where smiles='{flattenSmile}'"
+        sSql = f"select suffix from {chemregDB}.salts where smiles='{flattenSmile}'"
         cur.execute(sSql)
         suffix = cur.fetchall()
         if len(suffix) == 0:
@@ -294,7 +302,7 @@ class CreateSalt(tornado.web.RequestHandler):
         with Chem.SDWriter(sio) as w:
             w.write(mol)
         molfile = sio.getvalue()
-        sSql = f"""insert into chem_reg.salts (suffix, smiles, mw, mf, molfile)
+        sSql = f"""insert into {chemregDB}.salts (suffix, smiles, mw, mf, molfile)
         values ('{suffix}', '{sSmiles}', {mw}, '{mf}', '{molfile}')
         """
         cur.execute(sSql)
@@ -331,10 +339,10 @@ class GetLastBatchFromEln(tornado.web.RequestHandler):
 @jwtauth
 class GetNextSdfSequence(tornado.web.RequestHandler):
     def get(self):
-        sSql = "select pkey from chem_reg.sdfile_sequence"
+        sSql = f"select pkey from {chemregDB}.sdfile_sequence"
         cur.execute(sSql)
         pkey = cur.fetchall()[0][0] +1
-        sSql = f"update chem_reg.sdfile_sequence set pkey={pkey}"
+        sSql = f"update {chemregDB}.sdfile_sequence set pkey={pkey}"
         cur.execute(sSql)
         self.finish(f'{pkey}')
 
@@ -343,10 +351,10 @@ class GetNextSdfSequence(tornado.web.RequestHandler):
 class GetRegnosFromSdfSequence(tornado.web.RequestHandler):
     def get(self):
         sdfile_sequence = self.get_argument("sdfile_sequence")
-        sSql = f'''select regno from chem_reg.chem_info
+        sSql = f'''select regno from {chemregDB}.chem_info
         where sdfile_sequence = {sdfile_sequence}
         '''
-        res = sqlExec(sSql)
+        res = sqlExec2(sSql)
         self.finish(res)
         
 
@@ -372,7 +380,7 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
         external_id,
         supplier_batch,
         purity
-        from chem_reg.chem_info
+        from {chemregDB}.chem_info
         where regno = {regno}'''
         cur.execute(sSql)
         (regno,
@@ -423,7 +431,7 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
                              molfile,
                              compound_id,
                              'compound_id')
-        sSql = f'''update chem_reg.chem_info
+        sSql = f'''update {chemregDB}.chem_info
                    set compound_id='{compound_id}'
                    where regno = {regno}'''
         cur.execute(sSql)
@@ -497,7 +505,7 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         if purity == '':
             purity = -1
         sSql = f"""
-        insert into chem_reg.chem_info (
+        insert into {chemregDB}.chem_info (
         regno,
         jpage,
         compound_id,
@@ -546,8 +554,7 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         )
         """
         cur.execute(sSql)
-        #addStructure("chem_reg.chem_info_mol", molfile, newRegno, 'regno')
-        addStructure("chem_reg.CHEM", molfile, newRegno, 'regno')
+        addStructure(f"{chemregDB}.CHEM", molfile, newRegno, 'regno')
         self.finish(sStatus)
           
 
@@ -558,8 +565,10 @@ class Search(tornado.web.RequestHandler):
         value = self.get_argument("value")
         values = (value, )
 
-        sSql = "select regno from chem_reg.chem_info where " + column +" = %s"
-        res = sqlExec(sSql, values)
+        sSql = f"select regno from {chemregDB}.chem_info where {column} = '{value}'"
+        print(sSql)
+        cur.execute(sSql)
+        res = res2json()
         self.write(res)
 
 
@@ -569,8 +578,9 @@ class GetRegnoData(tornado.web.RequestHandler):
         column = self.get_argument("column")
         regno = self.get_argument("regno")
         values = (regno, )        
-        sSql = "select " + column + " from chem_reg.chem_info where regno = %s"
-        res = sqlExec(sSql, values)
+        sSql = f"select {column} from {chemregDB}.chem_info where regno = {regno}"
+        cur.execute(sSql)
+        res = res2json()
         self.write(res)
 
 
@@ -578,7 +588,7 @@ class GetRegnoData(tornado.web.RequestHandler):
 class CreateMolImage(tornado.web.RequestHandler):
     def get(self):
         regno = self.get_argument("regno")
-        sSql = f"""select molfile from chem_reg.chem_info
+        sSql = f"""select molfile from {chemregDB}.chem_info
                    where regno = '{regno}'"""
         cur.execute(sSql)
         molfile = cur.fetchall()
@@ -608,12 +618,12 @@ class LoadMolfile(tornado.web.RequestHandler):
             return
         try:
             #addStructure('chem_reg.chem_info_mol', molfile, regno, 'regno')
-            addStructure('chem_reg.CHEM', molfile, regno, 'regno')
+            addStructure(f'{chemregDB}.CHEM', molfile, regno, 'regno')
         except Exception as e:
             print(str(e))
             print(f'failed on regno {regno}')
             return
-        sSql = f"""update chem_reg.chem_info set
+        sSql = f"""update {chemregDB}.chem_info set
                    `molfile` = '{molfile}',
                     C_MF = '{C_MF}',
                     C_MW = {C_MW},
@@ -638,7 +648,7 @@ class UpdateRegnoBatch(tornado.web.RequestHandler):
             self.set_status(500)
             self.finish()
         else:
-            sSql = f"""select regno from chem_reg.chem_info
+            sSql = f"""select regno from {chemregDB}.chem_info
             where jpage = '{batch}' and regno != '{regno}'"""
             cur.execute(sSql)
             res = cur.fetchall()
@@ -646,7 +656,7 @@ class UpdateRegnoBatch(tornado.web.RequestHandler):
                 self.set_status(500)
                 self.finish()
             else:
-                sSql = f"""update chem_reg.chem_info
+                sSql = f"""update {chemregDB}.chem_info
                 set jpage = '{batch}' where regno = '{regno}'"""
                 cur.execute(sSql)
                 self.finish()
@@ -665,7 +675,7 @@ class CreateSupplier(tornado.web.RequestHandler):
 class CreateRegno(tornado.web.RequestHandler):
     def put(self):
         regno = self.get_argument("regno")
-        sSql = """insert into chem_reg.chem_info
+        sSql = f"""insert into {chemregDB}.chem_info
         (regno, rdate) values (%s, now())"""
         val = (regno, )
         cur.execute(sSql, val)
@@ -675,17 +685,16 @@ class CreateRegno(tornado.web.RequestHandler):
 class DeleteRegno(tornado.web.RequestHandler):
     def put(self):
         regno = self.get_argument("regno")
-        val = (regno, )
-        sSql = """select regno, c_mf, chemist from chem_reg.chem_info
+        sSql = f"""select regno, c_mf, chemist from {chemregDB}.chem_info
                   where c_mf is null and chemist is null and
-                  regno=%s"""
-        cur.execute(sSql, val)
+                  regno={regno}"""
+        cur.execute(sSql)
         res = cur.fetchall()
         if len(res) > 0:
             logger.info('Deleting ' + str(res))
-            sSql = """delete from chem_reg.chem_info
-                      where regno = %s"""
-            cur.execute(sSql, val)
+            sSql = f"""delete from {chemregDB}.chem_info
+                      where regno = {regno}"""
+            cur.execute(sSql)
 
 
 @jwtauth
@@ -695,9 +704,9 @@ class UpdateColumn(tornado.web.RequestHandler):
         value = self.get_argument("value")
         regno = self.get_argument("regno")
         values = (value, regno, )
-        sSql = "update chem_reg.chem_info set " + column
-        sSql += """= %s where regno = %s"""
-        cur.execute(sSql, values)
+        sSql = f"""update {chemregDB}.chem_info set {column} = '{value}'
+        where regno = {regno}"""
+        cur.execute(sSql)
 
 
 @jwtauth
@@ -720,7 +729,7 @@ class GetCompound(tornado.web.RequestHandler):
 class GetMolfile(tornado.web.RequestHandler):
     def get(self):
         regno = self.get_argument("regno")
-        sSql = f"""select molfile from chem_reg.chem_info
+        sSql = f"""select molfile from {chemregDB}.chem_info
                    where regno = '{regno}'"""
         cur.execute(sSql)
         res = cur.fetchall()
@@ -733,10 +742,10 @@ class GetTextColumn(tornado.web.RequestHandler):
     def get(self):
         column = self.get_argument("column")
         regno = self.get_argument("regno")
-        sSql = "select cast(" + column + """ as char)
-                from chem_reg.chem_info where regno = %s"""
-        values = (regno, )
-        res = sqlExec(sSql, values)
+        sSql = f"""select cast({column} as char)
+                from {chemregDB}.chem_info where regno = {regno}"""
+        cur.execute(sSql)
+        res = res2json()
         self.write(res)
 
 
@@ -765,8 +774,8 @@ class GetColComboData(tornado.web.RequestHandler):
         elif column == 'library_description':
             sSql = """SELECT description FROM bcpvs.compound_library
                       order by description"""
-
-        res = sqlExec(sSql)
+        cur.execute(sSql)
+        res = res2json()
         self.write(res)
 
 
@@ -777,7 +786,7 @@ class GetLibraryName(tornado.web.RequestHandler):
         values = (library_id, )
         sSql = """SELECT description FROM bcpvs.compound_library
                   where library_name = %s"""
-        res = sqlExec(sSql, values)
+        res = sqlExec2(sSql, values)
         self.write(res)
 
 
@@ -785,7 +794,7 @@ class GetLibraryName(tornado.web.RequestHandler):
 class GetLibraries(tornado.web.RequestHandler):
     def get(self):
         sSql = "select fullname from hive.user_details where ORGANIZATION = 'chemistry'"
-        res = sqlExec(sSql)
+        res = sqlExec2(sSql)
         self.write(res)
 
 
