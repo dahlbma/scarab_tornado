@@ -85,26 +85,6 @@ border-radius: 10px;
        </spacer>
       </item>
       <item>
-       <widget class="QComboBox" name="server_cb">
-        <property name="styleSheet">
-         <string notr="true">background-color: rgba(85, 170, 255, 255)</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="verticalSpacer_7">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>43</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
        <widget class="QLabel" name="label_2">
         <property name="styleSheet">
          <string notr="true">color: rgb(255, 255, 255);
@@ -184,6 +164,26 @@ font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
          <size>
           <width>20</width>
           <height>47</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QComboBox" name="server_cb">
+        <property name="styleSheet">
+         <string notr="true">background-color: rgba(85, 170, 255, 255)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="verticalSpacer_7">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>43</height>
          </size>
         </property>
        </spacer>

@@ -567,7 +567,9 @@ border-radius: 5px;</string>
              <enum>Qt::ClickFocus</enum>
             </property>
             <property name="styleSheet">
-             <string notr="true">background-color: rgb(211, 215, 207); border: 1px solid black;</string>
+             <string notr="true">background-color: rgb(211, 215, 207); 
+
+border: 3px solid rgb(32, 74, 135);</string>
             </property>
             <property name="frameShape">
              <enum>QFrame::NoFrame</enum>

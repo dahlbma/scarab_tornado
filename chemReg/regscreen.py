@@ -27,7 +27,7 @@ class RegScreen(QMainWindow):
         self.populated = False
         self.regcompound_btn.setEnabled(False)
         self.batchOk = False
-        self.moleculeOk = False
+        self.molOK = False
         #### Regno
         if regno == None:
             self.regno = dbInterface.getNextRegno(self.token)
@@ -103,6 +103,7 @@ class RegScreen(QMainWindow):
 
         self.loadmol_btn.clicked.connect(self.uploadMolfile)
         self.editmol_btn.clicked.connect(self.editMolFile)
+
         #self.editmol_btn.setEnabled(False)
         #self.structure_lab.mouseReleaseEvent = self.editMolFile
 
@@ -117,6 +118,8 @@ class RegScreen(QMainWindow):
             res, sMessage = postMolFile(self, fname[0], self.regno, logging.getLogger(self.mod_name))
             displayMolfile(self)
             updateMoleculeProperties(self)
+            self.molOK = True
+            self.molChanged()      
 
     def editMolFile(self, event=None):
         self.fname = "tmp.mol" # temp file name
@@ -154,9 +157,8 @@ class RegScreen(QMainWindow):
             displayMolfile(self)
             updateMoleculeProperties(self)
             ok_msg.setText("Updated .mol file")
-            self.moleculeOk = True
-            if self.batch_eb.text() not in ('', ' ', None) and self.allDataPresent():
-                self.regcompound_btn.setEnabled(True)
+            self.molOK = True
+            self.molChanged()
         else:
             # cancel, do nothing
             ok_msg.setText("Did not update .mol file in database. 'tmp.mol' deleted.")
@@ -203,13 +205,18 @@ class RegScreen(QMainWindow):
         else:
             self.ip_rights_cb.setStyleSheet("")
 
+        if self.structure_lab.pixmap().isNull() == True:
+            self.structure_lab.setStyleSheet(st_sh)
+        else:
+            self.structure_lab.setStyleSheet("background-color: rgb(211, 215, 207); border: 1px solid black;")
+
         if self.submitter_cb.currentText() == '' or \
            self.compoundtype_cb.currentText() == '' or \
            self.project_cb.currentText() == '' or \
            self.product_cb.currentText() == '' or \
            self.libraryid_cb.currentText() == '' or \
            self.batchOk == False or \
-           self.moleculeOk == False or \
+           self.molOK == False or \
            self.ip_rights_cb.currentText() == '':
             return False
         else:
@@ -232,6 +239,11 @@ class RegScreen(QMainWindow):
         else:
             self.regcompound_btn.setEnabled(False)
             
+    def molChanged(self):
+        if self.allDataPresent() and (not self.structure_lab.pixmap().isNull()) and self.batch_eb.text() not in ('', ' ', None):
+                self.regcompound_btn.setEnabled(True)
+        else:
+            self.regcompound_btn.setEnabled(False)
         
     def changeEvent(self, value='', action='doNothing'):
         if action == 'doNothing':
