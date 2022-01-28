@@ -152,6 +152,7 @@ class getChemRegBin(tornado.web.RequestHandler):
 def make_app():
     return tornado.web.Application([
         (r"/login", login),
+        (r"/getDatabase", dbInterface.GetDatabase),
         (r"/api/bcpvsRegCompound", dbInterface.BcpvsRegCompound),
         (r"/api/chemRegAddMol", dbInterface.ChemRegAddMol),
         (r"/api/search", dbInterface.Search),
