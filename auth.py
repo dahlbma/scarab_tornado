@@ -58,19 +58,21 @@ def jwtauth(handler_class):
     def wrap_execute(handler_execute):
         def require_auth(handler, kwargs):
             head = str(handler.request.headers)
+            #print(head)
             if head.find('token') == -1:
                 handler._transforms = []
                 handler.write("Missing authorization")
                 handler.finish()
                 return False
-
+            
             #auth = handler.request.headers.get(AUTHORIZATION_HEADER)
             try:                    
                 auth = handler.request.headers.get('token')
                 parts = auth.split()
-                if len(parts) == 2 and parts[0] == '{"token":':
-                
-                    x = re.match('^\"(.+)\"}', parts[1])
+                if len(parts) == 4 and parts[0] == '{"token":':
+                    #x = re.match('^\"(.+)\"}', parts[1])
+                    x = re.match('^\"(.+)\",', parts[1])
+
                     payload = x.groups()[0]
                     s = jwt.decode(
                         payload,

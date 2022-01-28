@@ -50,6 +50,7 @@ class login(tornado.web.RequestHandler):
     def post(self, *args):
         username = self.get_argument('username')
         password = self.get_argument('password')
+        database = self.get_argument('database')
         try:
             db_connection2 = MySQLdb.connect(
                 host="esox3",
@@ -68,7 +69,8 @@ class login(tornado.web.RequestHandler):
             'exp': datetime.utcnow() + timedelta(seconds=JWT_EXP_DELTA_SECONDS)
         }
         jwt_token = jwt.encode(payload, JWT_SECRET, JWT_ALGORITHM)
-        self.write({'token': jwt_token})
+        self.write({'token': jwt_token,
+                    'database': database})
 
     def get(self):
         pass

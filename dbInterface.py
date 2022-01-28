@@ -15,21 +15,19 @@ import sys
 import codecs
 
 logger = logging.getLogger(__name__)
-#chemregDB = 'chem_reg'
-#bcpvsDB = 'bcpvs'
-chemregDB = 'chem_reg_test'
-bcpvsDB = 'bcpvs_test'
 
 db_connection = MySQLdb.connect(
     host=config.database['host'],
     user=config.database['user'],
-    passwd=config.database['password'],
-    database=chemregDB
+    passwd=config.database['password']
 )
 db_connection.autocommit(True)
 cur = db_connection.cursor()
 
-def getDatabase(database):
+def getDatabase(parent):
+    data = parent.request.headers['Token']
+    jsonData = json.loads(data)
+    database = jsonData['database']
     if database == 'Live':
         return 'chem_reg', 'bcpvs'
     else:
@@ -39,7 +37,7 @@ def res2json():
     result = [list(i) for i in cur.fetchall()]
     return json.dumps(result)
 
-def checkUniqueStructure(smiles):
+def checkUniqueStructure(smiles, bcpvsDB):
     sSql = f"""
     SELECT 
     T3.`COMPOUND_ID` 'compound_id', bin2smiles(T1.`MOL`) 'mol'
@@ -60,7 +58,7 @@ def checkUniqueStructure(smiles):
     mols = cur.fetchall()
     return mols
 
-def getNewRegno():
+def getNewRegno(chemregDB):
     sSql = f"select pkey from {chemregDB}.regno_sequence"
     cur.execute(sSql)
     pkey = cur.fetchall()[0][0] +1
@@ -76,7 +74,7 @@ def getNewSaltNumber():
     cur.execute(sSql)
     return pkey
 
-def getNewCompoundId():
+def getNewCompoundId(bcpvsDB):
     sSql = f"select pkey from {bcpvsDB}.compound_id_sequence"
     cur.execute(sSql)
     pkey = cur.fetchall()[0][0] +1
@@ -162,7 +160,8 @@ def addStructure(database, molfile, newRegno, idColumnName):
     #
     #####
 
-def registerNewCompound(compound_id_numeric,
+def registerNewCompound(bcpvsDB,
+                        compound_id_numeric,
                         molfile,
                         mf,
                         sep_mol_monoiso_mass,
@@ -188,7 +187,8 @@ def registerNewCompound(compound_id_numeric,
     cur.execute(sSql)
     return compound_id
 
-def registerNewBatch(compound_id,
+def registerNewBatch(bcpvsDB,
+                     compound_id,
                      chemreg_regno,
                      notebook_ref,
                      suffix,
@@ -286,7 +286,7 @@ def getMoleculeProperties(self, molfile):
 @jwtauth
 class CreateSalt(tornado.web.RequestHandler):
     def put(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         sSmiles = self.get_argument("smiles")
         iSaltNumber = getNewSaltNumber()
         mol = Chem.MolFromSmiles(sSmiles)
@@ -318,7 +318,7 @@ class GetCanonicSmiles(tornado.web.RequestHandler):
 @jwtauth
 class GetLastBatchFromEln(tornado.web.RequestHandler):
     def get(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         sEln = self.get_argument("eln")
         eln_id = sEln[0:5]
         sSql = f'''select notebook_ref from {bcpvsDB}.batch
@@ -335,7 +335,7 @@ class GetLastBatchFromEln(tornado.web.RequestHandler):
 @jwtauth
 class GetNextSdfSequence(tornado.web.RequestHandler):
     def get(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         sSql = f"select pkey from {chemregDB}.sdfile_sequence"
         cur.execute(sSql)
         pkey = cur.fetchall()[0][0] +1
@@ -347,7 +347,7 @@ class GetNextSdfSequence(tornado.web.RequestHandler):
 @jwtauth
 class GetRegnosFromSdfSequence(tornado.web.RequestHandler):
     def get(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         sdfile_sequence = self.get_argument("sdfile_sequence")
         sSql = f'''select regno from {chemregDB}.chem_info
         where sdfile_sequence = {sdfile_sequence}
@@ -360,7 +360,7 @@ class GetRegnosFromSdfSequence(tornado.web.RequestHandler):
 @jwtauth
 class BcpvsRegCompound(tornado.web.RequestHandler):
     def put(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         regno = self.get_argument("regno")
         sSql = f'''select regno,
         compound_id,
@@ -414,14 +414,15 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
         mol = Chem.MolFromMolBlock(molfile)
         
         if compound_id in ('', None):
-            mols = checkUniqueStructure(sSmiles)
+            mols = checkUniqueStructure(sSmiles, bcpvsDB)
             if len(mols) != 0:
                 compound_id = mols[0][0]
                 compound_id_numeric = compound_id[3:]
             else:
                 # Register a new compound
-                compound_id_numeric = getNewCompoundId()
-                compound_id = registerNewCompound(compound_id_numeric,
+                compound_id_numeric = getNewCompoundId(bcpvsDB)
+                compound_id = registerNewCompound(bcpvsDB,
+                                                  compound_id_numeric,
                                                   molfile,
                                                   C_MF,
                                                   C_MONOISO,
@@ -435,7 +436,8 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
                    set compound_id='{compound_id}'
                    where regno = {regno}'''
         cur.execute(sSql)
-        registerNewBatch(compound_id,
+        registerNewBatch(bcpvsDB,
+                         compound_id,
                          regno,
                          jpage,
                          saSalts,
@@ -455,7 +457,7 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
 @jwtauth
 class ChemRegAddMol(tornado.web.RequestHandler):
     def post(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         molfile = self.get_body_argument('molfile')
         jpage = self.get_body_argument('jpage')
         chemist = self.get_body_argument('chemist')
@@ -492,7 +494,7 @@ class ChemRegAddMol(tornado.web.RequestHandler):
 
         ########################
         # Do exact match with molecule against the CBK database
-        mols = checkUniqueStructure(sSmiles)
+        mols = checkUniqueStructure(sSmiles, bcpvsDB)
         sStatus = 'oldMolecule'
         if len(mols) == 0:
             sStatus = 'newMolecule'
@@ -502,7 +504,7 @@ class ChemRegAddMol(tornado.web.RequestHandler):
 
         ########################
         # Get new regno and add nmolecule to chem_info
-        newRegno = getNewRegno()
+        newRegno = getNewRegno(chemregDB)
         if purity == '':
             purity = -1
         sSql = f"""
@@ -562,7 +564,7 @@ class ChemRegAddMol(tornado.web.RequestHandler):
 @jwtauth
 class Search(tornado.web.RequestHandler):
     def get(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         column = self.get_argument("column")
         value = self.get_argument("value")
         values = (value, )
@@ -576,7 +578,7 @@ class Search(tornado.web.RequestHandler):
 @jwtauth
 class GetRegnoData(tornado.web.RequestHandler):
     def get(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         column = self.get_argument("column")
         regno = self.get_argument("regno")
         values = (regno, )        
@@ -589,7 +591,7 @@ class GetRegnoData(tornado.web.RequestHandler):
 @jwtauth
 class CreateMolImage(tornado.web.RequestHandler):
     def get(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         regno = self.get_argument("regno")
         sSql = f"""select molfile from {chemregDB}.chem_info
                    where regno = '{regno}'"""
@@ -603,7 +605,7 @@ class CreateMolImage(tornado.web.RequestHandler):
 @jwtauth
 class LoadMolfile(tornado.web.RequestHandler):
     def post(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         fBody = self.request.files['file'][0]
         regnoBody = self.request.files['regno'][0]
         molfile = tornado.escape.xhtml_unescape(fBody.body)
@@ -640,7 +642,7 @@ class LoadMolfile(tornado.web.RequestHandler):
 @jwtauth
 class UpdateRegnoBatch(tornado.web.RequestHandler):
     def put(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         regno = self.get_argument("regno")
         batch = self.get_argument("batch")
         sSql = f"""select compound_id from {bcpvsDB}.batch
@@ -668,7 +670,7 @@ class UpdateRegnoBatch(tornado.web.RequestHandler):
 @jwtauth
 class CreateSupplier(tornado.web.RequestHandler):
     def put(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         supplierName = self.get_argument("supplier")
         sSql = f"""insert into {bcpvsDB}.compound_suppliers
         (name) values ('{supplierName}')"""
@@ -678,7 +680,7 @@ class CreateSupplier(tornado.web.RequestHandler):
 @jwtauth
 class CreateRegno(tornado.web.RequestHandler):
     def put(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         regno = self.get_argument("regno")
         sSql = f"""insert into {chemregDB}.chem_info
         (regno, rdate) values (%s, now())"""
@@ -689,7 +691,7 @@ class CreateRegno(tornado.web.RequestHandler):
 @jwtauth
 class DeleteRegno(tornado.web.RequestHandler):
     def put(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         regno = self.get_argument("regno")
         sSql = f"""select regno, c_mf, chemist from {chemregDB}.chem_info
                   where c_mf is null and chemist is null and
@@ -706,7 +708,7 @@ class DeleteRegno(tornado.web.RequestHandler):
 @jwtauth
 class UpdateColumn(tornado.web.RequestHandler):
     def put(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         column = self.get_argument("column")
         value = self.get_argument("value")
         regno = self.get_argument("regno")
@@ -735,7 +737,7 @@ class GetCompound(tornado.web.RequestHandler):
 @jwtauth
 class GetMolfile(tornado.web.RequestHandler):
     def get(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         regno = self.get_argument("regno")
         sSql = f"""select molfile from {chemregDB}.chem_info
                    where regno = '{regno}'"""
@@ -748,7 +750,7 @@ class GetMolfile(tornado.web.RequestHandler):
 @jwtauth
 class GetTextColumn(tornado.web.RequestHandler):
     def get(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         column = self.get_argument("column")
         regno = self.get_argument("regno")
         sSql = f"""select cast({column} as char)
@@ -761,7 +763,7 @@ class GetTextColumn(tornado.web.RequestHandler):
 @jwtauth
 class GetColComboData(tornado.web.RequestHandler):
     def get(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         column = self.get_argument("column")
         sSql = ''
         if column == 'project':
@@ -792,7 +794,7 @@ class GetColComboData(tornado.web.RequestHandler):
 @jwtauth
 class GetLibraryName(tornado.web.RequestHandler):
     def get(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         library_id = self.get_argument("library_id")
         sSql = f"""SELECT description FROM {bcpvsDB}.compound_library
                   where library_name = '{library_id}'"""
@@ -813,18 +815,19 @@ class GetLibraries(tornado.web.RequestHandler):
 @jwtauth
 class GetNextRegno(tornado.web.RequestHandler):
     def get(self):
-        newRegno = getNewRegno()
+        chemregDB, bcpvsDB = getDatabase(self)
+        newRegno = getNewRegno(chemregDB)
         self.write(json.dumps(newRegno))
 
 
 @jwtauth
 class CreateLibrary(tornado.web.RequestHandler):
     def put(self):
-        chemregDB, bcpvsDB = getDatabase(self.get_argument("database"))
+        chemregDB, bcpvsDB = getDatabase(self)
         sLibraryDescription = self.get_argument("library_name")
         sSupplier = self.get_argument("supplier")
 
-        sSql = "select pkey from {bcpvsDB}.library_id_sequence"
+        sSql = f"select pkey from {bcpvsDB}.library_id_sequence"
         cur.execute(sSql)
         pkey = cur.fetchall()[0][0] +1
         sSql = f"update {bcpvsDB}.library_id_sequence set pkey={pkey}"
