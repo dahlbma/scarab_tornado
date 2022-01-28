@@ -15,8 +15,8 @@ import sys
 import codecs
 
 logger = logging.getLogger(__name__)
-chemregDB = 'chem_reg'
-bcpvsDB = 'bcpvs'
+#chemregDB = 'chem_reg'
+#bcpvsDB = 'bcpvs'
 chemregDB = 'chem_reg_test'
 bcpvsDB = 'bcpvs_test'
 
@@ -120,8 +120,6 @@ def getSaltLetters(saSmileFragments):
 def addStructure(database, molfile, newRegno, idColumnName):
     #####
     # Add the molecule to the structure tables
-    #print(molfile)
-    #print(database, idColumnName, newRegno)
     sSql = f"""
     insert into {database} (mol, {idColumnName})
     value
@@ -238,8 +236,6 @@ def getMoleculeProperties(self, molfile):
     sSql = f'''select bin2smiles(mol2bin('{molfile}')) smiles'''
     cur.execute(sSql)
     res = cur.fetchall()
-    if res[0][0] == None:
-        print(molfile)
     sSmiles = (res[0][0]).decode()
     
     sio = sys.stderr = StringIO()
@@ -559,7 +555,6 @@ class Search(tornado.web.RequestHandler):
         values = (value, )
 
         sSql = f"select regno from {chemregDB}.chem_info where {column} = '{value}'"
-        print(sSql)
         cur.execute(sSql)
         res = res2json()
         self.write(res)
@@ -607,10 +602,8 @@ class LoadMolfile(tornado.web.RequestHandler):
         if C_MF == False:
             self.set_status(500)
             self.finish(f'Molfile failed {regno} {errorMessage}')
-            #print(f'Molfile failed {regno}')
             return
         try:
-            #addStructure('chem_reg.chem_info_mol', molfile, regno, 'regno')
             addStructure(f'{chemregDB}.CHEM', molfile, regno, 'regno')
         except Exception as e:
             print(str(e))
