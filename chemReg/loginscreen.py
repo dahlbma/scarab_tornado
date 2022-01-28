@@ -17,7 +17,9 @@ class LoginScreen(QDialog):
         loadUi(resource_path("assets/welcomescreen.ui"), self)
         self.passwordfield.setEchoMode(QtWidgets.QLineEdit.Password)
         self.login.clicked.connect(self.loginfunction)
-    
+        saDatabases = dbInterface.getDatabase()
+        self.server_cb.addItems(saDatabases)
+        
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Return or event.key() == QtCore.Qt.Key_Enter:
             self.loginfunction()
@@ -25,7 +27,7 @@ class LoginScreen(QDialog):
     def loginfunction(self):
         user = self.usernamefield.text()
         password = self.passwordfield.text()
-
+        database = self.server_cb.currentText()
         if len(user) == 0 or len(password) == 0:
             self.errorlabel.setText("Please input all fields")
         else:
@@ -42,15 +44,15 @@ class LoginScreen(QDialog):
             self.errorlabel.setText("Wrong username/password")
             return
         self.jwt_token = r.content
-        self.gotoSearch(self.jwt_token)
+        self.gotoSearch(self.jwt_token, database)
 
     def gotoReg(self, token):
         reg = RegScreen(token)
         self.window().addWidget(reg)
         self.window().setCurrentIndex(self.window().currentIndex() + 1)
 
-    def gotoSearch(self, token):
-        search = SearchScreen(token)
+    def gotoSearch(self, token, database):
+        search = SearchScreen(token, database)
         self.window().addWidget(search)
         self.window().setCurrentIndex(self.window().currentIndex() + 1)
 

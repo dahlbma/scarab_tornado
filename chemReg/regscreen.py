@@ -11,10 +11,11 @@ from addmetatags import AddMetaTags
 
 
 class RegScreen(QMainWindow):
-    def __init__(self, token, regno=None):
+    def __init__(self, token, database, regno=None):
         super(RegScreen, self).__init__()
         loadUi(resource_path("assets/regchem.ui"), self)
         self.token = token
+        self.database = database
         self.mod_name = "reg"
         logger = logging.getLogger(self.mod_name)
         self.dirty = False
@@ -30,8 +31,8 @@ class RegScreen(QMainWindow):
         self.molOK = False
         #### Regno
         if regno == None:
-            self.regno = dbInterface.getNextRegno(self.token)
-            dbInterface.createNewRegno(self.regno, self.token)
+            self.regno = dbInterface.getNextRegno(self.token, self.database)
+            dbInterface.createNewRegno(self.regno, self.token, self.database)
         else:
             self.regno = str(regno)
         self.regno_eb.setText(str(self.regno))
@@ -108,7 +109,9 @@ class RegScreen(QMainWindow):
         #self.structure_lab.mouseReleaseEvent = self.editMolFile
 
     def changeLibraryName(self):
-        library_name = dbInterface.getLibraryName(self.token, self.libraryid_cb.currentText())
+        library_name = dbInterface.getLibraryName(self.token,
+                                                  self.libraryid_cb.currentText(),
+                                                  self.database)
         self.librarydesc_eb.setText(library_name)
 
     def uploadMolfile(self):
@@ -129,7 +132,9 @@ class RegScreen(QMainWindow):
             shutil.copy(resource_path("nostruct.mol"), self.fname_path)
         else:
             # download molfile for selected regno, write to 'tmp.mol'
-            tmp_mol_str = dbInterface.getMolFile(self.token, self.regno)
+            tmp_mol_str = dbInterface.getMolFile(self.token,
+                                                 self.regno,
+                                                 self.database)
             tmp_file = open(self.fname_path, "w")
             n = tmp_file.write(tmp_mol_str)
             tmp_file.close()
@@ -227,7 +232,10 @@ class RegScreen(QMainWindow):
         pattern = '^[a-zA-Z]{2}[0-9]{7}$'
         self.batchOk = False
         if len(re.findall(pattern, sBatch)) == 1:
-            res = dbInterface.updateBatch(self.token, self.regno, sBatch)
+            res = dbInterface.updateBatch(self.token,
+                                          self.regno,
+                                          sBatch,
+                                          self.database)
             if res == False:
                 self.regcompound_btn.setEnabled(False)
                 send_msg("Batch Id error", f"That batch is already in use")
@@ -253,29 +261,41 @@ class RegScreen(QMainWindow):
             self.regcompound_btn.setEnabled(True)
         else:
             self.regcompound_btn.setEnabled(False)
-        dbInterface.updateValue(action, value, self.token, self.regno)
+        dbInterface.updateValue(action,
+                                value,
+                                self.token,
+                                self.regno,
+                                self.database)
 
     def regCompound(self):
         from searchscreen import SearchScreen
-        compound_id = dbInterface.bcpvsRegCompound(self.token, self.regno)
-        search = SearchScreen(self.token, self.regno)
+        compound_id = dbInterface.bcpvsRegCompound(self.token,
+                                                   self.regno,
+                                                   self.database)
+        search = SearchScreen(self.token, self.database, self.regno)
         self.window().addWidget(search)
         self.window().setCurrentIndex(self.window().currentIndex() + 1)
 
     def gotoSearch(self):
         from searchscreen import SearchScreen
         if self.dirty == False:
-            dbInterface.deleteRegno(self.regno, self.token)
-        search = SearchScreen(self.token, self.regno)
+            dbInterface.deleteRegno(self.regno,
+                                    self.token,
+                                    self.database)
+        search = SearchScreen(self.token, self.database, self.regno)
         self.window().addWidget(search)
         self.window().setCurrentIndex(self.window().currentIndex() + 1)
 
     def gotoLoadSdf(self):
         if self.dirty == False:
-            dbInterface.deleteRegno(self.regno, self.token)
+            dbInterface.deleteRegno(self.regno,
+                                    self.token,
+                                    self.database)
         loadSDF = LoadSDF(self.token)
         
     def gotoAddMeta(self):
         if self.dirty == False:
-            dbInterface.deleteRegno(self.regno, self.token)
+            dbInterface.deleteRegno(self.regno,
+                                    self.token,
+                                    self.database)
         addMetaTags = AddMetaTags(self.token)

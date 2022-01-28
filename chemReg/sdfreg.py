@@ -10,9 +10,10 @@ from bs4 import UnicodeDammit
 ip_rights_list = [None, 'External rights', 'LCBKI', 'Commercial']
 
 class LoadSDF(QDialog):
-    def __init__(self, token):
+    def __init__(self, token, database):
         super(LoadSDF, self).__init__()
         self.token = token
+        self.database = database
         self.mod_name = "sdfreg"
         logger = logging.getLogger(self.mod_name)
         self.sdfilename = None
@@ -23,31 +24,45 @@ class LoadSDF(QDialog):
         loadUi(resource_path("assets/sdfReg.ui"), self)
         self.pbar.setValue(0)
         self.pbar.hide()
-        submitters = dbInterface.getColComboData(self.token, 'chemist')
+        submitters = dbInterface.getColComboData(self.token,
+                                                 'chemist',
+                                                 self.database)
         self.submitter_cb.addItems(submitters)
         self.submitter_cb.currentTextChanged.connect(self.check_fields)
         
-        compoundTypes = dbInterface.getColComboData(self.token, 'compound_type')
+        compoundTypes = dbInterface.getColComboData(self.token,
+                                                    'compound_type',
+                                                    self.database)
         self.compoundtype_cb.addItems(compoundTypes)
         self.compoundtype_cb.currentTextChanged.connect(self.check_fields)
         
-        projects = dbInterface.getColComboData(self.token, 'project')
+        projects = dbInterface.getColComboData(self.token,
+                                               'project',
+                                               self.database)
         self.project_cb.addItems(projects)
         self.project_cb.currentTextChanged.connect(self.check_fields)
         
-        suppliers = dbInterface.getColComboData(self.token, 'supplier')
+        suppliers = dbInterface.getColComboData(self.token,
+                                                'supplier',
+                                                self.database)
         self.supplier_cb.addItems(suppliers)
         self.supplier_cb.currentTextChanged.connect(self.check_fields)
         
-        solvents = dbInterface.getColComboData(self.token, 'solvent')
+        solvents = dbInterface.getColComboData(self.token,
+                                               'solvent',
+                                               self.database)
         self.solvent_cb.addItems(solvents)
         self.solvent_cb.currentTextChanged.connect(self.check_fields)
         
-        productTypes = dbInterface.getColComboData(self.token, 'product')
+        productTypes = dbInterface.getColComboData(self.token,
+                                                   'product',
+                                                   self.database)
         self.producttype_cb.addItems(productTypes)
         self.producttype_cb.currentTextChanged.connect(self.check_fields)
         
-        libraryIds = dbInterface.getColComboData(self.token, 'library_id')
+        libraryIds = dbInterface.getColComboData(self.token,
+                                                 'library_id',
+                                                 self.database)
         self.library_cb.addItems(libraryIds)
         self.library_cb.currentTextChanged.connect(self.update_librarydesc)
         self.library_cb.currentTextChanged.connect(self.check_fields)
@@ -84,7 +99,9 @@ class LoadSDF(QDialog):
             self.upload_btn.setEnabled(True)
 
     def update_librarydesc(self):
-        library_name = dbInterface.getLibraryName(self.token, self.library_cb.currentText())
+        library_name = dbInterface.getLibraryName(self.token,
+                                                  self.library_cb.currentText(),
+                                                  self.database)
         self.librarydesc_eb.setText(library_name)
 
     def parseElnIds(self):
@@ -175,8 +192,10 @@ class LoadSDF(QDialog):
         self.pbar.setValue(progress)
         QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         sCurrentEln = self.saElnIds[iElnId]
-        iBatchCount = dbInterface.getLastBatchOfEln(self.token, sCurrentEln)
-        iSdfSequence = dbInterface.getSdfSequence(self.token)
+        iBatchCount = dbInterface.getLastBatchOfEln(self.token,
+                                                    sCurrentEln,
+                                                    self.database)
+        iSdfSequence = dbInterface.getSdfSequence(self.token, self.database)
         self.event_lab.setText('Register in ChemReg')
         while True:
             # Maybe run in separate thread instead, see:
@@ -205,7 +224,9 @@ class LoadSDF(QDialog):
             if iBatchCount == 1000:
                 iElnId += 1
                 sCurrentEln = self.saElnIds[iElnId]
-                iBatchCount = dbInterface.getLastBatchOfEln(self.token, sCurrentEln)
+                iBatchCount = dbInterface.getLastBatchOfEln(self.token,
+                                                            sCurrentEln,
+                                                            self.database)
                 
             dTags['jpage'] = sCurrentEln + str(iBatchCount).zfill(3)
             dTags['molfile'] = sMol.decode('latin-1')
@@ -218,8 +239,10 @@ class LoadSDF(QDialog):
             dTags['library_id'] = self.library_cb.currentText()
             dTags['ip_rights'] = self.ip_rights_cb.currentText()
             dTags['sdfile_sequence'] = iSdfSequence
+            dTags['database'] = self.database
             
-            lStatus, sMessage = dbInterface.chemRegAddMolFile(dTags, self.token)
+            lStatus, sMessage = dbInterface.chemRegAddMolFile(dTags,
+                                                              self.token)
             if sMessage == b'newMolecule':
                 iNewMols += 1
             if lStatus != True:
@@ -228,7 +251,9 @@ class LoadSDF(QDialog):
                 f_err_msg.write(f"{str(dTags['external_id'])} {str(sMessage)}\n")
                 f_err_msg.flush()
                 lError = True
-        saRegnos = dbInterface.getRegnosFromSdfSequence(self.token, iSdfSequence)
+        saRegnos = dbInterface.getRegnosFromSdfSequence(self.token,
+                                                        iSdfSequence,
+                                                        self.database)
         self.event_lab.setText('Register in Compound database')
         iTickCount = 0
         progress = 0
@@ -239,7 +264,9 @@ class LoadSDF(QDialog):
                 iTickCount = 0
                 self.pbar.setValue(progress)
             QApplication.processEvents()
-            dbInterface.bcpvsRegCompound(self.token, sReg)
+            dbInterface.bcpvsRegCompound(self.token,
+                                         sReg,
+                                         self.database)
         self.event_lab.setText('')
         QApplication.processEvents()
         self.pbar.hide()

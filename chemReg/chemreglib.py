@@ -49,7 +49,9 @@ def open_file(filename):
     return proc
 
 def displayMolfile(self):
-    dbInterface.createMolImage(self.token, self.regno)
+    dbInterface.createMolImage(self.token,
+                               self.regno,
+                               self.database)
     image = QImage()
     self.structure_lab.setScaledContents(True)
     image.loadFromData(dbInterface.getMolImage(self.regno))
@@ -58,7 +60,9 @@ def displayMolfile(self):
 def postMolFile(self, fname, regno, logger):
     logger.info("posting file %s to server", fname)
     f = {'file': open(fname, 'rb'), 'regno': regno}
-    r = dbInterface.postMolfile(self.token, f)
+    r = dbInterface.postMolfile(self.token,
+                                f,
+                                self.database)
     if r.status_code != 200:
         return False, r.content
     else:
@@ -67,46 +71,62 @@ def postMolFile(self, fname, regno, logger):
 def updateMoleculeProperties(self):
     avgMolMass = dbInterface.getTextColumn(self.token,
                                            'C_MW',
-                                           self.regno)
+                                           self.regno,
+                                           self.database)
     self.avgmolmass_lab.setText(avgMolMass)
     molFormula = dbInterface.getTextColumn(self.token,
                                            'C_MF',
-                                           self.regno)
+                                           self.regno,
+                                           self.database)
     self.mf_eb.setText(molFormula)
     sCHNS = dbInterface.getTextColumn(self.token,
                                       'C_CHNS',
-                                      self.regno)
+                                      self.regno,
+                                      self.database)
     self.chns_eb.setText(sCHNS)
     monoIsoMass = dbInterface.getTextColumn(self.token,
                                             'C_MONOISO',
-                                            self.regno)
+                                            self.regno,
+                                            self.database)
     self.monoisomass_lab.setText(monoIsoMass)
 
 def updateScreen(self):
     if self.populated == False:
         self.regno_eb.setText(str(self.regno))
-        submitters = dbInterface.getColComboData(self.token, 'chemist')
+        submitters = dbInterface.getColComboData(self.token,
+                                                 'chemist',
+                                                 self.database)
         self.submitter_cb.addItems(submitters)
         try:
             self.submitter_search_cb.clear()
             self.submitter_search_cb.addItems(submitters)
         except:
             pass
-        projects = dbInterface.getColComboData(self.token, 'project')
+        projects = dbInterface.getColComboData(self.token,
+                                               'project',
+                                               self.database)
         self.project_cb.addItems(projects)
 
-        compoundTypes = dbInterface.getColComboData(self.token, 'compound_type')
+        compoundTypes = dbInterface.getColComboData(self.token,
+                                                    'compound_type',
+                                                    self.database)
         self.compoundtype_cb.addItems(compoundTypes)
 
-        productTypes = dbInterface.getColComboData(self.token, 'product')
+        productTypes = dbInterface.getColComboData(self.token,
+                                                   'product',
+                                                   self.database)
         self.product_cb.addItems(productTypes)
         
-        libraryIds = dbInterface.getColComboData(self.token, 'library_id')
+        libraryIds = dbInterface.getColComboData(self.token,
+                                                 'library_id',
+                                                 self.database)
         self.libraryid_cb.addItems(libraryIds)
         
         self.ip_rights_cb.addItems(ip_rights_list)
 
-        solvents = dbInterface.getColComboData(self.token, 'solvent')
+        solvents = dbInterface.getColComboData(self.token,
+                                               'solvent',
+                                               self.database)
         self.solvent_cb.addItems(solvents)
     
     # Set current values for this regno
@@ -117,25 +137,36 @@ def updateScreen(self):
             pass
         self.regno_eb.setText(str(self.regno))
         
-        createdDate = dbInterface.getTextColumn(self.token, 'rdate', self.regno)
+        createdDate = dbInterface.getTextColumn(self.token,
+                                                'rdate',
+                                                self.regno,
+                                                self.database)
         self.date_lab.setText(createdDate)
 
         updateMoleculeProperties(self)
         
         externalCompoundId = dbInterface.getTextColumn(self.token,
                                                        'EXTERNAL_ID',
-                                                       self.regno)
+                                                       self.regno,
+                                                       self.database)
         self.externalid_eb.setText(externalCompoundId)
 
         externalBatch = dbInterface.getTextColumn(self.token,
                                                   'SUPPLIER_BATCH',
-                                                  self.regno)
+                                                  self.regno,
+                                                  self.database)
         self.externalbatch_eb.setText(externalBatch)
 
-        currentBatch = dbInterface.getTextColumn(self.token, 'JPAGE', self.regno)
+        currentBatch = dbInterface.getTextColumn(self.token,
+                                                 'JPAGE',
+                                                 self.regno,
+                                                 self.database)
         self.batch_eb.setText(currentBatch)
 
-        compound_id = dbInterface.getTextColumn(self.token, 'compound_id', self.regno)
+        compound_id = dbInterface.getTextColumn(self.token,
+                                                'compound_id',
+                                                self.regno,
+                                                self.database)
         self.compoundid_lab.setText(compound_id)
         try:
             if compound_id not in (' ', None, ''):
@@ -146,57 +177,99 @@ def updateScreen(self):
                 self.loadmol_btn.setEnabled(False)
         except Exception as e:
             pass
-        submitter = dbInterface.getTextColumn(self.token, 'chemist', self.regno)
+        submitter = dbInterface.getTextColumn(self.token,
+                                              'chemist',
+                                              self.regno,
+                                              self.database)
         self.submitter_cb.setCurrentText(submitter)
         try:
             self.submitter_search_cb.setCurrentText(submitter)
         except:
             pass
-        project = dbInterface.getTextColumn(self.token, 'project', self.regno)
+        project = dbInterface.getTextColumn(self.token,
+                                            'project',
+                                            self.regno,
+                                            self.database)
         self.project_cb.setCurrentText(project)
 
-        product = dbInterface.getTextColumn(self.token, 'product', self.regno)
+        product = dbInterface.getTextColumn(self.token,
+                                            'product',
+                                            self.regno,
+                                            self.database)
         self.product_cb.setCurrentText(product)
 
         compoundType = dbInterface.getTextColumn(self.token,
                                                  'compound_type',
-                                                 self.regno)
+                                                 self.regno,
+                                                 self.database)
         self.compoundtype_cb.setCurrentText(compoundType)
 
-        libraryId = dbInterface.getTextColumn(self.token, 'library_id', self.regno)
+        libraryId = dbInterface.getTextColumn(self.token,
+                                              'library_id',
+                                              self.regno,
+                                              self.database)
         self.libraryid_cb.setCurrentText(libraryId)
 
         library_name = dbInterface.getLibraryName(self.token,
-                                                  self.libraryid_cb.currentText())
+                                                  self.libraryid_cb.currentText(),
+                                                  self.database)
         self.librarydesc_eb.setText(library_name)
 
-        chromText = dbInterface.getTextColumn(self.token, 'chrom_text', self.regno)
+        chromText = dbInterface.getTextColumn(self.token,
+                                              'chrom_text',
+                                              self.regno,
+                                              self.database)
         self.chrom_text.setPlainText(chromText)
         
-        nmrText = dbInterface.getTextColumn(self.token, 'nmr_text', self.regno)
+        nmrText = dbInterface.getTextColumn(self.token,
+                                            'nmr_text',
+                                            self.regno,
+                                            self.database)
         self.nmr_text.setPlainText(nmrText)
 
-        commentsText = dbInterface.getTextColumn(self.token, 'comments', self.regno)
+        commentsText = dbInterface.getTextColumn(self.token,
+                                                 'comments',
+                                                 self.regno,
+                                                 self.database)
         self.comments_text.setPlainText(commentsText)
 
-        msText = dbInterface.getTextColumn(self.token, 'ms_text', self.regno)
+        msText = dbInterface.getTextColumn(self.token,
+                                           'ms_text',
+                                           self.regno,
+                                           self.database)
         self.ms_text.setPlainText(msText)
 
-        chromPurity = dbInterface.getTextColumn(self.token, 'chrom_purity', self.regno)
+        chromPurity = dbInterface.getTextColumn(self.token,
+                                                'chrom_purity',
+                                                self.regno,
+                                                self.database)
         self.chrompurity_eb.setText(chromPurity)
-        nmrPurity = dbInterface.getTextColumn(self.token, 'nmr_purity', self.regno)
+        nmrPurity = dbInterface.getTextColumn(self.token,
+                                              'nmr_purity',
+                                              self.regno,
+                                              self.database)
         self.nmrpurity_eb.setText(chromPurity)
-        msPurity = dbInterface.getTextColumn(self.token, 'ms_purity', self.regno)
+        msPurity = dbInterface.getTextColumn(self.token,
+                                             'ms_purity',
+                                             self.regno,
+                                             self.database)
         self.mspurity_eb.setText(msPurity)
-        purity = dbInterface.getTextColumn(self.token, 'purity', self.regno)
+        purity = dbInterface.getTextColumn(self.token,
+                                           'purity',
+                                           self.regno,
+                                           self.database)
         self.purity_eb.setText(purity)
         
         ip_rights = dbInterface.getTextColumn(self.token,
                                               'ip_rights', 
-                                              self.regno)
+                                              self.regno,
+                                              self.database)
         self.ip_rights_cb.setCurrentText(ip_rights)
 
-        solvent = dbInterface.getTextColumn(self.token, 'solvent', self.regno)
+        solvent = dbInterface.getTextColumn(self.token,
+                                            'solvent',
+                                            self.regno,
+                                            self.database)
         self.solvent_cb.setCurrentText(solvent)
 
         displayMolfile(self)
