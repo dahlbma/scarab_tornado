@@ -34,7 +34,7 @@ class LoginScreen(QDialog):
             self.errorlabel.setText("")
         
         try:
-            r = dbInterface.login(user, password)
+            r = dbInterface.login(user, password, database)
         except Exception as e:
             self.errorlabel.setText("Bad Connection")
             send_msg("Error Message", str(e), QMessageBox.Warning, e)
@@ -44,15 +44,15 @@ class LoginScreen(QDialog):
             self.errorlabel.setText("Wrong username/password")
             return
         self.jwt_token = r.content
-        self.gotoSearch(self.jwt_token, database)
+        self.gotoSearch(self.jwt_token)
 
     def gotoReg(self, token):
         reg = RegScreen(token)
         self.window().addWidget(reg)
         self.window().setCurrentIndex(self.window().currentIndex() + 1)
 
-    def gotoSearch(self, token, database):
-        search = SearchScreen(token, database)
+    def gotoSearch(self, token):
+        search = SearchScreen(token)
         self.window().addWidget(search)
         self.window().setCurrentIndex(self.window().currentIndex() + 1)
 

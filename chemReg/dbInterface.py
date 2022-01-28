@@ -27,61 +27,58 @@ def getDatabase():
     res = listify(r, False)
     return res
 
-def searchValue(target, value, token, database):
+def searchValue(target, value, token):
     r = requests.get(f'{baseUrl}api/search',
                      params={'column': target,
-                             'value': value,
-                             'database': database},
+                             'value': value},
                      headers={'token': token})
     cleanList = listify(r, False)
     return cleanList
 
-def updateValue(target, value, token, regno, database):
+def updateValue(target, value, token, regno):
     r = requests.put(f'{baseUrl}api/update',
                      params={'column': target,
                              'value': value,
-                             'regno': regno,
-                             'database': database},
+                             'regno': regno},
                      headers={'token': token})
 
-def createNewRegno(regno, token, database):
+def createNewRegno(regno, token):
     r = requests.put(f'{baseUrl}api/createRegno',
-                     params={'regno': regno, 'database': database},
+                     params={'regno': regno},
                      headers={'token': token})
 
-def updateBatch(token, regno, sBatch, database):
+def updateBatch(token, regno, sBatch):
     r = requests.put(f'{baseUrl}api/updateRegnoBatch',
-                     params={'regno': regno, 'batch': sBatch, 'database': database},
+                     params={'regno': regno, 'batch': sBatch},
                      headers={'token': token})
     if r.status_code != 200:
         return False
     else:
         return True
 
-def deleteRegno(regno, token, database):
+def deleteRegno(regno, token):
     r = requests.put(f'{baseUrl}api/deleteRegno',
-                     params={'regno': regno, 'database': database},
+                     params={'regno': regno},
                      headers={'token': token})
 
-def getTextColumn(token, column, regno, database):
+def getTextColumn(token, column, regno):
     r = requests.get(f'{baseUrl}api/getTextColumn',
                      params={'column': column,
-                             'regno': regno,
-                             'database': database},
+                             'regno': regno},
                      headers={'token': token})
     cleanList = listify(r, False)
     return cleanList[0]
     
-def getColComboData(token, column, database):
+def getColComboData(token, column):
     r = requests.get(f'{baseUrl}api/getColComboData',
-                     params={'column': column, 'database': database},
+                     params={'column': column},
                      headers={'token': token})
     cleanList = listify(r)
     return cleanList
 
-def getLibraryName(token, library_id, database):
+def getLibraryName(token, library_id):
     r = requests.get(f'{baseUrl}api/getLibraryName',
-                     params={'library_id': library_id, 'database': database},
+                     params={'library_id': library_id},
                      headers={'token': token})
     cleanList = listify(r, False)
     if cleanList == []:
@@ -90,65 +87,62 @@ def getLibraryName(token, library_id, database):
         cleanList = cleanList[0]
     return cleanList
 
-def createLibrary(token, library_name, supplier, database):
+def createLibrary(token, library_name, supplier):
     r = requests.put(f'{baseUrl}api/createLibrary',
                      params={'library_name': library_name,
-                             'supplier': supplier,
-                             'database': database},
+                             'supplier': supplier},
                      headers={'token': token})
     if r.status_code != 200:
         return False, r.content
     else:
         return True, r.content
     
-def createSupplier(token, supplier, database):
+def createSupplier(token, supplier):
     r = requests.put(f'{baseUrl}api/createSupplier',
-                     params={'supplier': supplier, 'database': database},
+                     params={'supplier': supplier},
                      headers={'token': token})
     if r.status_code != 200:
         return False, r.content
     else:
         return True, r.content
 
-def getNextRegno(token, database):
+def getNextRegno(token):
     r = requests.get(f'{baseUrl}api/getNextRegno',
-                     params={'database': database},
                      headers={'token': token})
     res = r.content.decode()
     return str(res)
 
-def getSdfSequence(token, database):
+def getSdfSequence(token):
     r = requests.get(f'{baseUrl}api/getNextSdfSequence',
-                     params={'database': database},
                      headers={'token': token})
     res = r.content.decode()
     return res
 
-def getMolFile(token, regno, database):
+def getMolFile(token, regno):
     r = requests.get(f'{baseUrl}api/getMolfile', 
-                     params={'regno': regno, 'database': database}, 
+                     params={'regno': regno}, 
                      headers={'token': token})
     res = r.content.decode()
     return res
     
-def createMolImage(token, regno, database):
+def createMolImage(token, regno):
     r = requests.get(f'{baseUrl}api/createMolImage',
-                     params={'regno': regno, 'database': database},
+                     params={'regno': regno},
                      headers={'token': token})
     res = r.content.decode()
     return res
 
-def postMolfile(token, molfile, database):
+def postMolfile(token, molfile):
     r = requests.post(f'{baseUrl}api/loadMolfile',
-                      params={'database': database},
                       headers={'token': token},
                       files=molfile)
     return r
 
-def login(user, password):
+def login(user, password, database):
     r = requests.post(f'{baseUrl}login',
                       data = {'username':user,
-                              'password':password})
+                              'password':password,
+                              'database':database})
     return r
 
 def getVersion():
@@ -166,37 +160,37 @@ def getMolImage(regno):
     res = r.content
     return res
 
-def getLastBatchOfEln(token, sEln, database):
+def getLastBatchOfEln(token, sEln):
     r = requests.get(f'{baseUrl}api/getLastBatchFromEln',
-                     params={'eln': sEln, 'database': database},
+                     params={'eln': sEln},
                      headers={'token': token})
     res = r.content.decode()
     return int(res)
 
-def getCanonicSmiles(token, smiles, database):
+def getCanonicSmiles(token, smiles):
     r = requests.get(f'{baseUrl}api/getCanonicSmiles',
-                     params={'smiles': smiles, 'database': database},
+                     params={'smiles': smiles},
                      headers={'token': token})
     return r.content.decode()
 
-def createSalt(token, smiles, database):
+def createSalt(token, smiles):
     r = requests.put(f'{baseUrl}api/createSalt',
-                     params={'smiles': smiles, 'database': database},
+                     params={'smiles': smiles},
                      headers={'token': token})
     if r.status_code != 200:
         return False, r.content
     else:
         return True, r.content
 
-def getRegnosFromSdfSequence(token, iSequence, database):
+def getRegnosFromSdfSequence(token, iSequence):
     r = requests.get(f'{baseUrl}api/getRegnosFromSequence',
-                     params={'sdfile_sequence': iSequence, 'database': database},
+                     params={'sdfile_sequence': iSequence},
                      headers={'token': token})
     res = listify(r, False)
     return res
 
-def bcpvsRegCompound(token, sReg, database):
+def bcpvsRegCompound(token, sReg):
     r = requests.put(f'{baseUrl}api/bcpvsRegCompound',
-                     params={'regno': sReg, 'database': database},
+                     params={'regno': sReg},
                      headers={'token': token})
     return r.content

@@ -8,10 +8,9 @@ from sdfreg import LoadSDF
 from addmetatags import AddMetaTags
 
 class SearchScreen(QMainWindow):
-    def __init__(self, token, database, regno=None):
+    def __init__(self, token, regno=None):
         super(SearchScreen, self).__init__()
         self.token = token
-        self.database = database
         self.mod_name = "search"
         logger = logging.getLogger(self.mod_name)
         loadUi(resource_path("assets/searchchem.ui"), self)
@@ -54,15 +53,14 @@ class SearchScreen(QMainWindow):
         if self.regno != None:
             # download molfile for selected regno, write to 'tmp.mol'
             tmp_mol_str = dbInterface.getMolFile(self.token,
-                                                 self.regno,
-                                                 self.database)
+                                                 self.regno)
             tmp_file = open(fname_path, "w")
             n = tmp_file.write(tmp_mol_str)
             tmp_file.close()
             open_file(fname_path)
 
     def gotoLoadSdf(self):
-        loadSDF = LoadSDF(self.token, self.database)
+        loadSDF = LoadSDF(self.token)
 
     def previousRegno(self):
         if self.regno == None or self.regnos == None:
@@ -92,7 +90,7 @@ class SearchScreen(QMainWindow):
 
     def gotoEditRegno(self):
         from regscreen import RegScreen
-        reg = RegScreen(self.token, self.database, self.regno)
+        reg = RegScreen(self.token, self.regno)
         self.window().addWidget(reg)
         self.window().setCurrentIndex(self.window().currentIndex() + 1)
         
@@ -109,8 +107,7 @@ class SearchScreen(QMainWindow):
             self.regnos = []
             tmpInts = dbInterface.searchValue(action,
                                               value,
-                                              self.token,
-                                              self.database)
+                                              self.token)
             for tmpRegno in tmpInts:
                 self.regnos.append(str(tmpRegno))
             if len(self.regnos) > 0:
@@ -126,7 +123,7 @@ class SearchScreen(QMainWindow):
 
     def gotoReg(self):
         from regscreen import RegScreen
-        reg = RegScreen(self.token, self.database)
+        reg = RegScreen(self.token)
         self.window().addWidget(reg)
         self.window().setCurrentIndex(self.window().currentIndex() + 1)
 
