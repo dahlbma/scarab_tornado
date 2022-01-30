@@ -66,7 +66,7 @@ def getNewRegno(chemregDB):
     cur.execute(sSql)
     return pkey
 
-def getNewSaltNumber():
+def getNewSaltNumber(chemregDB):
     sSql = f"select pkey from {chemregDB}.salts_sequence"
     cur.execute(sSql)
     pkey = cur.fetchall()[0][0] +1
@@ -95,7 +95,7 @@ def createPngFromMolfile(regno, molfile):
     except:
         logger.error(f"regno {regno} is nostruct")
 
-def getSaltLetters(saSmileFragments):
+def getSaltLetters(saSmileFragments, chemregDB):
     saSaltLetters = ''
     saRemainderSmailes = list()
     for smile in saSmileFragments:
@@ -288,7 +288,7 @@ class CreateSalt(tornado.web.RequestHandler):
     def put(self):
         chemregDB, bcpvsDB = getDatabase(self)
         sSmiles = self.get_argument("smiles")
-        iSaltNumber = getNewSaltNumber()
+        iSaltNumber = getNewSaltNumber(chemregDB)
         mol = Chem.MolFromSmiles(sSmiles)
         mw = Descriptors.MolWt(mol)
         mf = rdMolDescriptors.CalcMolFormula(mol)
@@ -306,8 +306,9 @@ class CreateSalt(tornado.web.RequestHandler):
 @jwtauth
 class GetCanonicSmiles(tornado.web.RequestHandler):
     def get(self):
+        chemregDB, bcpvsDB = getDatabase(self)
         sSmiles = self.get_argument("smiles")
-        sLetters, saRemainderSmile = getSaltLetters([sSmiles])
+        sLetters, saRemainderSmile = getSaltLetters([sSmiles], chemregDB)
         mol = Chem.MolFromSmiles(sSmiles)
         flattenSmile = Chem.rdmolfiles.MolToSmiles(mol)
         canonSmile = Chem.CanonSmiles(flattenSmile)
