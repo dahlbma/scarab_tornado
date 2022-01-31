@@ -21,7 +21,8 @@ class LoginScreen(QDialog):
         self.server_cb.addItems(saDatabases)
         
     def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Return or event.key() == QtCore.Qt.Key_Enter:
+        if event.key() == QtCore.Qt.Key_Return \
+           or event.key() == QtCore.Qt.Key_Enter:
             self.loginfunction()
     
     def loginfunction(self):
