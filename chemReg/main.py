@@ -58,7 +58,7 @@ try:
     widget.resize(windowWidth, windowHeight)
 
     widget.show()
-    app.setWindowIcon(QtGui.QIcon('asssets/chem.ico'))
+    app.setWindowIcon(QtGui.QIcon('assets/chem.ico'))
     widget.setWindowIcon(QtGui.QIcon('assets/chem.ico'))
     sys.exit(app.exec_())
 except Exception as e:
