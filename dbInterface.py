@@ -242,13 +242,7 @@ def getMoleculeProperties(self, molfile, chemregDB):
     sSql = f'''select bin2smiles(mol2bin('{molfile}')) smiles'''
     cur.execute(sSql)
     res = cur.fetchall()
-    try:
-        sSmiles = (res[0][0]).decode()
-    except:
-        print(molfile)
-        print(res)
-    sSmiles = (res[0][0]).decode()
-    
+    sSmiles = (res[0][0]).decode()    
     
     sio = sys.stderr = StringIO()
     Chem.WrapLogs()
