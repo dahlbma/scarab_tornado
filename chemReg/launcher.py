@@ -6,6 +6,10 @@ from PyQt5 import QtGui
 
 from chemreglib import *
 
+ex_paths = {'Windows': 'ch.exe',
+            'Linux':'ch',
+            'Darwin':'ch'}
+
 def error_handler(etype, value, tb):
     err_msg = "".join(traceback.format_exception(etype, value, tb))
     logger.exception(err_msg)
@@ -64,16 +68,17 @@ class LauncherScreen(QDialog):
 
     def updatefunction(self):
         os_name = platform.system()
-        exec_path = ""
+        print(ex_paths[os_name])
+        exec_path = f"{os.getcwd()}/{ex_paths[os_name]}"
         if os_name == 'Windows':
-            exec_path = '{}/chemreg.exe'.format(os.getcwd())
+            exec_path = '{}/ch.exe'.format(os.getcwd())
         elif os_name == 'Linux':
-            exec_path = '{}/chemreg'.format(os.getcwd())
+            exec_path = '{}/ch'.format(os.getcwd())
         elif os_name == 'Darwin':
-            exec_path = '{}/chemreg'.format(os.getcwd())
+            exec_path = '{}/ch'.format(os.getcwd())
         # check if versions match
         match, info = self.ver_check()
-        if self.frc_update_chb.isChecked() or not os.path.isfile(exec_path):
+        if self.frc_update_chb.isChecked() or not os.path.exists(exec_path):
             logger.info("Force update")
             match = 1
         if match == 2:
@@ -113,12 +118,13 @@ class LauncherScreen(QDialog):
         check = self.updatefunction()
         if check != -1:
             os_name = platform.system()
+            exec_path = ex_paths[os_name]
             if os_name == 'Windows':
-                subprocess.Popen(['chemreg.exe'], shell=True)
+                subprocess.Popen([f'{exec_path}'], shell=True)
             elif os_name == 'Linux':
-                subprocess.Popen(['./chemreg'], shell=True)
+                subprocess.Popen([f'./{exec_path}'], shell=True)
             elif os_name == 'Darwin':
-                subprocess.Popen(['open', 'chemreg'], shell=True)
+                subprocess.Popen(['open', f'{exec_path}'], shell=True)
             else:
                 send_msg("Error", "Can not launch chemreg, unknown OS", icon=QMessageBox.Warning)
             QtWidgets.QApplication.instance().quit()

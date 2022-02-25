@@ -28,7 +28,7 @@ bexe = EXE(
     b.zipfiles,
     b.datas,
     [],
-    name='chemreg_launcher',
+    name='chemreg',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
