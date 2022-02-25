@@ -28,7 +28,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='chemreg',
+    name='ch.exe',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
