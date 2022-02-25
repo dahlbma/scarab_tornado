@@ -238,11 +238,11 @@ def registerNewBatch(bcpvsDB,
     cur.execute(sSql)
 
 
-def getMoleculeProperties(self, molfile):
+def getMoleculeProperties(self, molfile, chemregDB):
     sSql = f'''select bin2smiles(mol2bin('{molfile}')) smiles'''
     cur.execute(sSql)
     res = cur.fetchall()
-    sSmiles = (res[0][0]).decode()
+    sSmiles = (res[0][0]).decode()    
     
     sio = sys.stderr = StringIO()
     Chem.WrapLogs()
@@ -262,7 +262,7 @@ def getMoleculeProperties(self, molfile):
     saSmileFragments = sSmiles.split('.')
     saSalts = ''
     if len(saSmileFragments) > 1:
-        saSalts, saRemainderSmile = getSaltLetters(saSmileFragments)
+        saSalts, saRemainderSmile = getSaltLetters(saSmileFragments, chemregDB)
         if saSalts == False:
             return (False,
                     False,
@@ -410,7 +410,7 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
          C_CHNS,
          saSalts,
          sSmiles,
-         errorMessage) = getMoleculeProperties(self, molfile)
+         errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
 
         mol = Chem.MolFromMolBlock(molfile)
         
@@ -480,7 +480,7 @@ class ChemRegAddMol(tornado.web.RequestHandler):
          C_CHNS,
          saSalts,
          sSmiles,
-         errorMessage) = getMoleculeProperties(self, molfile)
+         errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
 
         if C_MF == False:
             self.set_status(500)
@@ -617,7 +617,7 @@ class LoadMolfile(tornado.web.RequestHandler):
          C_CHNS,
          saSalts,
          sSmiles,
-         errorMessage) = getMoleculeProperties(self, molfile)
+         errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
         if C_MF == False:
             self.set_status(500)
             self.finish(f'Molfile failed {regno} {errorMessage}')
