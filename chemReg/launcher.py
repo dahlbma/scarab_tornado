@@ -68,14 +68,7 @@ class LauncherScreen(QDialog):
 
     def updatefunction(self):
         os_name = platform.system()
-        print(ex_paths[os_name])
         exec_path = f"{os.getcwd()}/{ex_paths[os_name]}"
-        if os_name == 'Windows':
-            exec_path = '{}/ch.exe'.format(os.getcwd())
-        elif os_name == 'Linux':
-            exec_path = '{}/ch'.format(os.getcwd())
-        elif os_name == 'Darwin':
-            exec_path = '{}/ch'.format(os.getcwd())
         # check if versions match
         match, info = self.ver_check()
         if self.frc_update_chb.isChecked() or not os.path.exists(exec_path):
