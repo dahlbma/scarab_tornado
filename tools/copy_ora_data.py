@@ -36,7 +36,6 @@ engineLOCTREE = sqlalchemy.create_engine('mysql+pymysql://' + config.LOCTREE)
 engineMICROTUBE = sqlalchemy.create_engine('mysql+pymysql://' + config.MICROTUBE)
 engineCHEMSPEC = sqlalchemy.create_engine('mysql+pymysql://' + config.CHEMSPEC)
 engineSCREEN = sqlalchemy.create_engine('mysql+pymysql://' + config.SCREEN)
-engineSCREENMOL = sqlalchemy.create_engine('mysql+pymysql://' + config.SCREENMOL)
 
 ################################################
 
