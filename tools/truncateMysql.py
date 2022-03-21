@@ -16,6 +16,8 @@ def truncateTable(sTab):
     except Exception as e:
         print(e)
 
+allTabs = True
+#allTabs = False
 
 truncateTable("chem_reg.CHEM")
 truncateTable("chem_reg.CHEM_MOL")
