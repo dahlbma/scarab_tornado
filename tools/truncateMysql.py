@@ -28,10 +28,6 @@ truncateTable("chem_reg.chem_info_mol_key")
 truncateTable("chem_reg.chem_info_mol_ukey")
 truncateTable("chem_reg.chemreg_dist")
 truncateTable("chem_reg.tmp_mol")
-<<<<<<< HEAD
-
-=======
->>>>>>> 5ffcb722de566b5de2b190e044f06ddec9ffe466
 quit()
 
 truncateTable("bcpvs.JCMOL_MOLTABLE_MOL_keysim")
