@@ -13,6 +13,7 @@ class LoginScreen(QDialog):
     def __init__(self):
         super(LoginScreen, self).__init__()
         self.mod_name = "login"
+
         logger = logging.getLogger(self.mod_name)
         loadUi(resource_path("assets/welcomescreen.ui"), self)
         self.passwordfield.setEchoMode(QtWidgets.QLineEdit.Password)
