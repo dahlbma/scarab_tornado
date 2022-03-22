@@ -1,5 +1,5 @@
 set icmdb "verbose" 1
-s = 'admin'
+s = 'password'
 connect icmdb 'administrator' s
 
 Delete these from jcmol_moltable.sdf:
