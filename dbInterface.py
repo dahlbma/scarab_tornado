@@ -239,7 +239,7 @@ def registerNewBatch(bcpvsDB,
 
 
 def getMoleculeProperties(self, molfile, chemregDB):
-    sSql = f'''select bin2smiles(mol2bin('{molfile}')) smiles'''
+    sSql = f'''select bin2smiles(mol2bin('{molfile}'), 'mol') smiles'''
     cur.execute(sSql)
     res = cur.fetchall()
     sSmiles = (res[0][0]).decode()    
