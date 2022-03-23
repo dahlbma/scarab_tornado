@@ -16,6 +16,8 @@ def truncateTable(sTab):
     except Exception as e:
         print(e)
 
+allTabs = True
+#allTabs = False
 
 truncateTable("chem_reg.CHEM")
 truncateTable("chem_reg.CHEM_MOL")
@@ -26,7 +28,7 @@ truncateTable("chem_reg.chem_info_mol_key")
 truncateTable("chem_reg.chem_info_mol_ukey")
 truncateTable("chem_reg.chemreg_dist")
 truncateTable("chem_reg.tmp_mol")
-
+quit()
 
 truncateTable("bcpvs.JCMOL_MOLTABLE_MOL_keysim")
 truncateTable("bcpvs.JCMOL_MOLTABLE_MOL_key")

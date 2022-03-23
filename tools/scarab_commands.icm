@@ -7,8 +7,7 @@ BVT016996C
 
 
 load icmdb mol "chem.sdf" "Databases/localhost" "chem_reg" "BeeHive/chem_reg"
-load icmdb mol "jcmol_moltable.sdf" "Databases/localhost" "bcpvs" "BeeHive/Compound"
-
+load icmdb mol "/home/mats.dahlberg/scarab_data/scarab_tornado/tools/jcmol_moltable.sdf" "Databases/localhost" "bcpvs" "BeeHive/Compound"
 
 #####################################
 ## Reset chem_reg database
