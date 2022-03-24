@@ -272,6 +272,16 @@ if copyTable(engineBCPVS, 'bcpvs.structure_change_log', 'structure_change_log'):
     cur.execute("""ALTER TABLE bcpvs.structure_change_log
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
 
+
+
+
+##
+if copyTable(engineCHEMSPEC, 'chemspec.solvent_tbl', 'solvent_tbl'):
+    cur.execute("ALTER TABLE chemspec.solvent_tbl Modify column solvent varchar(20)")
+
+pt.close_connection(con)
+quit()
+
 ################################################
 # SCREEN tables
 if copyTable(engineSCREEN, 'screen.aa_cyp3a4_stab', 'aa_cyp3a4_stab'):

@@ -39,20 +39,24 @@ def res2json():
 
 def checkUniqueStructure(smiles, bcpvsDB):
     sSql = f"""
-    SELECT 
-    T3.`COMPOUND_ID` 'compound_id', bin2smiles(T1.`MOL`) 'mol'
-    FROM
-    (SELECT NULL) ONE_ROW_TAB_
-    STRAIGHT_JOIN
-    {bcpvsDB}.`JCMOL_MOLTABLE_MOL_key` T2 ON T2.`molkey` = FP(MOL2BIN('{smiles}',
-    'smiles'),
-    'sss')
-    STRAIGHT_JOIN
-    {bcpvsDB}.`JCMOL_MOLTABLE_MOL` T1 ON T2.`COMPOUND_ID` = T1.`COMPOUND_ID`
-    AND UNIQUEKEY('{smiles}') = UNIQUEKEY(T1.`mol`)
-    STRAIGHT_JOIN
-    {bcpvsDB}.`JCMOL_MOLTABLE` T3 ON T1.`COMPOUND_ID` = T3.`COMPOUND_ID`
-    ORDER BY T3.`COMPOUND_ID` DESC
+SELECT 
+T3.`COMPOUND_ID` 'compound_id', bin2smiles(T1.`MOL`) 'mol'
+FROM
+(SELECT NULL) ONE_ROW_TAB_
+STRAIGHT_JOIN
+{bcpvsDB}.`JCMOL_MOLTABLE_MOL_key` T2 ON T2.`molkey` = FP(MOL2BIN('{smiles}',
+'smiles'),
+'sss')
+STRAIGHT_JOIN
+{bcpvsDB}.`JCMOL_MOLTABLE_MOL` T1 ON T2.`COMPOUND_ID` = T1.`COMPOUND_ID`
+AND UNIQUEKEY('{smiles}') = UNIQUEKEY(T1.`mol`)
+STRAIGHT_JOIN
+{bcpvsDB}.`JCMOL_MOLTABLE` T3 ON T1.`COMPOUND_ID` = T3.`COMPOUND_ID`
+ORDER BY T3.`COMPOUND_ID` ASC
+    """
+    sSql = f"""
+SELECT * FROM bcpvs.`JCMOL_MOLTABLE_ukey` T1
+WHERE T1.molkeyct = UNIQUEKEY('{smiles}')
     """
     cur.execute(sSql)
     mols = cur.fetchall()
@@ -138,13 +142,13 @@ def addStructure(database, molfile, newRegno, idColumnName):
     """
     cur.execute(sSql)
 
-    '''
     sSql = f"""
-    insert into {database}_ukey select molid, uniquekey(mol) as molkey
+    insert into {database}_ukey select {idColumnName}, uniquekey(mol) as molkey,
+    uniquekey(`mol`,'nostereo') as molkeyns,
+    uniquekey(`mol`,'cistrans') as molkeyct
     from {database} where {idColumnName} = '{newRegno}'
     """
     cur.execute(sSql)
-    '''
 
     sSql = f"""
     insert into {database}_MOL_keysim select {idColumnName}, fp(mol, 'sim') as molkey
@@ -242,8 +246,8 @@ def getMoleculeProperties(self, molfile, chemregDB):
     sSql = f'''select bin2smiles(mol2bin('{molfile}'), 'mol') smiles'''
     cur.execute(sSql)
     res = cur.fetchall()
-    sSmiles = (res[0][0]).decode()    
-    
+    sSmiles = (res[0][0]).decode()
+    #print(f'in getMoleculeProperties: {sSmiles}')
     sio = sys.stderr = StringIO()
     Chem.WrapLogs()
     mol = Chem.MolFromSmiles(sSmiles)
@@ -411,7 +415,7 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
          saSalts,
          sSmiles,
          errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
-
+        #print(f'in BcpvsRegCompound: {sSmiles}')
         mol = Chem.MolFromMolBlock(molfile)
         
         if compound_id in ('', None):

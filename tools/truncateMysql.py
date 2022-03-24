@@ -20,6 +20,7 @@ allTabs = True
 #allTabs = False
 
 truncateTable("chem_reg.CHEM")
+truncateTable("chem_reg.CHEM_ukey")
 truncateTable("chem_reg.CHEM_MOL")
 truncateTable("chem_reg.CHEM_MOL_key")
 truncateTable("chem_reg.CHEM_MOL_keysim")
