@@ -7,7 +7,29 @@ BVT016996C
 
 
 load icmdb mol "chem.sdf" "Databases/localhost" "chem_reg" "BeeHive/chem_reg"
-load icmdb mol "jcmol_moltable.sdf" "Databases/localhost" "bcpvs" "BeeHive/Compound"
+load icmdb mol "/home/mats.dahlberg/scarab_data/scarab_tornado/tools/jcmol_moltable.sdf" "Databases/localhost" "bcpvs" "BeeHive/Compound"
+
+
+
+drop table bcpvs.JCMOL_MOLTABLE_ukey;
+
+CREATE TABLE bcpvs.JCMOL_MOLTABLE_ukey(
+compound_id varchar(26) PRIMARY KEY,
+`molkey` MEDIUMBLOB,
+`molkeyns` MEDIUMBLOB,
+`molkeyct` MEDIUMBLOB
+) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4 COLLATE = UTF8MB4_0900_AI_CI;
+
+insert into bcpvs.JCMOL_MOLTABLE_ukey
+(select compound_id, uniquekey(`mol`) as molkey,
+uniquekey(`mol`,'nostereo') as molkeyns,
+uniquekey(`mol`,'cistrans') as molkeyct
+from bcpvs.JCMOL_MOLTABLE);
+
+create index `JCMOL_MOLTABLE_ukey_idx1` on bcpvs.JCMOL_MOLTABLE_ukey (molkey(255));
+create index `JCMOL_MOLTABLE_ukey_idx2` on bcpvs.JCMOL_MOLTABLE_ukey (molkeyns(255));
+create index `JCMOL_MOLTABLE_ukey_idx3` on bcpvs.JCMOL_MOLTABLE_ukey (molkeyct(255));
+
 
 
 #####################################

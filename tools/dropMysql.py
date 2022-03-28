@@ -66,7 +66,6 @@ dropTable("cool.plating_sequence")
 dropTable("cool.solubility_problem")
 
 
-
 dropTable("assay.cerep_assays")
 dropTable("assay.cerep_functional_dr")
 dropTable("assay.cerep_functional_sp")

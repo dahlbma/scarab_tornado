@@ -36,7 +36,6 @@ engineLOCTREE = sqlalchemy.create_engine('mysql+pymysql://' + config.LOCTREE)
 engineMICROTUBE = sqlalchemy.create_engine('mysql+pymysql://' + config.MICROTUBE)
 engineCHEMSPEC = sqlalchemy.create_engine('mysql+pymysql://' + config.CHEMSPEC)
 engineSCREEN = sqlalchemy.create_engine('mysql+pymysql://' + config.SCREEN)
-engineSCREENMOL = sqlalchemy.create_engine('mysql+pymysql://' + config.SCREENMOL)
 
 ################################################
 
@@ -272,6 +271,16 @@ if copyTable(engineBCPVS, 'bcpvs.structure_change_log', 'structure_change_log'):
 
     cur.execute("""ALTER TABLE bcpvs.structure_change_log
                    ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
+
+
+
+
+##
+if copyTable(engineCHEMSPEC, 'chemspec.solvent_tbl', 'solvent_tbl'):
+    cur.execute("ALTER TABLE chemspec.solvent_tbl Modify column solvent varchar(20)")
+
+pt.close_connection(con)
+quit()
 
 ################################################
 # SCREEN tables

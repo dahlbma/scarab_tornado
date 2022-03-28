@@ -45,7 +45,7 @@ class LauncherScreen(QDialog):
             r = dbInterface.getVersion()
             # turn it into a dict
             info = json.loads(r.content)
-            logger.info(f"recieved {info}")
+            logging.getLogger(self.mod_name).info(f"recieved {info}")
         except Exception as e:
             self.status_lab.setText("ERROR no connection")
             logger(self.mod_name).error(str(e))
@@ -57,7 +57,7 @@ class LauncherScreen(QDialog):
             with open('./ver.dat', 'r') as f:
                 info_dict = json.load(f)
         except Exception as e:
-            logger.error(str(e))
+            logging.getLogger(self.mod_name).error(str(e))
             # create version file
             return 1, {"version":"-1"}
         # check if versions match
@@ -72,7 +72,7 @@ class LauncherScreen(QDialog):
         # check if versions match
         match, info = self.ver_check()
         if self.frc_update_chb.isChecked() or not os.path.exists(exec_path):
-            logger.info("Force update")
+            logging.getLogger(self.mod_name).info("Force update")
             match = 1
         if match == 2:
             # no connection to server
@@ -85,23 +85,23 @@ class LauncherScreen(QDialog):
                 
                 with open(exec_path, 'wb') as chemreg_file:
                     shutil.copyfileobj(bin_r.raw, chemreg_file)
-                    logging.info("Updated chemreg")
+                    logging.getLogger(self.mod_name).info("Updated chemreg")
                 
                 os.chmod(exec_path, 0o775)
   
             except Exception as e:
                 self.status_lab.setText("ERROR ")
-                logger.info(str(e))
+                logging.getLogger(self.mod_name).info(str(e))
                 return -1
         # all is well
         try:
             r = dbInterface.getVersion()
             # turn it into a dict
             info = json.loads(r.content)
-            logger.info(f"recieved {info}")
+            logging.getLogger(self.mod_name).info(f"recieved {info}")
         except Exception as e:
             self.status_lab.setText("ERROR no connection")
-            logger(self.mod_name).error(str(e))
+            logging.getLogger(self.mod_name).error(str(e))
         with open('./ver.dat', 'w', encoding='utf-8') as ver_file:
             json.dump(info, ver_file, ensure_ascii=False, indent=4)
         return 0

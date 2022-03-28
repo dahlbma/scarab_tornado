@@ -35,6 +35,7 @@ fh.setFormatter(formatter)
 logger.addHandler(ch)
 logger.addHandler(fh)
 
+
 try:
     # base app settings
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "2"
