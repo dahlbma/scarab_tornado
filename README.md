@@ -16,7 +16,7 @@ which will build the launcher executable `chemreg`(.exe).
 Substitute `<pyinstaller>` with your local appropriate PyInstaller module (possibly `py -3.8 -m PyInstaller` or just `python3 pyinstaller`, case sensitive module names).
 
 <!--
-<b> Make sure to build a new version of the `ce` executable before using `upload.py` to upload a new version!
+<b> Make sure to build a new version of the `ch` executable before using `upload.py` to upload a new version!
 </b>
 -->
 
