@@ -17,7 +17,12 @@ class LoginScreen(QDialog):
         loadUi(resource_path("assets/welcomescreen.ui"), self)
         self.passwordfield.setEchoMode(QtWidgets.QLineEdit.Password)
         self.login.clicked.connect(self.loginfunction)
-        saDatabases = dbInterface.getDatabase()
+        saDatabases = None
+        try:
+            saDatabases = dbInterface.getDatabase()
+        except Exception as e:
+            send_msg("Connection Error", f"ChemReg has encountered a fatal error:\n\n{str(e)}\n\nPlease restart ChemReg.", icon=QMessageBox.Critical, e=e)
+            sys.exit()
         self.server_cb.addItems(saDatabases)
         
     def keyPressEvent(self, event):
