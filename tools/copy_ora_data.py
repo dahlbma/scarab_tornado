@@ -275,12 +275,6 @@ if copyTable(engineBCPVS, 'bcpvs.structure_change_log', 'structure_change_log'):
 
 
 
-##
-if copyTable(engineCHEMSPEC, 'chemspec.solvent_tbl', 'solvent_tbl'):
-    cur.execute("ALTER TABLE chemspec.solvent_tbl Modify column solvent varchar(20)")
-
-pt.close_connection(con)
-quit()
 
 ################################################
 # SCREEN tables

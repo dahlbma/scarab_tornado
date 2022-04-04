@@ -6,13 +6,16 @@ Delete these from jcmol_moltable.sdf:
 BVT016996C
 
 
+make molcart table mol  "C:\Users\mats.dahlberg\Downloads\p2.sdf" name="bcpvs.p2"
+
+
 load icmdb mol "chem.sdf" "Databases/localhost" "chem_reg" "BeeHive/chem_reg"
 load icmdb mol "/home/mats.dahlberg/scarab_data/scarab_tornado/tools/jcmol_moltable.sdf" "Databases/localhost" "bcpvs" "BeeHive/Compound"
+load icmdb mol "/home/mats.dahlberg/scarab_data/scarab_tornado/tools/error.sdf" "Databases/localhost" "bcpvs" "BeeHive/Compound"
 
 
 
 drop table bcpvs.JCMOL_MOLTABLE_ukey;
-
 CREATE TABLE bcpvs.JCMOL_MOLTABLE_ukey(
 compound_id varchar(26) PRIMARY KEY,
 `molkey` MEDIUMBLOB,
@@ -29,6 +32,26 @@ from bcpvs.JCMOL_MOLTABLE);
 create index `JCMOL_MOLTABLE_ukey_idx1` on bcpvs.JCMOL_MOLTABLE_ukey (molkey(255));
 create index `JCMOL_MOLTABLE_ukey_idx2` on bcpvs.JCMOL_MOLTABLE_ukey (molkeyns(255));
 create index `JCMOL_MOLTABLE_ukey_idx3` on bcpvs.JCMOL_MOLTABLE_ukey (molkeyct(255));
+
+
+
+drop table bcpvs.ERROR_ukey;
+CREATE TABLE bcpvs.ERROR_ukey(
+id varchar(26) PRIMARY KEY,
+`molkey` MEDIUMBLOB,
+`molkeyns` MEDIUMBLOB,
+`molkeyct` MEDIUMBLOB
+) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4 COLLATE = UTF8MB4_0900_AI_CI;
+
+insert into bcpvs.ERROR_ukey
+(select id, uniquekey(`mol`) as molkey,
+uniquekey(`mol`,'nostereo') as molkeyns,
+uniquekey(`mol`,'cistrans') as molkeyct
+from bcpvs.ERROR);
+
+create index `ERROR_ukey_idx1` on bcpvs.ERROR_ukey (molkey(255));
+create index `ERROR_ukey_idx2` on bcpvs.ERROR_ukey (molkeyns(255));
+create index `ERROR_ukey_idx3` on bcpvs.ERROR_ukey (molkeyct(255));
 
 
 

@@ -37,7 +37,8 @@ def res2json():
     result = [list(i) for i in cur.fetchall()]
     return json.dumps(result)
 
-def checkUniqueStructure(smiles, bcpvsDB):
+def checkUniqueStructure(molfile, bcpvsDB):
+    '''
     sSql = f"""
 SELECT 
 T3.`COMPOUND_ID` 'compound_id', bin2smiles(T1.`MOL`) 'mol'
@@ -54,9 +55,10 @@ STRAIGHT_JOIN
 {bcpvsDB}.`JCMOL_MOLTABLE` T3 ON T1.`COMPOUND_ID` = T3.`COMPOUND_ID`
 ORDER BY T3.`COMPOUND_ID` ASC
     """
+    '''
     sSql = f"""
-SELECT * FROM bcpvs.`JCMOL_MOLTABLE_ukey` T1
-WHERE T1.molkeyct = UNIQUEKEY('{smiles}')
+SELECT * FROM {bcpvsDB}.`JCMOL_MOLTABLE_ukey` T1
+WHERE T1.molkeyct = UNIQUEKEY('{molfile}')
     """
     cur.execute(sSql)
     mols = cur.fetchall()
@@ -419,7 +421,8 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
         mol = Chem.MolFromMolBlock(molfile)
         
         if compound_id in ('', None):
-            mols = checkUniqueStructure(sSmiles, bcpvsDB)
+            #mols = checkUniqueStructure(sSmiles, bcpvsDB)
+            mols = checkUniqueStructure(molfile, bcpvsDB)
             if len(mols) != 0:
                 compound_id = mols[0][0]
                 compound_id_numeric = compound_id[3:]
@@ -499,7 +502,8 @@ class ChemRegAddMol(tornado.web.RequestHandler):
 
         ########################
         # Do exact match with molecule against the CBK database
-        mols = checkUniqueStructure(sSmiles, bcpvsDB)
+        #mols = checkUniqueStructure(sSmiles, bcpvsDB)
+        mols = checkUniqueStructure(molfile, bcpvsDB)
         sStatus = 'oldMolecule'
         if len(mols) == 0:
             sStatus = 'newMolecule'
