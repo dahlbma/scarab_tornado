@@ -3,7 +3,7 @@ from PyQt5.QtGui import QImage, QPixmap
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
-ip_rights_list = [None, 'External rights', 'LCBKI', 'Commercial']
+ip_rights_list = [' ', 'External rights', 'LCBKI', 'Commercial']
 
 
 def send_msg(title, text, icon=QMessageBox.Information, e=None):
@@ -84,7 +84,7 @@ def updateMoleculeProperties(self):
                                             self.regno)
     self.monoisomass_lab.setText(monoIsoMass)
 
-def updateScreen(self):
+def oldUpdateScreen(self):
     if self.populated == False:
         self.regno_eb.setText(str(self.regno))
         submitters = dbInterface.getColComboData(self.token,
