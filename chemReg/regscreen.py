@@ -36,7 +36,7 @@ class RegScreen(QMainWindow):
             self.regno = str(regno)
         self.regno_eb.setText(str(self.regno))
 
-        updateScreen(self)
+        self.updateScreen()
         self.populated = True
         #### Chemist
         self.submitter_cb.currentTextChanged.connect(
@@ -290,3 +290,174 @@ class RegScreen(QMainWindow):
             dbInterface.deleteRegno(self.regno,
                                     self.token)
         addMetaTags = AddMetaTags(self.token)
+
+    def updateScreen(self):
+        if self.populated == False:
+            self.regno_eb.setText(str(self.regno))
+            submitters = dbInterface.getColComboData(self.token,
+                                                    'chemist')
+            self.submitter_cb.addItems(submitters)
+
+            projects = dbInterface.getColComboData(self.token,
+                                                'project')
+            self.project_cb.addItems(projects)
+
+            compoundTypes = dbInterface.getColComboData(self.token,
+                                                        'compound_type')
+            self.compoundtype_cb.addItems(compoundTypes)
+
+            productTypes = dbInterface.getColComboData(self.token,
+                                                    'product')
+            self.product_cb.addItems(productTypes)
+            
+            libraryIds = dbInterface.getColComboData(self.token,
+                                                    'library_id')
+            self.libraryid_cb.addItems(libraryIds)
+            
+            self.ip_rights_cb.addItems(ip_rights_list)
+
+            solvents = dbInterface.getColComboData(self.token,
+                                                'solvent')
+            self.solvent_cb.addItems(solvents)
+        
+        # Set current values for this regno
+        if self.regno != None:
+            self.regno_eb.setText(str(self.regno))
+            
+            createdDate = dbInterface.getTextColumn(self.token,
+                                                    'rdate',
+                                                    self.regno)
+            self.date_lab.setText(createdDate)
+
+            updateMoleculeProperties(self)
+            
+            externalCompoundId = dbInterface.getTextColumn(self.token,
+                                                        'EXTERNAL_ID',
+                                                        self.regno)
+            self.externalid_eb.setText(externalCompoundId)
+
+            externalBatch = dbInterface.getTextColumn(self.token,
+                                                    'SUPPLIER_BATCH',
+                                                    self.regno)
+            self.externalbatch_eb.setText(externalBatch)
+
+            currentBatch = dbInterface.getTextColumn(self.token,
+                                                    'JPAGE',
+                                                    self.regno)
+            self.batch_eb.setText(currentBatch)
+
+            compound_id = dbInterface.getTextColumn(self.token,
+                                                    'compound_id',
+                                                    self.regno)
+            self.compoundid_lab.setText(compound_id)
+
+            if compound_id not in (' ', None, ''):
+                #self.regcompound_btn.setEnabled(True)
+                self.batch_eb.setReadOnly(True)
+                self.regcompound_btn.setEnabled(False)
+                self.editmol_btn.setEnabled(False)
+                self.loadmol_btn.setEnabled(False)
+            
+            submitter = dbInterface.getTextColumn(self.token,
+                                                'chemist',
+                                                self.regno)
+            self.submitter_cb.setCurrentText(submitter)
+            
+            project = dbInterface.getTextColumn(self.token,
+                                                'project',
+                                                self.regno)
+            self.project_cb.setCurrentText(project)
+
+            product = dbInterface.getTextColumn(self.token,
+                                                'product',
+                                                self.regno)
+            self.product_cb.setCurrentText(product)
+
+            compoundType = dbInterface.getTextColumn(self.token,
+                                                    'compound_type',
+                                                    self.regno)
+            self.compoundtype_cb.setCurrentText(compoundType)
+
+            libraryId = dbInterface.getTextColumn(self.token,
+                                                'library_id',
+                                                self.regno)
+            self.libraryid_cb.setCurrentText(libraryId)
+
+            library_name = dbInterface.getLibraryName(self.token,
+                                                    self.libraryid_cb.currentText())
+            self.librarydesc_eb.setText(library_name)
+
+            chromText = dbInterface.getTextColumn(self.token,
+                                                'chrom_text',
+                                                self.regno)
+            self.chrom_text.setPlainText(chromText)
+            
+            nmrText = dbInterface.getTextColumn(self.token,
+                                                'nmr_text',
+                                                self.regno)
+            self.nmr_text.setPlainText(nmrText)
+
+            commentsText = dbInterface.getTextColumn(self.token,
+                                                    'comments',
+                                                    self.regno)
+            self.comments_text.setPlainText(commentsText)
+
+            msText = dbInterface.getTextColumn(self.token,
+                                            'ms_text',
+                                            self.regno)
+            self.ms_text.setPlainText(msText)
+
+            chromPurity = dbInterface.getTextColumn(self.token,
+                                                    'chrom_purity',
+                                                    self.regno)
+            self.chrompurity_eb.setText(chromPurity)
+            nmrPurity = dbInterface.getTextColumn(self.token,
+                                                'nmr_purity',
+                                                self.regno)
+            self.nmrpurity_eb.setText(chromPurity)
+            msPurity = dbInterface.getTextColumn(self.token,
+                                                'ms_purity',
+                                                self.regno)
+            self.mspurity_eb.setText(msPurity)
+            purity = dbInterface.getTextColumn(self.token,
+                                            'purity',
+                                            self.regno)
+            self.purity_eb.setText(purity)
+            
+            ip_rights = dbInterface.getTextColumn(self.token,
+                                                'ip_rights', 
+                                                self.regno)
+            self.ip_rights_cb.setCurrentText(ip_rights)
+
+            solvent = dbInterface.getTextColumn(self.token,
+                                                'solvent',
+                                                self.regno)
+            self.solvent_cb.setCurrentText(solvent)
+
+            displayMolfile(self)
+        else:
+            self.editregno_btn.setEnabled(False)
+            self.regno_eb.setText(None)
+            self.compoundid_lab.setText(None)
+            self.batch_eb.setText(None)
+            self.submitter_cb.setCurrentText(' ')
+            self.project_cb.setCurrentText(' ')
+            self.product_cb.setCurrentText(' ')
+            self.compoundtype_cb.setCurrentText(' ')
+            self.libraryid_cb.setCurrentText(' ')
+            self.chrom_text.setPlainText('')
+            self.nmr_text.insertPlainText('')
+            self.ms_text.insertPlainText('')
+            self.chrompurity_eb.setText(None)
+            self.nmrpurity_eb.setText(None)
+            self.mspurity_eb.setText(None)
+            self.purity_eb.setText(None)
+            self.ip_rights_cb.setCurrentText(' ')
+            self.externalid_eb.setText(None)
+            self.externalbatch_eb.setText(None)
+            self.iupac_eb.setText(None)
+            self.monoisomass_lab.setText(None)
+            self.avgmolmass_lab.setText(None)
+            self.date_lab.setText(None)
+            self.structure_lab.clear()
+            self.solvent_cb.setCurrentText(' ')
