@@ -17,7 +17,7 @@ def listify(data, addBlank=True):
     res = json.loads(res)
     cleanList = list()
     if addBlank:
-        cleanList.append(None)
+        cleanList.append(' ')
     for i in res:
         cleanList.append(i[0])
     return cleanList

@@ -57,7 +57,6 @@ class SearchScreen(QMainWindow):
         #    lambda: self.searchEvent(self.batch_search_eb.text(), 'JPAGE'))
 
         self.search_search_btn.clicked.connect(self.launch_searchEvent)
-        self.pushButton_2.clicked.connect(self.debugger)
 
     def editMolFile(self):
         fname = "tmp.mol" # temp file name
@@ -163,12 +162,6 @@ class SearchScreen(QMainWindow):
 
     def gotoAddMeta(self):
         addMetaTags = AddMetaTags(self.token)
-
-    def debugger(self):
-        setattr(self.submitter_search_cb, "allItems", lambda: [self.submitter_search_cb.itemText(i) for i in range(self.submitter_search_cb.count())])
-        print(self.submitter_search_cb.allItems())
-        print(self.submitter_search_cb.currentIndex())
-        self.submitter_search_cb.setCurrentText(' ')
 
     def clear_search_fields(self, field):
         self.regno_search_eb.textChanged.disconnect()
