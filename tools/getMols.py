@@ -31,7 +31,7 @@ con = cx_Oracle.connect(config.Ora['user'],
 cur = con.cursor()
 
 def getTable(sSchema, sTable, lCols):
-    sFileName = f'{sSchema}_{sTable}{sTable}.sdf'
+    sFileName = f'1{sSchema}_{sTable}{sTable}.sdf'
     print("Exporting " + sFileName)
     try:
         os.remove(sFileName)
@@ -42,13 +42,9 @@ def getTable(sSchema, sTable, lCols):
     sdfile = open(sFileName, 'a')
     sCols = ','.join(lCols)
     sSql = f'''select {sCols} from {sST} where compound_id in (
-'CBK000212D',
-'CBK000953',
-'CBK000469C',
-'CBK000486C',
-'CBK000490C',
-'CBK000491C',
-'')
+'CBK664927',
+'CBK664926',
+'CBK664925')
  '''
     cur.execute(sSql)
     s = True
@@ -72,3 +68,15 @@ def getTable(sSchema, sTable, lCols):
 
 getTable('bcpvs', 'jcmol_moltable', ['compound_id', 'molfile'])
 getTable('bcpvs', 'jcsepmol_moltable', ['compound_id', 'molfile'])
+
+
+
+
+'''
+'CBK000212D',
+'CBK000953',
+'CBK000469C',
+'CBK000486C',
+'CBK000490C',
+'CBK000491C',
+'''
