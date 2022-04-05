@@ -56,9 +56,15 @@ STRAIGHT_JOIN
 ORDER BY T3.`COMPOUND_ID` ASC
     """
     '''
+    sSql = f'''select uniquekey('{molfile}', 'cistrans')'''
+    cur.execute(sSql)
+    molkey = cur.fetchall()
+    if len(molkey) == 0:
+        logger.error('Error in molfile')
+        return False
     sSql = f"""
 SELECT * FROM {bcpvsDB}.`JCMOL_MOLTABLE_ukey` T1
-WHERE T1.molkeyct = UNIQUEKEY('{molfile}')
+WHERE T1.molkeyct = UNIQUEKEY('{molfile}', 'cistrans')
     """
     cur.execute(sSql)
     mols = cur.fetchall()
@@ -248,13 +254,16 @@ def getMoleculeProperties(self, molfile, chemregDB):
     sSql = f'''select bin2smiles(mol2bin('{molfile}'), 'mol') smiles'''
     cur.execute(sSql)
     res = cur.fetchall()
-    sSmiles = (res[0][0]).decode()
-    #print(f'in getMoleculeProperties: {sSmiles}')
+    try:
+        sSmiles = (res[0][0]).decode()
+    except:
+        return (False, False, False, False, False, '', f'No smiles for molecule')
+        
     sio = sys.stderr = StringIO()
     Chem.WrapLogs()
     mol = Chem.MolFromSmiles(sSmiles)
-    #mol = Chem.MolFromMolBlock(molfile)
-    try:
+
+    try:    
         C_MF = rdMolDescriptors.CalcMolFormula(mol)
         molmassFormula = Formula(C_MF.replace('-', ''))
         C_CHNS = getAtomicComposition(molmassFormula.composition())
@@ -423,6 +432,9 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
         if compound_id in ('', None):
             #mols = checkUniqueStructure(sSmiles, bcpvsDB)
             mols = checkUniqueStructure(molfile, bcpvsDB)
+            if mols == False:
+                logger.error(f'Error in molfile for regno {self.regno}')
+                return False
             if len(mols) != 0:
                 compound_id = mols[0][0]
                 compound_id_numeric = compound_id[3:]
@@ -504,6 +516,8 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         # Do exact match with molecule against the CBK database
         #mols = checkUniqueStructure(sSmiles, bcpvsDB)
         mols = checkUniqueStructure(molfile, bcpvsDB)
+        if mols == False:
+            return False
         sStatus = 'oldMolecule'
         if len(mols) == 0:
             sStatus = 'newMolecule'

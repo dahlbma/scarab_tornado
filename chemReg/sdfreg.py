@@ -185,6 +185,9 @@ class LoadSDF(QDialog):
         sCurrentEln = self.saElnIds[iElnId]
         iBatchCount = dbInterface.getLastBatchOfEln(self.token,
                                                     sCurrentEln)
+        if (1000 - iBatchCount) < 900:
+            send_msg("Not enough notebook numbers", f"Only {1000 - iBatchCount} on first notebook page")
+            return
         iSdfSequence = dbInterface.getSdfSequence(self.token)
         self.event_lab.setText('Register in ChemReg')
         while True:

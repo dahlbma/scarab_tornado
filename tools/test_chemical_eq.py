@@ -60,11 +60,11 @@ db_connection = MySQLdb.connect(
 cur = db_connection.cursor()
 
 sdfilename = 'sdf.sdf'
-sdfilename = 'jcmol_moltable_org.sdf'
 #sdfilename = 'strange_mols.sdf'
 #sdfilename = 'mol.sdf'
 sdfilename = 'jcmol_moltable.sdf'
-
+sdfilename = 'jcmol_moltable_org.sdf'
+sdfilename = 'error2.sdf'
 f = open(sdfilename, "rb")
 fErr = open("error_standardized.sdf", "w")
 iMols = 0
@@ -84,36 +84,18 @@ while True:
     #    break
     #    #quit()
     #    #print(iMols)
-
-    sSql = f"""select bin2inchi(mol2bin('{sMol}','mol'), 'key')"""
-    sSql = f"""select bin2inchi(mol2bin('{sMol}','mol'))"""
-    cur.execute(sSql)
-    res = cur.fetchall()
-    try:
-        #print(res[0][0].decode())
-        pass
-    except:
-        pass
-        #print(sMol)
-        #quit()
-    sSql = f'''select bin2smiles(mol2bin('{sMol}')) smiles'''
-    cur.execute(sSql)
-    res = cur.fetchall()
-
-    try:
-        sSmiles = (res[0][0]).decode()
-    except:
-        pass
-
     mols = doSearch2(sMol)
     
     if len(mols) > 0:
         #print(len(mols))
         iFound += 1
     else:
-        fErr.write(sMol)
-        print(sCompoundId)
-        iNothingFound += 1
+        if " 0  0  0     0  0            999 V2000" in sMol:
+            pass
+        else:
+            fErr.write(sMol)
+            print(sCompoundId)
+            iNothingFound += 1
 
 
 print(f'Not found: {iNothingFound}')
