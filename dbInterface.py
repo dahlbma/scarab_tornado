@@ -269,9 +269,17 @@ def getMoleculeProperties(self, molfile, chemregDB):
         resSmiles = sSmiles
     #######################
     ## Old code here
-    C_MW = Descriptors.MolWt(mol)
     mono_iso_mol = Chem.MolFromSmiles(resSmiles)
-    C_MONOISO = Descriptors.ExactMolWt(mono_iso_mol)
+
+    cur.execute(f"""select
+    MolWeight(mol2bin('{molfile}', 'mol')),
+    MolFormula(mol2bin('{molfile}', 'mol')),
+    MolWeight(mol2bin('{resSmiles}', 'smiles'))
+    """)
+    resMolcart = cur.fetchall()
+    C_MW = resMolcart[0][0]
+    C_MF = resMolcart[0][1].decode().replace(" ", "")
+    C_MONOISO = resMolcart[0][2]
     return (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, resSmiles, '')
 
 @jwtauth

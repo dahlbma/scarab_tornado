@@ -71,10 +71,25 @@ iMols = 0
 iNothingFound = 0
 iFound = 0
 while True:
-    sMol = getNextMolecule(f)
+    sMol = getNextMolecule(f)    
     sCompoundId = getCompoundId(sMol)
     if sMol == b'' or sMol == '':
         break
+    mw = cur.execute(f"""select
+    MolWeight(mol2bin('{sMol}', 'mol')),
+    MolFormula(mol2bin('{sMol}', 'mol'))
+    """)
+
+    mw_molcart = cur.execute(f"""select
+    MolWeight(mol2bin('{sMol}', 'mol')),
+    MolFormula(mol2bin('{sMol}', 'mol')),
+    MolWeight(mol2bin('CC', 'smiles'))
+    """)
+
+    
+    res = cur.fetchall()
+    print((res[0][1]).decode())
+
     iMols += 1
 
     if iMols % 1000 == 0:
