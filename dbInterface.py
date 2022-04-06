@@ -38,30 +38,6 @@ def res2json():
     return json.dumps(result)
 
 def checkUniqueStructure(molfile, bcpvsDB):
-    '''
-    sSql = f"""
-SELECT 
-T3.`COMPOUND_ID` 'compound_id', bin2smiles(T1.`MOL`) 'mol'
-FROM
-(SELECT NULL) ONE_ROW_TAB_
-STRAIGHT_JOIN
-{bcpvsDB}.`JCMOL_MOLTABLE_MOL_key` T2 ON T2.`molkey` = FP(MOL2BIN('{smiles}',
-'smiles'),
-'sss')
-STRAIGHT_JOIN
-{bcpvsDB}.`JCMOL_MOLTABLE_MOL` T1 ON T2.`COMPOUND_ID` = T1.`COMPOUND_ID`
-AND UNIQUEKEY('{smiles}') = UNIQUEKEY(T1.`mol`)
-STRAIGHT_JOIN
-{bcpvsDB}.`JCMOL_MOLTABLE` T3 ON T1.`COMPOUND_ID` = T3.`COMPOUND_ID`
-ORDER BY T3.`COMPOUND_ID` ASC
-    """
-    '''
-    sSql = f'''select uniquekey('{molfile}', 'cistrans')'''
-    cur.execute(sSql)
-    molkey = cur.fetchall()
-    if len(molkey) == 0:
-        logger.error('Error in molfile')
-        return False
     sSql = f"""
 SELECT * FROM {bcpvsDB}.`JCMOL_MOLTABLE_ukey` T1
 WHERE T1.molkeyct = UNIQUEKEY('{molfile}', 'cistrans')
@@ -426,11 +402,9 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
          saSalts,
          sSmiles,
          errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
-        #print(f'in BcpvsRegCompound: {sSmiles}')
         mol = Chem.MolFromMolBlock(molfile)
         
         if compound_id in ('', None):
-            #mols = checkUniqueStructure(sSmiles, bcpvsDB)
             mols = checkUniqueStructure(molfile, bcpvsDB)
             if mols == False:
                 logger.error(f'Error in molfile for regno {self.regno}')
@@ -492,6 +466,11 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         purity = self.get_body_argument('purity')
         ip_rights = self.get_body_argument('ip_rights')
         sdfile_sequence = self.get_body_argument('sdfile_sequence')
+
+        if " 0  0  0     0  0      " in molfile:
+            self.set_status(500)
+            self.finish(f'Nostruct for jpage: {jpage}')
+            return
         
         (C_MF,
          C_MW,
@@ -514,7 +493,6 @@ class ChemRegAddMol(tornado.web.RequestHandler):
 
         ########################
         # Do exact match with molecule against the CBK database
-        #mols = checkUniqueStructure(sSmiles, bcpvsDB)
         mols = checkUniqueStructure(molfile, bcpvsDB)
         if mols == False:
             return False
@@ -647,8 +625,8 @@ class LoadMolfile(tornado.web.RequestHandler):
         try:
             addStructure(f'{chemregDB}.CHEM', molfile, regno, 'regno')
         except Exception as e:
-            print(str(e))
-            print(f'failed on regno {regno}')
+            logger.error(str(e))
+            logger.error(f'failed on regno {regno}')
             return
         sSql = f"""update {chemregDB}.chem_info set
                    `molfile` = '{molfile}',
