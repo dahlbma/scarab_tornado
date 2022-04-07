@@ -83,32 +83,6 @@ def createPngFromMolfile(regno, molfile):
     except:
         logger.error(f"regno {regno} is nostruct")
 
-def getSaltLetters(saSmileFragments, chemregDB):
-    saSaltLetters = ''
-    saRemainderSmailes = list()
-    for smile in saSmileFragments:
-        mol = Chem.MolFromSmiles(smile)
-        # Remove all stereochemistry from the fragment
-        Chem.rdmolops.RemoveStereochemistry(mol)
-        flattenSmile = Chem.rdmolfiles.MolToSmiles(mol)
-        canonSmile = Chem.CanonSmiles(flattenSmile)
-        sSql = f"select suffix from {chemregDB}.salts where smiles='{flattenSmile}'"
-        cur.execute(sSql)
-        suffix = cur.fetchall()
-        if len(suffix) == 0:
-            saRemainderSmailes.append(smile)
-        else:
-            saSaltLetters += suffix[0][0]
-    
-    sRemainderSmile = '.'.join(saRemainderSmailes)
-    if saSaltLetters == '' or len(saRemainderSmailes) > 1:
-        # This is an error state, there are multiple fragments in
-        # the molfile but there is no match against the salt database
-        logger.error(f"Can't find salt in fragments {saSmileFragments}")
-        return False, saRemainderSmailes
-
-    return saSaltLetters, sRemainderSmile
-
 def addStructure(database, molfile, newRegno, idColumnName):
     #####
     # Add the molecule to the structure tables
@@ -227,60 +201,45 @@ def registerNewBatch(bcpvsDB,
 
 
 def getMoleculeProperties(self, molfile, chemregDB):
-    sSql = f'''select bin2smiles(mol2bin('{molfile}'), 'mol') smiles'''
+    sSql = f'''select
+    bin2smiles(mol2bin('{molfile}'), 'mol') smiles,
+    MolFormula(mol2bin('{molfile}', 'mol'))'''
     cur.execute(sSql)
     res = cur.fetchall()
     try:
         sSmiles = (res[0][0]).decode()
+        C_MF = res[0][1].decode().replace(" ", "")
     except:
-        return (False, False, False, False, False, '', f'No smiles for molecule')
-        
-    sio = sys.stderr = StringIO()
-    Chem.WrapLogs()
-    mol = Chem.MolFromSmiles(sSmiles)
+        return (False, False, False, False, False, f'No smiles for molecule')
 
-    try:    
-        C_MF = rdMolDescriptors.CalcMolFormula(mol)
+    try:
         molmassFormula = Formula(C_MF.replace('-', ''))
         C_CHNS = getAtomicComposition(molmassFormula.composition())
     except Exception as e:
-        return (False, False, False, False, False, '', f'{sio.getvalue()}')
+        return (False, False, False, False, False, f'{str(e)}')
     
-    #sSmiles = Chem.MolToSmiles(mol)
     if sSmiles == '':
-        return (False, False, False, False, False, '', 'Empty molfile')
+        return (False, False, False, False, False, 'Empty molfile')
     saRemainderSmile = ''
     saSmileFragments = sSmiles.split('.')
-    saSalts = ''
+    saSmileFragments.sort(key=len, reverse=True)
+    
+    mainMolSmile = sSmiles
+    saltSmile = ''
+    
     if len(saSmileFragments) > 1:
-        saSalts, saRemainderSmile = getSaltLetters(saSmileFragments, chemregDB)
-        if saSalts == False:
-            return (False,
-                    False,
-                    False,
-                    False,
-                    False,
-                    '',
-                    f'Unknown salt {saRemainderSmile}')
-        #for smileFrag in saSmileFragments:
-    if saRemainderSmile != '':
-        resSmiles = saRemainderSmile
-    else:
-        resSmiles = sSmiles
-    #######################
-    ## Old code here
-    mono_iso_mol = Chem.MolFromSmiles(resSmiles)
+        mainMolSmile = saSmileFragments[0]
+        saltSmile = '.'.join(saSmileFragments[1:])
 
     cur.execute(f"""select
-    MolWeight(mol2bin('{molfile}', 'mol')),
-    MolFormula(mol2bin('{molfile}', 'mol')),
-    MolWeight(mol2bin('{resSmiles}', 'smiles'))
+    MolWeight(mol2bin('{sSmiles}', 'smiles')),
+    MolWeight(mol2bin('{mainMolSmile}', 'smiles'))
     """)
     resMolcart = cur.fetchall()
     C_MW = resMolcart[0][0]
-    C_MF = resMolcart[0][1].decode().replace(" ", "")
-    C_MONOISO = resMolcart[0][2]
-    return (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, resSmiles, '')
+    C_MONOISO = resMolcart[0][1]
+    return (C_MF, C_MW, C_MONOISO, C_CHNS, saltSmile, '')
+
 
 @jwtauth
 class CreateSalt(tornado.web.RequestHandler):
@@ -408,7 +367,6 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
          C_MONOISO,
          C_CHNS,
          saSalts,
-         sSmiles,
          errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
         mol = Chem.MolFromMolBlock(molfile)
         
@@ -485,18 +443,17 @@ class ChemRegAddMol(tornado.web.RequestHandler):
          C_MONOISO,
          C_CHNS,
          saSalts,
-         sSmiles,
          errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
 
         if C_MF == False:
             self.set_status(500)
-            self.finish(f'Molfile failed {external_id} {errorMessage} {sSmiles}')
-            logger.error(f'Molfile failed {external_id} {errorMessage} {sSmiles}')
+            self.finish(f'Molfile failed {external_id} {errorMessage}')
+            logger.error(f'Molfile failed {external_id} {errorMessage}')
             return
         if saSalts == False:
             self.set_status(500)
-            self.finish(f'Unknown salt in molfile for {external_id} {errorMessage} {sSmiles}')
-            logger.error(f'Unknown salt in molfile for {external_id} {errorMessage} {sSmiles}')
+            self.finish(f'Unknown salt in molfile for {external_id} {errorMessage}')
+            logger.error(f'Unknown salt in molfile for {external_id} {errorMessage}')
             return
 
         ########################
@@ -624,7 +581,6 @@ class LoadMolfile(tornado.web.RequestHandler):
          C_MONOISO,
          C_CHNS,
          saSalts,
-         sSmiles,
          errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
         if C_MF == False:
             self.set_status(500)

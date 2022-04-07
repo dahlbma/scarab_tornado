@@ -47,7 +47,6 @@ def getCompoundId(sMolfile):
         sCompoundId = x[0]
     except:
         sCompoundId = ''
-        print(sMolfile)
     return sCompoundId
 
 
@@ -65,6 +64,7 @@ sdfilename = 'sdf.sdf'
 sdfilename = 'jcmol_moltable.sdf'
 sdfilename = 'jcmol_moltable_org.sdf'
 sdfilename = 'error2.sdf'
+sdfilename = 'e.sdf'
 f = open(sdfilename, "rb")
 fErr = open("error_standardized.sdf", "w")
 iMols = 0
@@ -85,10 +85,20 @@ while True:
     MolFormula(mol2bin('{sMol}', 'mol')),
     MolWeight(mol2bin('CC', 'smiles'))
     """)
-
-    
     res = cur.fetchall()
     print((res[0][1]).decode())
+
+
+    sSql = f"""select bin2smiles(mol2bin('{sMol}', 'mol'))"""
+    cur.execute(sSql)
+    smile = cur.fetchall()[0][0].decode()
+    
+    
+    sSql = f"""select UNIQUEKEY(mol2bin('{smile}', 'smiles'))"""
+    cur.execute(sSql)
+    curSmiles = cur.fetchall()[0][0].decode()
+    print(curSmiles, 1)
+    
 
     iMols += 1
 
