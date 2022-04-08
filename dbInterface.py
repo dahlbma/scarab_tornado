@@ -203,12 +203,17 @@ def registerNewBatch(bcpvsDB,
 def getMoleculeProperties(self, molfile, chemregDB):
     sSql = f'''select
     bin2smiles(mol2bin('{molfile}'), 'mol') smiles,
-    MolFormula(mol2bin('{molfile}', 'mol'))'''
+    MolFormula(mol2bin('{molfile}', 'mol')),
+    MolWeight(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'))),
+    MolNofMol(mol2bin('{molfile}', 'mol'))
+    '''
     cur.execute(sSql)
     res = cur.fetchall()
     try:
         sSmiles = (res[0][0]).decode()
         C_MF = res[0][1].decode().replace(" ", "")
+        mainFragMolWeight = res[0][2]
+        iNrOfFragments = res[0][3]
     except:
         return (False, False, False, False, False, f'No smiles for molecule')
 
@@ -220,10 +225,20 @@ def getMoleculeProperties(self, molfile, chemregDB):
     
     if sSmiles == '':
         return (False, False, False, False, False, 'Empty molfile')
-    saRemainderSmile = ''
     saSmileFragments = sSmiles.split('.')
-    saSmileFragments.sort(key=len, reverse=True)
-    
+    if len(saSmileFragments) > 1 and iNrOfFragments == len(saSmileFragments):
+        iFragPosition = 0
+        for fragment in saSmileFragments:
+            sSql = f'''select MolWeight(mol2bin(UNIQUEKEY('{fragment}', 'cistrans')))
+            '''
+            cur.execute(sSql)
+            res = cur.fetchall()
+            if res[0][0] == mainFragMolWeight:
+                if iFragPosition != 0:
+                    saSmileFragments[0], saSmileFragments[iFragPosition] = saSmileFragments[iFragPosition], saSmileFragments[0]
+                    break
+            iFragPosition += 1
+
     mainMolSmile = sSmiles
     saltSmile = ''
     
