@@ -294,9 +294,9 @@ class GetLastBatchFromEln(tornado.web.RequestHandler):
     def get(self):
         chemregDB, bcpvsDB = getDatabase(self)
         sEln = self.get_argument("eln")
-        eln_id = sEln[0:5]
+        eln_id = sEln[0:6]
         sSql = f'''select notebook_ref from {bcpvsDB}.batch
-        where notebook_ref like '{eln_id}%\' order by notebook_ref desc'''
+        where notebook_ref like '{eln_id}%' order by notebook_ref desc'''
         cur.execute(sSql)
         cRes = cur.fetchall()
         if len(cRes) > 0:
