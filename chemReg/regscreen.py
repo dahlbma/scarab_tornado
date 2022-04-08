@@ -226,7 +226,8 @@ class RegScreen(QMainWindow):
            self.libraryid_cb.currentText() == '' or \
            self.batchOk == False or \
            self.molOK == False or \
-           self.ip_rights_cb.currentText() == '':
+           self.ip_rights_cb.currentText() == '' or \
+           self.compoundid_lab.text() != '':
             return False
         else:
             return True
@@ -239,16 +240,15 @@ class RegScreen(QMainWindow):
             res = dbInterface.updateBatch(self.token,
                                           self.regno,
                                           sBatch)
-            if res == False:
-                self.regcompound_btn.setEnabled(False)
+            if (res == False) and (self.compoundid_lab.text() == ''):
                 send_msg("Batch Id error", f"That batch is already in use")
             else:
                 self.batchOk = True
 
             if self.allDataPresent():
                 self.regcompound_btn.setEnabled(True)
-        else:
-            self.regcompound_btn.setEnabled(False)
+                return
+        self.regcompound_btn.setEnabled(False)
             
     def molChanged(self):
         if (not self.structure_lab.pixmap().isNull()):# and self.batch_eb.text() not in ('', ' ', None):

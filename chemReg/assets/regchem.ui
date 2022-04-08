@@ -1063,6 +1063,9 @@ border-radius: 5px;</string>
             </item>
             <item>
              <widget class="QPushButton" name="gotorer_btn">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="text">
                <string>Goto Register</string>
               </property>
