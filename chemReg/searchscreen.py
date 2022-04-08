@@ -1,6 +1,7 @@
 import sys, dbInterface, os, logging
 from PyQt5.uic import loadUi
 from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtCore import QTimer
 
 from chemreglib import *
 
@@ -26,7 +27,7 @@ class SearchScreen(QMainWindow):
         self.regnos = None
         self.editregno_btn.setEnabled(False)
         self.editregno_btn.clicked.connect(self.gotoEditRegno)
-        self.editmol_btn.clicked.connect(self.editMolFile)
+        self.openmol_btn.clicked.connect(self.openMolFile)
         
         self.loadsdf_btn.clicked.connect(self.gotoLoadSdf)
         self.back_btn.clicked.connect(self.previousRegno)
@@ -58,10 +59,13 @@ class SearchScreen(QMainWindow):
 
         self.search_search_btn.clicked.connect(self.launch_searchEvent)
 
-    def editMolFile(self):
+    def openMolFile(self):
+        def enable_btn(self):
+            self.openmol_btn.setEnabled(True)
+        self.openmol_btn.setEnabled(False)
+        QTimer.singleShot(5000, lambda: enable_btn(self))
         fname = "tmp.mol" # temp file name
         fname_path = resource_path(fname) # file location / actual file name
-        print(self.regno)
         if self.regno != None:
             # download molfile for selected regno, write to 'tmp.mol'
             tmp_mol_str = dbInterface.getMolFile(self.token,
@@ -70,6 +74,8 @@ class SearchScreen(QMainWindow):
             n = tmp_file.write(tmp_mol_str)
             tmp_file.close()
             open_file(fname_path)
+
+    
 
     def gotoLoadSdf(self):
         loadSDF = LoadSDF(self.token)
@@ -237,10 +243,8 @@ class SearchScreen(QMainWindow):
         
         # Set current values for this regno
         if self.regno != None:
-            try:
-                self.editregno_btn.setEnabled(True)
-            except:
-                pass
+            self.editregno_btn.setEnabled(True)
+            self.openmol_btn.setEnabled(True)
             self.regno_eb.setText(str(self.regno))
             
             createdDate = dbInterface.getTextColumn(self.token,
@@ -376,3 +380,4 @@ class SearchScreen(QMainWindow):
             self.date_lab.setText(None)
             self.structure_lab.clear()
             self.solvent_cb.setCurrentText(' ')
+            self.openmol_btn.setEnabled(False)

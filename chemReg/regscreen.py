@@ -103,6 +103,7 @@ class RegScreen(QMainWindow):
 
         self.loadmol_btn.clicked.connect(self.uploadMolfile)
         self.editmol_btn.clicked.connect(self.editMolFile)
+        self.editmol_btn.setEnabled(True)
 
         #self.editmol_btn.setEnabled(False)
         #self.structure_lab.mouseReleaseEvent = self.editMolFile
@@ -123,6 +124,7 @@ class RegScreen(QMainWindow):
             self.molChanged()      
 
     def editMolFile(self, event=None):
+        self.editmol_btn.setEnabled(False)
         self.fname = "tmp.mol" # temp file name
         self.fname_path = resource_path(self.fname) # file location / actual file name
         if self.structure_lab.pixmap().isNull():
@@ -169,6 +171,8 @@ class RegScreen(QMainWindow):
         os.remove(self.fname_path)
         self.fname = None
         self.fname_path = None
+        print("finish editing")
+        self.editmol_btn.setEnabled(True)
 
     def allDataPresent(self):
         st_sh = "border-style: solid;\nborder-color: rgb(32, 74, 135);\nborder-width: 3px;\nborder-radius: 5px;"
@@ -209,8 +213,10 @@ class RegScreen(QMainWindow):
 
         if self.structure_lab.pixmap().isNull() == True:
             self.structure_lab.setStyleSheet(st_sh)
+            self.editmol_btn.setStyleSheet(st_sh)
         else:
             self.structure_lab.setStyleSheet("background-color: rgb(211, 215, 207); border: 1px solid black;")
+            self.editmol_btn.setStyleSheet("")
 
         if self.submitter_cb.currentText() == '' or \
            self.compoundtype_cb.currentText() == '' or \

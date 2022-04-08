@@ -654,19 +654,9 @@ border: 1px solid black;</string>
              </spacer>
             </item>
             <item>
-             <widget class="QPushButton" name="loadmol_btn">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
+             <widget class="QPushButton" name="openmol_btn">
               <property name="text">
-               <string>Load molfile</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="editmol_btn">
-              <property name="text">
-               <string>Edit</string>
+               <string>Open</string>
               </property>
              </widget>
             </item>
