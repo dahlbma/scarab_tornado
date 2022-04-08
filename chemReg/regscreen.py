@@ -251,7 +251,7 @@ class RegScreen(QMainWindow):
         self.regcompound_btn.setEnabled(False)
             
     def molChanged(self):
-        if (not self.structure_lab.pixmap().isNull()):# and self.batch_eb.text() not in ('', ' ', None):
+        if (not self.structure_lab.pixmap().isNull()):
             self.molOK = True
         else:
             self.molOK = False
@@ -365,7 +365,6 @@ class RegScreen(QMainWindow):
             self.compoundid_lab.setText(compound_id)
 
             if compound_id not in (' ', None, ''):
-                #self.regcompound_btn.setEnabled(True)
                 self.batch_eb.setReadOnly(True)
                 self.regcompound_btn.setEnabled(False)
                 self.editmol_btn.setEnabled(False)
