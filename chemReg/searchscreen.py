@@ -20,10 +20,7 @@ class SearchScreen(QMainWindow):
         self.dirty = False
         self.populated = False
         self.searchingInProgress = False
-        if regno == None:
-            self.regno = None
-        else:
-            self.searchEvent(regno, 'regno')
+        
         self.regnos = None
         self.editregno_btn.setEnabled(False)
         self.editregno_btn.clicked.connect(self.gotoEditRegno)
@@ -34,28 +31,25 @@ class SearchScreen(QMainWindow):
         self.forward_btn.clicked.connect(self.nextRegno)
         self.addmeta_btn.clicked.connect(self.gotoAddMeta)
         
-        self.updateScreen()
+        if regno == None:
+            self.regno = None
+            self.updateScreen()
+        else:
+            self.searchEvent(regno, action='regno')
+        
         self.populated = True
 
         self.regno_search_eb.textChanged.connect(
             lambda: self.clear_search_fields('regno'))
-        #self.regno_search_eb.editingFinished.connect(
-        #    lambda: self.searchEvent(self.regno_search_eb.text(), 'regno'))
 
         self.submitter_search_cb.currentTextChanged.connect(
             lambda: self.clear_search_fields('submitter'))
-        #self.submitter_search_cb.currentTextChanged.connect(
-        #    lambda x: self.searchEvent(x, 'CHEMIST'))
 
         self.compoundid_search_eb.textChanged.connect(
             lambda: self.clear_search_fields('compoundid'))
-        #self.compoundid_search_eb.textChanged.connect(
-        #    lambda: self.searchEvent(self.compoundid_search_eb.text(), 'COMPOUND_ID'))
 
         self.batch_search_eb.textChanged.connect(
             lambda: self.clear_search_fields('batch'))
-        #self.batch_search_eb.editingFinished.connect(
-        #    lambda: self.searchEvent(self.batch_search_eb.text(), 'JPAGE'))
 
         self.search_search_btn.clicked.connect(self.launch_searchEvent)
 
