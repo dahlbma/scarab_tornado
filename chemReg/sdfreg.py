@@ -20,6 +20,7 @@ class LoadSDF(QDialog):
         self.iNrElnIds = None
         self.saElnIds = None
         self.ElnIdsOK = False
+        self.iFreeElnSpace = 0
         loadUi(resource_path("assets/sdfReg.ui"), self)
         self.pbar.setValue(0)
         self.pbar.hide()
@@ -76,6 +77,7 @@ class LoadSDF(QDialog):
         self.show()
     
     def check_fields(self):
+        print(self.iMolCount, self.iFreeElnSpace)
         if self.sdfilename == None or \
              self.submitter_cb.currentText() == '' or \
              self.compoundtype_cb.currentText() == '' or \
@@ -85,7 +87,8 @@ class LoadSDF(QDialog):
              self.producttype_cb.currentText() == '' or \
              self.library_cb.currentText() == '' or \
              self.ElnIdsOK == False or \
-             self.ip_rights_cb.currentText() == '':
+             self.ip_rights_cb.currentText() == '' or \
+             self.iMolCount >= self.iFreeElnSpace:
             self.upload_btn.setEnabled(False)
         else:
             self.upload_btn.setEnabled(True)
@@ -100,10 +103,14 @@ class LoadSDF(QDialog):
         saStrings = sIds.split(' ')
         iElnIdsFound = 0
         pattern = '^[a-zA-Z0-9]{6}$'
-        
+        iFreeElnPages = 0
         for sId in saStrings:
             if len(re.findall(pattern, sId)) == 1:
                 iElnIdsFound += 1
+                iLastPage = dbInterface.getLastBatchOfEln(self.token, sId)
+                iFreeElnPages += 1000 - iLastPage
+                self.iFreeElnSpace = iFreeElnPages
+                print(f'{sId} {iLastPage} {iFreeElnPages} {self.iFreeElnSpace}')
         saStrings = list(set(saStrings))
         if iElnIdsFound == self.iNrElnIds and len(saStrings) == iElnIdsFound:
             self.saElnIds = saStrings
@@ -185,9 +192,6 @@ class LoadSDF(QDialog):
         sCurrentEln = self.saElnIds[iElnId]
         iBatchCount = dbInterface.getLastBatchOfEln(self.token,
                                                     sCurrentEln)
-        if (1000 - iBatchCount) < 900:
-            send_msg("Not enough notebook numbers", f"Only {1000 - iBatchCount} on first notebook page")
-            return
         iSdfSequence = dbInterface.getSdfSequence(self.token)
         self.event_lab.setText('Register in ChemReg')
         while True:
