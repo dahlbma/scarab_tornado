@@ -353,30 +353,51 @@ background-color: rgb(255, 204, 204)
                   <item>
                    <widget class="QComboBox" name="submitter_cb">
                     <property name="styleSheet">
-                     <string notr="true">border-style: solid;
-border-color: rgb(32, 74, 135);
-border-width: 3px;
-border-radius: 5px;</string>
+                     <string notr="true">[ok='false']{
+	border-style: solid;
+	border-color: rgb(32, 74, 135);
+	border-width: 3px;
+	border-radius: 5px;
+}
+
+[ok='true']{}</string>
+                    </property>
+                    <property name="ok" stdset="0">
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QLineEdit" name="batch_eb">
                     <property name="styleSheet">
-                     <string notr="true">border-style: solid;
-border-color: rgb(32, 74, 135);
-border-width: 3px;
-border-radius: 5px;</string>
+                     <string notr="true">[ok='false']{
+	border-style: solid;
+	border-color: rgb(32, 74, 135);
+	border-width: 3px;
+	border-radius: 5px;
+}
+
+[ok='true']{}</string>
+                    </property>
+                    <property name="ok" stdset="0">
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QComboBox" name="project_cb">
                     <property name="styleSheet">
-                     <string notr="true">border-style: solid;
-border-color: rgb(32, 74, 135);
-border-width: 3px;
-border-radius: 5px;</string>
+                     <string notr="true">[ok='false']{
+	border-style: solid;
+	border-color: rgb(32, 74, 135);
+	border-width: 3px;
+	border-radius: 5px;
+}
+
+[ok='true']{}</string>
+                    </property>
+                    <property name="ok" stdset="0">
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
@@ -457,30 +478,51 @@ border-radius: 5px;</string>
                 <item>
                  <widget class="QComboBox" name="compoundtype_cb">
                   <property name="styleSheet">
-                   <string notr="true">border-style: solid;
-border-color: rgb(32, 74, 135);
-border-width: 3px;
-border-radius: 5px;</string>
+                   <string notr="true">[ok='false']{
+	border-style: solid;
+	border-color: rgb(32, 74, 135);
+	border-width: 3px;
+	border-radius: 5px;
+}
+
+[ok='true']{}</string>
+                  </property>
+                  <property name="ok" stdset="0">
+                   <bool>false</bool>
                   </property>
                  </widget>
                 </item>
                 <item>
                  <widget class="QComboBox" name="product_cb">
                   <property name="styleSheet">
-                   <string notr="true">border-style: solid;
-border-color: rgb(32, 74, 135);
-border-width: 3px;
-border-radius: 5px;</string>
+                   <string notr="true">[ok='false']{
+	border-style: solid;
+	border-color: rgb(32, 74, 135);
+	border-width: 3px;
+	border-radius: 5px;
+}
+
+[ok='true']{}</string>
+                  </property>
+                  <property name="ok" stdset="0">
+                   <bool>false</bool>
                   </property>
                  </widget>
                 </item>
                 <item>
                  <widget class="QComboBox" name="libraryid_cb">
                   <property name="styleSheet">
-                   <string notr="true">border-style: solid;
-border-color: rgb(32, 74, 135);
-border-width: 3px;
-border-radius: 5px;</string>
+                   <string notr="true">[ok='false']{
+	border-style: solid;
+	border-color: rgb(32, 74, 135);
+	border-width: 3px;
+	border-radius: 5px;
+}
+
+[ok='true']{}</string>
+                  </property>
+                  <property name="ok" stdset="0">
+                   <bool>false</bool>
                   </property>
                  </widget>
                 </item>
@@ -567,15 +609,24 @@ border-radius: 5px;</string>
              <enum>Qt::ClickFocus</enum>
             </property>
             <property name="styleSheet">
-             <string notr="true">background-color: rgb(211, 215, 207); 
-
-border: 3px solid rgb(32, 74, 135);</string>
+             <string notr="true">[ok='false']{
+	background-color: rgb(211, 215, 207); 
+	border: 3px solid rgb(32, 74, 135);
+}
+[ok='true']{
+	background-color: rgb(211, 215, 207);
+	border: 1px solid black;
+}
+</string>
             </property>
             <property name="frameShape">
              <enum>QFrame::NoFrame</enum>
             </property>
             <property name="text">
              <string/>
+            </property>
+            <property name="ok" stdset="0">
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -610,10 +661,20 @@ border: 3px solid rgb(32, 74, 135);</string>
             <item>
              <widget class="QPushButton" name="editmol_btn">
               <property name="styleSheet">
-               <string notr="true">border: 3px solid rgb(32, 74, 135);</string>
+               <string notr="true">[ok='false']{
+	border-style: solid;
+	border-color: rgb(32, 74, 135);
+	border-width: 3px;
+	border-radius: 5px;
+}
+
+[ok='true']{}</string>
               </property>
               <property name="text">
                <string>Edit</string>
+              </property>
+              <property name="ok" stdset="0">
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -940,10 +1001,17 @@ border: 3px solid rgb(32, 74, 135);</string>
                <enum>Qt::StrongFocus</enum>
               </property>
               <property name="styleSheet">
-               <string notr="true">border-style: solid;
-border-color: rgb(32, 74, 135);
-border-width: 3px;
-border-radius: 5px;</string>
+               <string notr="true">[ok='false']{
+	border-style: solid;
+	border-color: rgb(32, 74, 135);
+	border-width: 3px;
+	border-radius: 5px;
+}
+
+[ok='true']{}</string>
+              </property>
+              <property name="ok" stdset="0">
+               <bool>false</bool>
               </property>
              </widget>
             </item>

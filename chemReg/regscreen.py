@@ -176,49 +176,33 @@ class RegScreen(QMainWindow):
         self.editmol_btn.setEnabled(True)
 
     def allDataPresent(self):
-        st_sh = "border-style: solid;\nborder-color: rgb(32, 74, 135);\nborder-width: 3px;\nborder-radius: 5px;"
-        if self.submitter_cb.currentText() == ' ':
-            self.submitter_cb.setStyleSheet(st_sh)
-        else:
-            self.submitter_cb.setStyleSheet("")
-        
-        if self.compoundtype_cb.currentText() == ' ':
-            self.compoundtype_cb.setStyleSheet(st_sh)
-        else:
-            self.compoundtype_cb.setStyleSheet("")
-        
-        if self.project_cb.currentText() == ' ':
-            self.project_cb.setStyleSheet(st_sh)
-        else:
-            self.project_cb.setStyleSheet("")
-        
-        if self.product_cb.currentText() == ' ':
-            self.product_cb.setStyleSheet(st_sh)
-        else:
-            self.product_cb.setStyleSheet("")
-        
-        if self.libraryid_cb.currentText() == ' ':
-            self.libraryid_cb.setStyleSheet(st_sh)
-        else:
-            self.libraryid_cb.setStyleSheet("")
-        
-        if self.batchOk == False:
-            self.batch_eb.setStyleSheet(st_sh)
-        else:
-            self.batch_eb.setStyleSheet("")
-        
-        if self.ip_rights_cb.currentText() == ' ':
-            self.ip_rights_cb.setStyleSheet(st_sh)
-        else:
-            self.ip_rights_cb.setStyleSheet("")
 
-        if self.structure_lab.pixmap().isNull() == True:
-            self.structure_lab.setStyleSheet(st_sh)
-            self.editmol_btn.setStyleSheet(st_sh)
-        else:
-            self.structure_lab.setStyleSheet("background-color: rgb(211, 215, 207); border: 1px solid black;")
-            self.editmol_btn.setStyleSheet("")
+        self.submitter_cb.setProperty("ok", self.submitter_cb.currentText() != ' ')
+        self.submitter_cb.style().polish(self.submitter_cb)
 
+        self.compoundtype_cb.setProperty("ok", self.compoundtype_cb.currentText() != ' ')
+        self.compoundtype_cb.style().polish(self.compoundtype_cb)
+
+        self.project_cb.setProperty("ok", self.project_cb.currentText() != ' ')
+        self.project_cb.style().polish(self.project_cb)
+
+        self.product_cb.setProperty("ok", self.product_cb.currentText() != ' ')
+        self.product_cb.style().polish(self.product_cb)
+
+        self.libraryid_cb.setProperty("ok", self.libraryid_cb.currentText() != ' ')
+        self.libraryid_cb.style().polish(self.libraryid_cb)
+
+        self.batch_eb.setProperty("ok", self.batchOk)
+        self.batch_eb.style().polish(self.batch_eb)
+
+        self.ip_rights_cb.setProperty("ok", self.ip_rights_cb.currentText() != ' ')
+        self.ip_rights_cb.style().polish(self.ip_rights_cb)
+
+        self.structure_lab.setProperty("ok", self.molOK)
+        self.structure_lab.style().polish(self.structure_lab)
+        self.editmol_btn.setProperty("ok", self.molOK)
+        self.editmol_btn.style().polish(self.editmol_btn)
+        
         if self.submitter_cb.currentText() == ' ' or \
            self.compoundtype_cb.currentText() == ' ' or \
            self.project_cb.currentText() == ' ' or \
