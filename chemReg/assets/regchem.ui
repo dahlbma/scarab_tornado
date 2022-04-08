@@ -609,6 +609,9 @@ border: 3px solid rgb(32, 74, 135);</string>
             </item>
             <item>
              <widget class="QPushButton" name="editmol_btn">
+              <property name="styleSheet">
+               <string notr="true">border: 3px solid rgb(32, 74, 135);</string>
+              </property>
               <property name="text">
                <string>Edit</string>
               </property>

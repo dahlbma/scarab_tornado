@@ -69,6 +69,10 @@ class RegScreen(QMainWindow):
 
         #### Batch
         self.batch_eb.textChanged.connect(self.batchChanged)
+        if regno != None:
+            self.batchChanged()
+            self.molChanged()
+        
 
         self.chrom_text.textChanged.connect(
             lambda: self.changeEvent(self.chrom_text.toPlainText(), 'CHROM_TEXT'))
@@ -120,7 +124,6 @@ class RegScreen(QMainWindow):
             res, sMessage = postMolFile(self, fname[0], self.regno, logging.getLogger(self.mod_name))
             displayMolfile(self)
             updateMoleculeProperties(self)
-            self.molOK = True
             self.molChanged()      
 
     def editMolFile(self, event=None):
@@ -161,7 +164,6 @@ class RegScreen(QMainWindow):
             displayMolfile(self)
             updateMoleculeProperties(self)
             ok_msg.setText("Updated .mol file")
-            self.molOK = True
             self.molChanged()
         else:
             # cancel, do nothing
@@ -171,7 +173,6 @@ class RegScreen(QMainWindow):
         os.remove(self.fname_path)
         self.fname = None
         self.fname_path = None
-        print("finish editing")
         self.editmol_btn.setEnabled(True)
 
     def allDataPresent(self):
@@ -250,10 +251,16 @@ class RegScreen(QMainWindow):
             self.regcompound_btn.setEnabled(False)
             
     def molChanged(self):
-        if self.allDataPresent() and (not self.structure_lab.pixmap().isNull()) and self.batch_eb.text() not in ('', ' ', None):
-                self.regcompound_btn.setEnabled(True)
+        if (not self.structure_lab.pixmap().isNull()):# and self.batch_eb.text() not in ('', ' ', None):
+            self.molOK = True
+        else:
+            self.molOK = False
+        
+        if self.allDataPresent():
+            self.regcompound_btn.setEnabled(True)
         else:
             self.regcompound_btn.setEnabled(False)
+
         
     def changeEvent(self, value='', action='doNothing'):
         if action == 'doNothing':
