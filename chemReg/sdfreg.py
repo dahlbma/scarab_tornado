@@ -77,7 +77,6 @@ class LoadSDF(QDialog):
         self.show()
     
     def check_fields(self):
-        print(self.iMolCount, self.iFreeElnSpace)
         if self.sdfilename == None or \
              self.submitter_cb.currentText() == '' or \
              self.compoundtype_cb.currentText() == '' or \
@@ -110,7 +109,6 @@ class LoadSDF(QDialog):
                 iLastPage = dbInterface.getLastBatchOfEln(self.token, sId)
                 iFreeElnPages += 1000 - iLastPage
                 self.iFreeElnSpace = iFreeElnPages
-                print(f'{sId} {iLastPage} {iFreeElnPages} {self.iFreeElnSpace}')
         saStrings = list(set(saStrings))
         if iElnIdsFound == self.iNrElnIds and len(saStrings) == iElnIdsFound:
             self.saElnIds = saStrings
