@@ -225,7 +225,11 @@ def getMoleculeProperties(self, molfile, chemregDB):
     
     if sSmiles == '':
         return (False, False, False, False, False, 'Empty molfile')
-    saSmileFragments = sSmiles.split('.')
+    if iNrOfFragments > 1:
+        saSmileFragments = sSmiles.split('.')
+    else:
+        saSmileFragments = [sSmiles]
+
     if len(saSmileFragments) > 1 and iNrOfFragments == len(saSmileFragments):
         iFragPosition = 0
         for fragment in saSmileFragments:
@@ -235,7 +239,8 @@ def getMoleculeProperties(self, molfile, chemregDB):
             res = cur.fetchall()
             if res[0][0] == mainFragMolWeight:
                 if iFragPosition != 0:
-                    saSmileFragments[0], saSmileFragments[iFragPosition] = saSmileFragments[iFragPosition], saSmileFragments[0]
+                    saSmileFragments[0],
+                    saSmileFragments[iFragPosition] = saSmileFragments[iFragPosition], saSmileFragments[0]
                     break
             iFragPosition += 1
 
@@ -243,6 +248,7 @@ def getMoleculeProperties(self, molfile, chemregDB):
     saltSmile = ''
     
     if len(saSmileFragments) > 1:
+        print(f'len(saSmileFragments): {len(saSmileFragments)}')
         mainMolSmile = saSmileFragments[0]
         saltSmile = '.'.join(saSmileFragments[1:])
 
@@ -253,6 +259,8 @@ def getMoleculeProperties(self, molfile, chemregDB):
     resMolcart = cur.fetchall()
     C_MW = resMolcart[0][0]
     C_MONOISO = resMolcart[0][1]
+    if C_MONOISO == None:
+        C_MONOISO = C_MW
     return (C_MF, C_MW, C_MONOISO, C_CHNS, saltSmile, '')
 
 
@@ -459,7 +467,8 @@ class ChemRegAddMol(tornado.web.RequestHandler):
          C_CHNS,
          saSalts,
          errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
-
+        if saSalts == None:
+            saSalts = ''
         if C_MF == False:
             self.set_status(500)
             self.finish(f'Molfile failed {external_id} {errorMessage}')

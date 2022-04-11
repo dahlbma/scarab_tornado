@@ -148,7 +148,7 @@ if copyTable(engineBCPVS, 'bcpvs.batch', 'batch'):
     cur.execute("ALTER TABLE bcpvs.batch Modify column supplier_batch varchar(100)")
     cur.execute("ALTER TABLE bcpvs.batch Modify column chemspec_regno varchar(16)")
 
-    cur.execute("ALTER TABLE bcpvs.batch ADD COLUMN suffix varchar(20)")
+    cur.execute("ALTER TABLE bcpvs.batch ADD COLUMN suffix varchar(100)")
     
     """ These batches have 2 entries
     BC9614001
