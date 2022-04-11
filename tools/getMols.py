@@ -38,7 +38,7 @@ def getTable(sSchema, sTable, lCols):
     except:
         pass
     
-    sST = sSchema + '.' + sTable
+    sST = "1_" + sSchema + '.' + sTable
     sdfile = open(sFileName, 'a')
     sCols = ','.join(lCols)
     sSql = f'''select {sCols} from {sST} where compound_id in (
