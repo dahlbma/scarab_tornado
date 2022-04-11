@@ -42,9 +42,29 @@ def getTable(sSchema, sTable, lCols):
     sdfile = open(sFileName, 'a')
     sCols = ','.join(lCols)
     sSql = f'''select {sCols} from {sST} where compound_id in (
-'CBK664927',
-'CBK664926',
-'CBK664925')
+'CBK018515',
+'CBK020462',
+'CBK020871',
+'CBK021853',
+'CBK022431',
+'CBK024214G',
+'CBK023911G',
+'CBK041319K',
+'CBK041452',
+'CBK041201G',
+'CBK041317C',
+'CBK041610',
+'CBK042162N',
+'CBK042167G',
+'CBK042008',
+'CBK063183C',
+'CBK040993',
+'CBK003680',
+'CBK003682',
+'CBK200591N',
+'CBK201086N',
+'CBK042000H',
+'CBK201096')
  '''
     cur.execute(sSql)
     s = True
