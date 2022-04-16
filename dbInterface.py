@@ -239,8 +239,7 @@ def getMoleculeProperties(self, molfile, chemregDB):
             res = cur.fetchall()
             if res[0][0] == mainFragMolWeight:
                 if iFragPosition != 0:
-                    saSmileFragments[0],
-                    saSmileFragments[iFragPosition] = saSmileFragments[iFragPosition], saSmileFragments[0]
+                    saSmileFragments[0], saSmileFragments[iFragPosition] = saSmileFragments[iFragPosition], saSmileFragments[0]
                     break
             iFragPosition += 1
 
@@ -248,7 +247,6 @@ def getMoleculeProperties(self, molfile, chemregDB):
     saltSmile = ''
     
     if len(saSmileFragments) > 1:
-        print(f'len(saSmileFragments): {len(saSmileFragments)}')
         mainMolSmile = saSmileFragments[0]
         saltSmile = '.'.join(saSmileFragments[1:])
 
