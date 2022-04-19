@@ -13,6 +13,7 @@ from molmass import Formula
 from io import StringIO
 import sys
 import codecs
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -197,7 +198,12 @@ def registerNewBatch(bcpvsDB,
     '{supplier_batch}',
     {chemreg_regno})
     '''
-    cur.execute(sSql)
+    try:
+        cur.execute(sSql)
+    except Exception as e:
+        logger.error(f"{sSql}")
+        logger.error(f"{str(e)}")        
+
 
 
 def getMoleculeProperties(self, molfile, chemregDB):
@@ -390,18 +396,19 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
          saSalts,
          errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
         mol = Chem.MolFromMolBlock(molfile)
-        
         if compound_id in ('', None):
             mols = checkUniqueStructure(molfile, bcpvsDB)
             if mols == False:
                 logger.error(f'Error in molfile for regno {self.regno}')
                 return False
+
             if len(mols) != 0:
                 compound_id = mols[0][0]
                 compound_id_numeric = compound_id[3:]
             else:
                 # Register a new compound
                 compound_id_numeric = getNewCompoundId(bcpvsDB)
+
                 compound_id = registerNewCompound(bcpvsDB,
                                                   compound_id_numeric,
                                                   molfile,
@@ -448,6 +455,8 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         solvent = self.get_body_argument('solvent')
         product = self.get_body_argument('product')
         library_id = self.get_body_argument('library_id')
+        sLib = re.search(r"(Lib-\d\d\d\d)", library_id)
+        library_id = sLib.group()
         external_id = self.get_body_argument('external_id')
         supplier_batch = self.get_body_argument('supplier_batch')
         purity = self.get_body_argument('purity')
@@ -700,6 +709,10 @@ class UpdateColumn(tornado.web.RequestHandler):
         value = self.get_argument("value")
         regno = self.get_argument("regno")
         values = (value, regno, )
+        if column == 'library_id':
+            sLib = re.search(r"(Lib-\d\d\d\d)", value)
+            value = sLib.group()
+
         sSql = f"""update {chemregDB}.chem_info set {column} = '{value}'
         where regno = {regno}"""
         cur.execute(sSql)
@@ -768,8 +781,8 @@ class GetColComboData(tornado.web.RequestHandler):
         elif column == 'solvent':
             sSql = "SELECT solvent FROM chemspec.solvent_tbl order by solvent"
         elif column == 'library_id':
-            sSql = f"""SELECT library_name FROM {bcpvsDB}.compound_library
-                      order by library_name"""
+            sSql = f"""SELECT concat(library_name, " ", description) as library_name
+                       FROM {bcpvsDB}.compound_library order by library_name"""
         elif column == 'library_description':
             sSql = f"""SELECT description FROM {bcpvsDB}.compound_library
                       order by description"""
@@ -783,6 +796,11 @@ class GetLibraryName(tornado.web.RequestHandler):
     def get(self):
         chemregDB, bcpvsDB = getDatabase(self)
         library_id = self.get_argument("library_id")
+        sLib = re.search(r"(Lib-\d\d\d\d)", library_id)
+        if sLib == None:
+            self.write(b'[]')
+            return
+        library_id = sLib.group()
         sSql = f"""SELECT description FROM {bcpvsDB}.compound_library
                   where library_name = '{library_id}'"""
         cur.execute(sSql)
