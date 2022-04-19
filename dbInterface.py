@@ -454,7 +454,7 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         ip_rights = self.get_body_argument('ip_rights')
         sdfile_sequence = self.get_body_argument('sdfile_sequence')
 
-        if " 0  0  0     0  0      " in molfile:
+        if "0  0  0     0  0            999 V2" in molfile:
             self.set_status(500)
             self.finish(f'Nostruct for jpage: {jpage}')
             return
