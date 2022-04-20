@@ -570,7 +570,7 @@ if copyTable(engineLOCTREE, 'loctree.subpositions', 'subpositions'):
 
 cur.execute("""CREATE INDEX parent_idx ON loctree.locations (parent)""")
 cur.execute("""CREATE INDEX loctype_idx ON loctree.locations (type_id)""")
-cur.execute("""CREATE INDEX glassloaction_idx glass.vial (location)""")
+cur.execute("""CREATE INDEX glassloaction_idx ON glass.vial (location)""")
 ################################################
 # MICROTUBE tables
 
