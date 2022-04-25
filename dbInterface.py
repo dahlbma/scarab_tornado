@@ -884,3 +884,56 @@ class UploadBinary(tornado.web.RequestHandler):
         output_file = open(bin_file, 'wb')
         output_file.write(file1['body'])
         output_file.close()
+
+class GetChemRegBinary(tornado.web.RequestHandler):
+    def post(self):
+        pass
+
+    def get(self, os_name):
+        bin_file = ""
+        if os_name == 'Windows':
+            bin_file = f'dist/{os_name}/ch.exe'
+        elif os_name == 'Linux':
+            bin_file = f'dist/{os_name}/ch'
+        elif os_name == 'Darwin':
+            bin_file = f'dist/{os_name}/ch'
+        else:
+            # unsupported OS
+            self.set_status(500)
+            self.write({'message': 'OS not supported'})
+            return
+        try:
+            with open(bin_file, 'rb') as f:
+                logging.info("sending bin file")
+                self.set_status(200)
+                self.write(f.read())
+        except Exception as e:
+            logging.error(f"Did not send bin file, error: {str(e)}")
+
+class getVersionData(tornado.web.RequestHandler):
+    def post(self):
+        pass
+
+    def get(self):
+        try:
+            with open('./ver.dat', 'r') as f:
+                self.write(json.load(f))
+                return
+        except Exception as e:
+            logging.error(str(e))
+            self.set_status(500)
+            self.write({'message': 'ver.dat not available'})
+
+@jwtauth
+class UploadVersionNo(tornado.web.RequestHandler):
+    def post(self, *args, **kwargs):
+        ver_no = self.get_argument("ver_no")
+        ver_file = "ver.dat"
+
+        with open(ver_file, "r") as f:
+            data = json.load(f)
+        
+        data["version"] = ver_no
+
+        with open(ver_file, "w") as f:
+            json.dump(data, f)

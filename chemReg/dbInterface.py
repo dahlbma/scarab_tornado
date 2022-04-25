@@ -204,3 +204,17 @@ def uploadBinary(token, os_name, file):
         return r.content.decode(), False
     else:
         return r.content.decode(), True
+
+def getChemRegBinary(os_name):
+    r = requests.get(f'{baseUrl}getChemRegBinary/{os_name}',
+                     stream=True) # fetch cello dist
+    return r
+
+def uploadVersionNo(token, ver_no):
+    r = requests.post(f'{baseUrl}getVersionData',
+                      data = {'ver_no':ver_no},
+                      headers = {'token':token}) # get file version
+    if r.status_code != 200:
+        return r.content.decode(), False
+    else:
+        return r.content.decode(), True
