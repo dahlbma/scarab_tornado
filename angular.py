@@ -186,7 +186,9 @@ def make_app():
         (r"/getChemRegBinary/(?P<os_name>[^\/]+)", dbInterface.GetChemRegBinary), # upload
         (r"/uploadVersionNo", dbInterface.UploadVersionNo),
         (r"/uploadLauncher", dbInterface.UploadLauncher), # upload
-        (r"/getChemRegLauncher/(?P<os_name>[^\/]+)", dbInterface.GetChemRegLauncher)
+        (r"/getChemRegLauncher/Windows", web.StaticFileHandler, {"path": "dist/Windows/chemreg.exe"}),
+        (r"/getChemRegLauncher/Linux", web.StaticFileHandler, {"path": "dist/Linux/chemreg"}),
+        (r"/getChemRegLauncher/Darwin", web.StaticFileHandler, {"path": "dist/Darwin/chemreg"})
     ], **settings)
 
 if __name__ == "__main__":
