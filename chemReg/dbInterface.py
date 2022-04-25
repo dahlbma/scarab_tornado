@@ -218,3 +218,13 @@ def uploadVersionNo(token, ver_no):
         return r.content.decode(), False
     else:
         return r.content.decode(), True
+
+def uploadLauncher(token, os_name, file):
+    r = requests.post(f'{baseUrl}uploadLauncher',
+                      data = {'os_name':os_name},
+                      headers = {'token':token},
+                      files = {'file':file})
+    if r.status_code != 200:
+        return r.content.decode(), False
+    else:
+        return r.content.decode(), True

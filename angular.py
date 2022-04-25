@@ -184,7 +184,9 @@ def make_app():
         (r"/getChemRegBin", getChemRegBin), # dbInterface.
         (r"/uploadBinary", dbInterface.UploadBinary), # upload
         (r"/getChemRegBinary/(?P<os_name>[^\/]+)", dbInterface.GetChemRegBinary), # upload
-        (r"/uploadVersionNo", dbInterface.UploadVersionNo)
+        (r"/uploadVersionNo", dbInterface.UploadVersionNo),
+        (r"/uploadLauncher", dbInterface.UploadLauncher), # upload
+        (r"/getChemRegLauncher/(?P<os_name>[^\/]+)", dbInterface.GetChemRegLauncher)
     ], **settings)
 
 if __name__ == "__main__":
