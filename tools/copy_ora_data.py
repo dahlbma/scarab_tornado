@@ -148,7 +148,7 @@ if copyTable(engineBCPVS, 'bcpvs.batch', 'batch'):
     cur.execute("ALTER TABLE bcpvs.batch Modify column supplier_batch varchar(100)")
     cur.execute("ALTER TABLE bcpvs.batch Modify column chemspec_regno varchar(16)")
 
-    cur.execute("ALTER TABLE bcpvs.batch ADD COLUMN suffix varchar(20)")
+    cur.execute("ALTER TABLE bcpvs.batch ADD COLUMN suffix varchar(100)")
     
     """ These batches have 2 entries
     BC9614001
@@ -568,6 +568,9 @@ if copyTable(engineLOCTREE, 'loctree.subpositions', 'subpositions'):
         print(str(e))
         print('Error creating index on loctree.subpositions')
 
+cur.execute("""CREATE INDEX parent_idx ON loctree.locations (parent)""")
+cur.execute("""CREATE INDEX loctype_idx ON loctree.locations (type_id)""")
+cur.execute("""CREATE INDEX glassloaction_idx ON glass.vial (location)""")
 ################################################
 # MICROTUBE tables
 

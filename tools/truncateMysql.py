@@ -29,6 +29,9 @@ truncateTable("chem_reg.chem_info_mol_key")
 truncateTable("chem_reg.chem_info_mol_ukey")
 truncateTable("chem_reg.chemreg_dist")
 truncateTable("chem_reg.tmp_mol")
+
+truncateTable("bcpvs.JCMOL_MOLTABLE_ukey")
+
 quit()
 
 truncateTable("bcpvs.JCMOL_MOLTABLE_MOL_keysim")
