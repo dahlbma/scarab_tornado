@@ -28,7 +28,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='ch.exe',
+    name='ch',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
