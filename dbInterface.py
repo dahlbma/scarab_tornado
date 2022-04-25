@@ -953,11 +953,11 @@ class UploadLauncher(tornado.web.RequestHandler):
 
         bin_file = ""
         if os_name == 'Windows':
-            bin_file = f'dist/{os_name}/chemreg.exe'
+            bin_file = f'dist/launchers/{os_name}/chemreg.exe'
         elif os_name == 'Linux':
-            bin_file = f'dist/{os_name}/chemreg'
+            bin_file = f'dist/launchers/{os_name}/chemreg'
         elif os_name == 'Darwin':
-            bin_file = f'dist/{os_name}/chemreg'
+            bin_file = f'dist/launchers/{os_name}/chemreg'
         else:
             # unsupported OS
             self.set_status(500)
@@ -967,28 +967,3 @@ class UploadLauncher(tornado.web.RequestHandler):
         output_file = open(bin_file, 'wb')
         output_file.write(file1['body'])
         output_file.close()
-
-class GetChemRegLauncher(tornado.web.RequestHandler):
-    def post(self):
-        pass
-
-    def get(self, os_name):
-        launcher_file = ""
-        if os_name == 'Windows':
-            launcher_file = f'dist/{os_name}/chemreg.exe'
-        elif os_name == 'Linux':
-            launcher_file = f'dist/{os_name}/chemreg'
-        elif os_name == 'Darwin':
-            launcher_file = f'dist/{os_name}/chemreg'
-        else:
-            # unsupported OS
-            self.set_status(500)
-            self.write({'message': 'OS not supported'})
-            return
-        try:
-            with open(launcher_file, 'rb') as f:
-                logging.info("sending launcher file")
-                self.set_status(200)
-                self.write(f.read())
-        except Exception as e:
-            logging.error(f"Did not send launcher file, error: {str(e)}")
