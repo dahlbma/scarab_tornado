@@ -194,3 +194,13 @@ def bcpvsRegCompound(token, sReg):
                      params={'regno': sReg},
                      headers={'token': token})
     return r.content
+
+def uploadBinary(token, os_name, file):
+    r = requests.post(f'{baseUrl}uploadBinary',
+                      data = {'os_name':os_name},
+                      headers = {'token':token},
+                      files = {'file':file})
+    if r.status_code != 200:
+        return r.content.decode(), False
+    else:
+        return r.content.decode(), True

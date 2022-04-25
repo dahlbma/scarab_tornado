@@ -181,7 +181,8 @@ def make_app():
         (r"/getCompound", dbInterface.GetCompound),
         (r"/mols/(.*)", web.StaticFileHandler, {"path": "mols/"}),
         (r"/getVersionData", getVersionData), # dbInterface.
-        (r"/getChemRegBin", getChemRegBin) # dbInterface.
+        (r"/getChemRegBin", getChemRegBin), # dbInterface.
+        (r"/uploadBinary", dbInterface.UploadBinary) # upload
     ], **settings)
 
 if __name__ == "__main__":

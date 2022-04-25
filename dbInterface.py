@@ -829,3 +829,33 @@ class GetDatabase(tornado.web.RequestHandler):
     def get(self):
         sRes = json.dumps([['Live'], ['Test']])
         self.finish(sRes)
+
+@jwtauth
+class UploadBinary(tornado.web.RequestHandler):
+    def post(self, *args, **kwargs):
+        os_name = self.get_argument("os_name")
+
+        try:
+            # self.request.files['file'][0]:
+            # {'body': 'Label Automator ___', 'content_type': u'text/plain', 'filename': u'k.txt'}
+            file1 = self.request.files['file'][0]
+        except:
+            logging.error("Error cant find file1 in the argument list")
+            return
+
+        bin_file = ""
+        if os_name == 'Windows':
+            bin_file = f'dist/{os_name}/ch.exe'
+        elif os_name == 'Linux':
+            bin_file = f'dist/{os_name}/ch'
+        elif os_name == 'Darwin':
+            bin_file = f'dist/{os_name}/ch'
+        else:
+            # unsupported OS
+            self.set_status(500)
+            self.write({'message': 'OS not supported'})
+            return
+        
+        output_file = open(bin_file, 'wb')
+        output_file.write(file1['body'])
+        output_file.close()
