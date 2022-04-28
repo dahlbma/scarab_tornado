@@ -670,6 +670,18 @@ if copyTable(engineCOOL, 'cool.config', 'config'):
     cur.execute("ALTER TABLE cool.config Modify column well varchar(10)")
     cur.execute("ALTER TABLE cool.config Modify column compound_id varchar(26) CHARACTER SET utf8 COLLATE utf8_bin")
     cur.execute("ALTER TABLE cool.config Modify column notebook_ref varchar(42)")
+
+
+    cur.execute("""SET foreign_key_checks = 0""")
+    cur.execute("""ALTER TABLE cool.config
+                   ADD FOREIGN KEY (notebook_ref) REFERENCES bcpvs.batch(notebook_ref)""")
+    cur.execute("""ALTER TABLE cool.config
+                   ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
+    cur.execute("""SET foreign_key_checks = 1""")
+
+    cur.execute("""CREATE UNIQUE INDEX config_well_idx on cool.config(config_id, well)""")
+
+
 ##
 
 if copyTable(engineCOOL, 'cool.config_key', 'config_key'):
