@@ -1,0 +1,38 @@
+1. Drop all the old beehive tables in mysql with:
+python dropMysql.py
+
+2. Truncate the chemReg tables in mysql with:
+python truncateMysql.py
+
+3. Create and copy the Oracle data to mysql with:
+python copy_ora_data.py
+
+4. Create sdf-files for all the molecule data with:
+python getBeeHiveSDFiles.py
+
+5. Remove BVT016996C from bcpvs_jcmol_moltable.sdf and bcpvs_jcsepmol_moltable.sdf
+   copy bcpvs_jcsepmol_moltable.sdf to jcmol_moltable.sdf
+
+6. Create the chemical table in scarab:
+sudo bash
+ln -s  /home/mysql_data/mysql.sock /var/run/mysqld/mysqld.sock
+/usr/local/icm/icm64 -icmdb
+
+s = 'password'
+connect icmdb 'administrator' s
+load icmdb mol "/home/mats.dahlberg/scarab_data/scarab_tornado/tools/jcmol_moltable.sdf" "Databases/localhost" "bcpvs" "BeeHive/Compound"
+
+7. Start a mysql shell and create the bcpvs.JCMOL_MOLTABLE_ukey data:
+mysql -u root -p
+insert into bcpvs.JCMOL_MOLTABLE_ukey
+(select compound_id, uniquekey(`mol`) as molkey,
+uniquekey(`mol`,'nostereo') as molkeyns,
+uniquekey(`mol`,'cistrans') as molkeyct
+from bcpvs.JCMOL_MOLTABLE);
+
+alter table bcpvs.JCMOL_MOLTABLE_ukey add constraint `JCMOL_MOLTABLE_MOL_ukey_FK` foreign key (`COMPOUND_ID`) references `bcpvs`.`JCMOL_MOLTABLE_MOL`(`COMPOUND_ID`) on delete cascade on update cascade;
+
+8. If there are no indexes on bcpvs.JCMOL_MOLTABLE_ukey:
+create index `JCMOL_MOLTABLE_ukey_idx1` on bcpvs.JCMOL_MOLTABLE_ukey (molkey(255));
+create index `JCMOL_MOLTABLE_ukey_idx2` on bcpvs.JCMOL_MOLTABLE_ukey (molkeyns(255));
+create index `JCMOL_MOLTABLE_ukey_idx3` on bcpvs.JCMOL_MOLTABLE_ukey (molkeyct(255));
