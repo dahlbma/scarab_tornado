@@ -124,12 +124,13 @@ if copyTable(engineBCPVS, 'bcpvs.compound', 'compound'):
     except Exception as e:
         print('Faile to create index on bcpvs.compound ' + str(e))
 
+    try:
         cur.execute(f'''CREATE TABLE bcpvs.compound_id_sequence (
         pkey int NOT NULL,
         PRIMARY KEY (pkey))''')
         cur.execute(f'''insert into bcpvs.compound_id_sequence set pkey = 600000''')
- 
-    
+    except:
+        cur.execute(f'''update bcpvs.compound_id_sequence set pkey = 600000''')
 ##
 
 if copyTable(engineBCPVS, 'bcpvs.batch', 'batch'):
@@ -204,6 +205,9 @@ if copyTable(engineBCPVS, 'bcpvs.compound_library', 'compound_library'):
         cur.execute("""ALTER TABLE bcpvs.compound_library CHANGE pkey pkey bigint AUTO_INCREMENT PRIMARY KEY""")
     except Exception as e:
         print('Faile to create index on bcpvs.compound_library ' + str(e))
+        
+    cur.execute("""update bcpvs.library_id_sequence set pkey = 3000""")
+
 ##
 if copyTable(engineBCPVS, 'bcpvs.compound_suppliers', 'compound_suppliers'):
     cur.execute("ALTER TABLE bcpvs.compound_suppliers Modify column name varchar(40)")
@@ -501,6 +505,9 @@ if copyTable(engineGLASS, 'glass.vial', 'vial'):
     except Exception as e:
         print(str(e))
         print('Error creating index on glass.vial.vial_id')
+
+    cur.execute(f'''update glass.vial_id_sequence set pkey = 1''')
+
 ##
 if copyTable(engineGLASS, 'glass.vial_log', 'vial_log'):
     cur.execute("ALTER TABLE glass.vial_log Modify column vial_id varchar(7)")
@@ -663,6 +670,18 @@ if copyTable(engineCOOL, 'cool.config', 'config'):
     cur.execute("ALTER TABLE cool.config Modify column well varchar(10)")
     cur.execute("ALTER TABLE cool.config Modify column compound_id varchar(26) CHARACTER SET utf8 COLLATE utf8_bin")
     cur.execute("ALTER TABLE cool.config Modify column notebook_ref varchar(42)")
+
+
+    cur.execute("""SET foreign_key_checks = 0""")
+    cur.execute("""ALTER TABLE cool.config
+                   ADD FOREIGN KEY (notebook_ref) REFERENCES bcpvs.batch(notebook_ref)""")
+    cur.execute("""ALTER TABLE cool.config
+                   ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
+    cur.execute("""SET foreign_key_checks = 1""")
+
+    cur.execute("""CREATE UNIQUE INDEX config_well_idx on cool.config(config_id, well)""")
+
+
 ##
 
 if copyTable(engineCOOL, 'cool.config_key', 'config_key'):

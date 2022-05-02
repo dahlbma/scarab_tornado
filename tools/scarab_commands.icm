@@ -17,7 +17,7 @@ load icmdb mol "/home/mats.dahlberg/scarab_data/scarab_tornado/tools/error.sdf" 
 
 drop table bcpvs.JCMOL_MOLTABLE_ukey;
 CREATE TABLE bcpvs.JCMOL_MOLTABLE_ukey(
-compound_id varchar(26) PRIMARY KEY,
+`COMPOUND_ID` varchar(26) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
 `molkey` MEDIUMBLOB,
 `molkeyns` MEDIUMBLOB,
 `molkeyct` MEDIUMBLOB
@@ -32,6 +32,8 @@ from bcpvs.JCMOL_MOLTABLE);
 create index `JCMOL_MOLTABLE_ukey_idx1` on bcpvs.JCMOL_MOLTABLE_ukey (molkey(255));
 create index `JCMOL_MOLTABLE_ukey_idx2` on bcpvs.JCMOL_MOLTABLE_ukey (molkeyns(255));
 create index `JCMOL_MOLTABLE_ukey_idx3` on bcpvs.JCMOL_MOLTABLE_ukey (molkeyct(255));
+
+alter table bcpvs.JCMOL_MOLTABLE_ukey add constraint `JCMOL_MOLTABLE_MOL_ukey_FK` foreign key (`COMPOUND_ID`) references `bcpvs`.`JCMOL_MOLTABLE_MOL`(`COMPOUND_ID`) on delete cascade on update cascade;
 
 
 
