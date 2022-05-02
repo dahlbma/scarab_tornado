@@ -54,3 +54,12 @@ database = dict(
 
 secret_key = 'Some random string'
 ```
+
+## Download Launcher
+To download the launcher executable from the server, navigate to:
+
+    <baseUrl>getChemRegLauncher/Windows/chemreg.exe
+    <baseUrl>getChemRegLauncher/Linux/chemreg
+    <baseUrl>getChemRegLauncher/Darwin/chemreg
+
+using your favourite internet browser.
