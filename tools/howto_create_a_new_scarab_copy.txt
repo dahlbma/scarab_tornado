@@ -31,6 +31,8 @@ uniquekey(`mol`,'cistrans') as molkeyct
 from bcpvs.JCMOL_MOLTABLE);
 
 alter table bcpvs.JCMOL_MOLTABLE_ukey add constraint `JCMOL_MOLTABLE_MOL_ukey_FK` foreign key (`COMPOUND_ID`) references `bcpvs`.`JCMOL_MOLTABLE_MOL`(`COMPOUND_ID`) on delete cascade on update cascade;
+alter table bcpvs.JCMOL_MOLTABLE add constraint `JCMOL_MOLTABLE_FK` foreign key (`COMPOUND_ID`) references bcpvs.compound(`COMPOUND_ID`);
+
 
 8. If there are no indexes on bcpvs.JCMOL_MOLTABLE_ukey:
 create index `JCMOL_MOLTABLE_ukey_idx1` on bcpvs.JCMOL_MOLTABLE_ukey (molkey(255));
