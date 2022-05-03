@@ -35,7 +35,7 @@ To use `upload.py`, use these options to provide files to upload.
 
 If you have built the main executable and launcher from the /frontend directory using *pyinstaller*, sample usage would look like this:
 
-    python3 upload.py -t dist/ch -l dist/chemreg
+    python3 upload.py -t dist/ch.exe -l dist/chemreg.exe
 
 Invoking this prompts a login verification from the server, after which the files are sent to the server.
 
@@ -54,3 +54,12 @@ database = dict(
 
 secret_key = 'Some random string'
 ```
+
+## Download Launcher
+To download the launcher executable from the server, navigate to:
+
+    <baseUrl>getChemRegLauncher/Windows/chemreg.exe
+    <baseUrl>getChemRegLauncher/Linux/chemreg
+    <baseUrl>getChemRegLauncher/Darwin/chemreg
+
+using your favourite internet browser.
