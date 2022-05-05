@@ -193,7 +193,7 @@ def make_app():
 
 if __name__ == "__main__":
     app = make_app()
-    app.listen(8082)
+    app.listen(8081)
     tornado.autoreload.start()
     
     for dir, _, files in os.walk('static'):
