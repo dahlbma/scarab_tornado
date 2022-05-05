@@ -1,7 +1,7 @@
 import requests
 import json
 
-baseUrl = 'https://esox3.scilifelab.se/vialdb/'
+baseUrl = 'https://esox3.scilifelab.se/chemreg/'
 
 def chemRegAddMolFile(dict, token):
     r = requests.post(f'{baseUrl}api/chemRegAddMol',

@@ -206,7 +206,7 @@ class SearchScreen(QMainWindow):
         if self.populated == False:
             self.regno_eb.setText(str(self.regno))
             submitters = dbInterface.getColComboData(self.token,
-                                                    'chemist')
+                                                     'chemist')
             self.submitter_cb.addItems(submitters)
             try:
                 self.submitter_search_cb.clear()
@@ -214,7 +214,7 @@ class SearchScreen(QMainWindow):
             except:
                 pass
             projects = dbInterface.getColComboData(self.token,
-                                                'project')
+                                                   'project')
             self.project_cb.addItems(projects)
 
             compoundTypes = dbInterface.getColComboData(self.token,
@@ -222,17 +222,17 @@ class SearchScreen(QMainWindow):
             self.compoundtype_cb.addItems(compoundTypes)
 
             productTypes = dbInterface.getColComboData(self.token,
-                                                    'product')
+                                                       'product')
             self.product_cb.addItems(productTypes)
             
             libraryIds = dbInterface.getColComboData(self.token,
-                                                    'library_id')
+                                                     'library_id')
             self.libraryid_cb.addItems(libraryIds)
             
             self.ip_rights_cb.addItems(ip_rights_list)
 
             solvents = dbInterface.getColComboData(self.token,
-                                                'solvent')
+                                                   'solvent')
             self.solvent_cb.addItems(solvents)
         
         # Set current values for this regno
