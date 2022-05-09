@@ -285,16 +285,17 @@ class SearchScreen(QMainWindow):
 
             compoundType = dbInterface.getTextColumn(self.token,
                                                     'compound_type',
-                                                    self.regno)
+                                                     self.regno)
             self.compoundtype_cb.setCurrentText(compoundType)
 
             libraryId = dbInterface.getTextColumn(self.token,
-                                                'library_id',
-                                                self.regno)
+                                                  'library_id',
+                                                  self.regno)
+            
             self.libraryid_cb.setCurrentText(libraryId)
 
             library_name = dbInterface.getLibraryName(self.token,
-                                                    self.libraryid_cb.currentText())
+                                                      libraryId)
             self.librarydesc_eb.setText(library_name)
 
             chromText = dbInterface.getTextColumn(self.token,
