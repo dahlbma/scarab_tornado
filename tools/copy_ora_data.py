@@ -683,6 +683,7 @@ if copyTable(engineCOOL, 'cool.config', 'config'):
 
     cur.execute("""SET foreign_key_checks = 1""")
 
+    cur.execute("""CREATE INDEX config_idx on cool.config(config_id)""")
     cur.execute("""CREATE UNIQUE INDEX config_well_idx on cool.config(config_id, well)""")
 
 
