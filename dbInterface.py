@@ -757,8 +757,6 @@ class GetTextColumn(tornado.web.RequestHandler):
                 from {chemregDB}.chem_info where regno = {regno}"""
         cur.execute(sSql)
         res = res2json()
-        if column == 'library_id':
-            print(res)
         self.write(res)
 
 
