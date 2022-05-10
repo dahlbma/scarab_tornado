@@ -753,8 +753,17 @@ class GetTextColumn(tornado.web.RequestHandler):
         chemregDB, bcpvsDB = getDatabase(self)
         column = self.get_argument("column")
         regno = self.get_argument("regno")
-        sSql = f"""select cast({column} as char)
-                from {chemregDB}.chem_info where regno = {regno}"""
+
+        if column == 'library_id':
+            sSql = f"""
+select concat(library_id, " ", l.description)
+from {chemregDB}.chem_info c, {bcpvsDB}.compound_library l
+where c.library_id = l.library_name
+and c.regno = '{regno}'
+            """
+        else:
+            sSql = f"""select cast({column} as char)
+            from {chemregDB}.chem_info where regno = {regno}"""
         cur.execute(sSql)
         res = res2json()
         self.write(res)
