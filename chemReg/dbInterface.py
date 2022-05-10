@@ -20,6 +20,8 @@ def listify(data, addBlank=True):
         cleanList.append(' ')
     for i in res:
         cleanList.append(i[0])
+    if cleanList == []:
+        cleanList = [None]
     return cleanList
 
 def getDatabase():

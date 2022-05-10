@@ -4,7 +4,6 @@ from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtCore import QTimer
 
 from chemreglib import *
-
 from sdfreg import LoadSDF
 from addmetatags import AddMetaTags
 
@@ -291,7 +290,6 @@ class SearchScreen(QMainWindow):
             libraryId = dbInterface.getTextColumn(self.token,
                                                   'library_id',
                                                   self.regno)
-            
             self.libraryid_cb.setCurrentText(libraryId)
 
             library_name = dbInterface.getLibraryName(self.token,
@@ -299,8 +297,8 @@ class SearchScreen(QMainWindow):
             self.librarydesc_eb.setText(library_name)
 
             chromText = dbInterface.getTextColumn(self.token,
-                                                'chrom_text',
-                                                self.regno)
+                                                  'chrom_text',
+                                                  self.regno)
             self.chrom_text.setPlainText(chromText)
             
             nmrText = dbInterface.getTextColumn(self.token,
