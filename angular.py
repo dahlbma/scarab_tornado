@@ -189,7 +189,8 @@ def make_app():
         (r"/getMolsoft/(.*)", web.StaticFileHandler, {"path": "dist/molsoft.zip"}),
         (r"/getChemRegLauncher/Windows/(.*)", web.StaticFileHandler, {"path": "dist/launchers/Windows/"}),
         (r"/getChemRegLauncher/Linux/(.*)", web.StaticFileHandler, {"path": "dist/launchers/Linux/"}),
-        (r"/getChemRegLauncher/Darwin/(.*)", web.StaticFileHandler, {"path": "dist/launchers/Darwin/"})
+        (r"/getChemRegLauncher/Darwin/(.*)", web.StaticFileHandler, {"path": "dist/launchers/Darwin/"}),
+        (r"/(.*)", web.StaticFileHandler,  {"path": "dist", "default_filename": "index.html"}),
     ], **settings)
 
 if __name__ == "__main__":
