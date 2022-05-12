@@ -268,6 +268,12 @@ def getMoleculeProperties(self, molfile, chemregDB):
     return (C_MF, C_MW, C_MONOISO, C_CHNS, saltSmile, '')
 
 
+class PingDB(tornado.web.RequestHandler):
+    def get(self):
+        sSql = "select * from hive.user_details where pkey = 0"
+        cur.execute(sSql)
+
+        
 @jwtauth
 class CreateSalt(tornado.web.RequestHandler):
     def put(self):
@@ -753,7 +759,9 @@ class GetTextColumn(tornado.web.RequestHandler):
         chemregDB, bcpvsDB = getDatabase(self)
         column = self.get_argument("column")
         regno = self.get_argument("regno")
-
+        if regno == None:
+            return
+        
         if column == 'library_id':
             sSql = f"""
 select concat(library_id, " ", l.description)

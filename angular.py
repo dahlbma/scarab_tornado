@@ -155,6 +155,7 @@ def make_app():
     return tornado.web.Application([
         (r"/login", login),
         (r"/getDatabase", dbInterface.GetDatabase),
+        (r"/pingDB", dbInterface.PingDB),
         (r"/api/bcpvsRegCompound", dbInterface.BcpvsRegCompound),
         (r"/api/chemRegAddMol", dbInterface.ChemRegAddMol),
         (r"/api/search", dbInterface.Search),
