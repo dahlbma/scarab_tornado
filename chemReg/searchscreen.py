@@ -235,7 +235,7 @@ class SearchScreen(QMainWindow):
             self.solvent_cb.addItems(solvents)
         
         # Set current values for this regno
-        if self.regno != None:
+        if self.regno not in (None, 'None'):
             self.editregno_btn.setEnabled(True)
             self.openmol_btn.setEnabled(True)
             self.regno_eb.setText(str(self.regno))
