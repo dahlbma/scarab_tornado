@@ -743,6 +743,11 @@ if copyTable(engineCOOL, 'cool.solubility_problem', 'solubility_problem'):
 if copyTable(engineASSAY, 'assay.lcb_sp', 'lcb_sp'):
     cur.execute("ALTER TABLE assay.lcb_sp Modify column compound_id varchar(26) CHARACTER SET utf8 COLLATE utf8_bin")
     cur.execute("ALTER TABLE assay.lcb_sp Modify column compound_batch varchar(16)")
+    
+    cur.execute("ALTER TABLE assay.lcb_sp Modify column CREATED_DATE datetime DEFAULT CURRENT_TIMESTAMP")
+
+    cur.execute("ALTER TABLE assay.lcb_sp Modify column WELL_ID varchar(16)")
+    cur.execute("ALTER TABLE assay.lcb_sp Modify column PLATE_ID varchar(16)")
     cur.execute("ALTER TABLE assay.lcb_sp Modify column project varchar(40)")
     cur.execute("ALTER TABLE assay.lcb_sp Modify column target varchar(40)")
     cur.execute("ALTER TABLE assay.lcb_sp Modify column operator varchar(40)")
@@ -760,6 +765,8 @@ if copyTable(engineASSAY, 'assay.lcb_sp', 'lcb_sp'):
     (select distinct(compound_batch) from assay.lcb_sp where compound_batch not in 
     (select notebook_ref from bcpvs.batch))tmpTbl)
     """)
+
+    cur.execute("""ALTER TABLE assay.lcb_sp MODIFY pkey BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT""")
 
     cur.execute("""ALTER TABLE assay.lcb_sp
                    ADD FOREIGN KEY (compound_batch) REFERENCES bcpvs.batch(notebook_ref)""")
