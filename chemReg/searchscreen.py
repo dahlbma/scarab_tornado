@@ -248,18 +248,18 @@ class SearchScreen(QMainWindow):
             updateMoleculeProperties(self)
             
             externalCompoundId = dbInterface.getTextColumn(self.token,
-                                                        'EXTERNAL_ID',
-                                                        self.regno)
+                                                           'EXTERNAL_ID',
+                                                           self.regno)
             self.externalid_eb.setText(externalCompoundId)
 
             externalBatch = dbInterface.getTextColumn(self.token,
-                                                    'SUPPLIER_BATCH',
-                                                    self.regno)
+                                                      'SUPPLIER_BATCH',
+                                                      self.regno)
             self.externalbatch_eb.setText(externalBatch)
 
             currentBatch = dbInterface.getTextColumn(self.token,
-                                                    'JPAGE',
-                                                    self.regno)
+                                                     'JPAGE',
+                                                     self.regno)
             self.batch_eb.setText(currentBatch)
 
             compound_id = dbInterface.getTextColumn(self.token,
@@ -268,8 +268,8 @@ class SearchScreen(QMainWindow):
             self.compoundid_lab.setText(compound_id)
             
             submitter = dbInterface.getTextColumn(self.token,
-                                                'chemist',
-                                                self.regno)
+                                                  'chemist',
+                                                  self.regno)
             self.submitter_cb.setCurrentText(submitter)
 
             project = dbInterface.getTextColumn(self.token,
