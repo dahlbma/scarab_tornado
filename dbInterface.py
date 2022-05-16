@@ -202,7 +202,14 @@ def registerNewBatch(bcpvsDB,
         cur.execute(sSql)
     except Exception as e:
         logger.error(f"{sSql}")
-        logger.error(f"{str(e)}")        
+        logger.error(f"{str(e)}")
+
+    if suffix == '':
+        sNULL = 'NULL'
+        sSql = f"""update {bcpvsDB}.batch set
+        suffix = {sNULL}
+        where notebook_ref = '{notebook_ref}'"""
+        cur.execute(sSql)
 
 
 
@@ -560,9 +567,16 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         )
         """
         cur.execute(sSql)
+        if saSalts == '':
+            sNULL = 'NULL'
+            sSql = f"""update {chemregDB}.chem_info set
+            suffix = {sNULL}
+            where regno = {newRegno}"""
+            cur.execute(sSql)
+
         addStructure(f"{chemregDB}.CHEM", molfile, newRegno, 'regno')
         self.finish(sStatus)
-          
+
 
 @jwtauth
 class Search(tornado.web.RequestHandler):
@@ -638,6 +652,14 @@ class LoadMolfile(tornado.web.RequestHandler):
                     suffix = '{saSalts}'
                   where regno = {regno}"""
         cur.execute(sSql)
+
+        if saSalts == '':
+            sNULL = 'NULL'
+            sSql = f"""update {chemregDB}.chem_info set
+            suffix = {sNULL}
+            where regno = {regno}"""
+            cur.execute(sSql)
+        
         createPngFromMolfile(regno, molfile)
 
 
@@ -812,7 +834,10 @@ class GetColComboData(tornado.web.RequestHandler):
 class GetLibraryName(tornado.web.RequestHandler):
     def get(self):
         chemregDB, bcpvsDB = getDatabase(self)
-        library_id = self.get_argument("library_id")
+        try:
+            library_id = self.get_argument("library_id")
+        except:
+            library_id = ''
         sLib = re.search(r"(Lib-\d\d\d\d)", library_id)
         if sLib == None:
             self.write(b'[]')
