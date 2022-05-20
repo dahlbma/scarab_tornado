@@ -739,10 +739,13 @@ class UpdateColumn(tornado.web.RequestHandler):
         values = (value, regno, )
         if column == 'library_id':
             sLib = re.search(r"(Lib-\d\d\d\d)", value)
-            value = sLib.group()
-
-        sSql = f"""update {chemregDB}.chem_info set {column} = '{value}'
-        where regno = {regno}"""
+            try:
+                value = sLib.group()
+                sSql = f"""update {chemregDB}.chem_info set {column} = '{value}'
+                where regno = {regno}"""
+            except:
+                sSql = f"""update {chemregDB}.chem_info set {column} = NULL
+                where regno = {regno}"""
         cur.execute(sSql)
 
 
@@ -786,10 +789,10 @@ class GetTextColumn(tornado.web.RequestHandler):
         
         if column == 'library_id':
             sSql = f"""
-select concat(library_id, " ", l.description)
+select IFNULL((select concat(library_id, " ", l.description)
 from {chemregDB}.chem_info c, {bcpvsDB}.compound_library l
 where c.library_id = l.library_name
-and c.regno = '{regno}'
+and c.regno = '{regno}'), null)
             """
         else:
             sSql = f"""select cast({column} as char)
