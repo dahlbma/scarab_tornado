@@ -142,12 +142,12 @@ class SearchScreen(QMainWindow):
                                               self.token)
             for tmpRegno in tmpInts:
                 self.regnos.append(str(tmpRegno))
-            if len(self.regnos) > 0:
+            if len(self.regnos) > 0 and self.regnos[0] != 'None':
                 sString = "1 of " + str(len(self.regnos))
                 self.numberOfHits_lab.setText(sString)
                 self.regno = str(self.regnos[0])
             else:
-                sString = "0 of " + str(len(self.regnos))
+                sString = "0 of 0"
                 self.numberOfHits_lab.setText(sString)
                 self.regno = None
             self.updateScreen()
@@ -290,6 +290,8 @@ class SearchScreen(QMainWindow):
             libraryId = dbInterface.getTextColumn(self.token,
                                                   'library_id',
                                                   self.regno)
+            if libraryId == None:
+                libraryId = ' '
             self.libraryid_cb.setCurrentText(libraryId)
 
             library_name = dbInterface.getLibraryName(self.token,
@@ -349,7 +351,7 @@ class SearchScreen(QMainWindow):
             self.regno_eb.setText(None)
             self.compoundid_lab.setText(None)
             self.batch_eb.setText(None)
-            self.submitter_cb.setCurrentText(' ')
+            self.submitter_cb.setCurrentText(None)
             self.project_cb.setCurrentText(' ')
             self.product_cb.setCurrentText(' ')
             self.compoundtype_cb.setCurrentText(' ')

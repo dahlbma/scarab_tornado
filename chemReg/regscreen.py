@@ -189,9 +189,6 @@ class RegScreen(QMainWindow):
         self.product_cb.setProperty("ok", self.product_cb.currentText() != ' ')
         self.product_cb.style().polish(self.product_cb)
 
-        self.libraryid_cb.setProperty("ok", self.libraryid_cb.currentText() != ' ')
-        self.libraryid_cb.style().polish(self.libraryid_cb)
-
         self.batch_eb.setProperty("ok", self.batchOk)
         self.batch_eb.style().polish(self.batch_eb)
 
@@ -207,7 +204,6 @@ class RegScreen(QMainWindow):
            self.compoundtype_cb.currentText() == ' ' or \
            self.project_cb.currentText() == ' ' or \
            self.product_cb.currentText() == ' ' or \
-           self.libraryid_cb.currentText() == ' ' or \
            self.batchOk == False or \
            self.molOK == False or \
            self.ip_rights_cb.currentText() == ' ' or \
