@@ -94,7 +94,16 @@ if copyTable(engineHIVE, 'hive.user_details', 'user_details'):
     cur.execute("ALTER TABLE hive.user_details Modify column organization varchar(255)")
     cur.execute("""update hive.user_details set organization = 'chemistry' where userid in
                    ('ANGUST', 'MAHARA', 'SLAS', 'DAHLBMA', 'BISJO')""")
+    cur.execute("""CREATE UNIQUE INDEX userid_idx ON hive.user_details(userid)""")
     
+    cur.execute("""update hive.user_details set fullname = 'Gustavsson, Anna-Lena' where userid = 'ANGUST'""")
+    cur.execute("""
+    INSERT INTO hive.user_details (userid,firstname,lastname,HIVELOCATION,HIVEPARENTLOCATION,email,TERMINATED_DATE,unix_account,location,organisation,fullname,CREATED_DATE,organization) VALUES
+    ('TOKOOL','Tobias','Koolmeister',NULL,NULL,'tobias.koolmeister@ki.se',NULL,NULL,NULL,NULL,'Koolmeister, Tobias',NULL,'chemistry')
+    """)
+
+
+                
     try:
         cur.execute("""ALTER TABLE hive.user_details CHANGE pkey pkey bigint AUTO_INCREMENT PRIMARY KEY""")
     except Exception as e:
