@@ -585,8 +585,11 @@ class Search(tornado.web.RequestHandler):
         column = self.get_argument("column")
         value = self.get_argument("value")
         values = (value, )
-
-        sSql = f"select regno from {chemregDB}.chem_info where {column} = '{value}'"
+        
+        if column == 'JPAGE':
+            sSql = f"select regno from {chemregDB}.chem_info where {column} like '{value}%'"
+        else:
+            sSql = f"select regno from {chemregDB}.chem_info where {column} = '{value}'"
         cur.execute(sSql)
         res = res2json()
         self.write(res)
