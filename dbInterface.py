@@ -429,8 +429,12 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
                                                   C_MONOISO,
                                                   ip_rights,
                                                   compound_name = '')
+                sSql = f'''select bin2mol(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles'))'''
+                cur.execute(sSql)
+                strippedMolfile = cur.fetchall()[0][0].decode("utf-8")
+                
                 addStructure(f"{bcpvsDB}.JCMOL_MOLTABLE",
-                             molfile,
+                             strippedMolfile,
                              compound_id,
                              'compound_id')
         sSql = f'''update {chemregDB}.chem_info
@@ -740,6 +744,9 @@ class UpdateColumn(tornado.web.RequestHandler):
         value = self.get_argument("value")
         regno = self.get_argument("regno")
         values = (value, regno, )
+        sSql = f"""update {chemregDB}.chem_info set {column} = '{value}'
+        where regno = {regno}"""
+
         if column == 'library_id':
             sLib = re.search(r"(Lib-\d\d\d\d)", value)
             try:
@@ -749,6 +756,7 @@ class UpdateColumn(tornado.web.RequestHandler):
             except:
                 sSql = f"""update {chemregDB}.chem_info set {column} = NULL
                 where regno = {regno}"""
+
         cur.execute(sSql)
 
 
