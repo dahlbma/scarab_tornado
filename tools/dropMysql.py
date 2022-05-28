@@ -128,6 +128,7 @@ dropTable("screen.ba_rec_ec50")
 dropTable("screen.hts_testsets")
 
 
+dropTable("bcpvs.JCMOL_MOLTABLE_ukey")
 dropTable("bcpvs.JCMOL_MOLTABLE_MOL_keysim")
 dropTable("bcpvs.JCMOL_MOLTABLE_MOL_key")
 dropTable("bcpvs.JCMOL_MOLTABLE_MOL")
@@ -149,6 +150,7 @@ dropTable("bcpvs.structure_change_log")
 
 
 if allTabs:
+    dropTable("bcpvs.batch_quality")
     dropTable("bcpvs.batch")
     dropTable("bcpvs.batch_invalid")
     dropTable("bcpvs.compound")
