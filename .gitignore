@@ -6,6 +6,7 @@ mols/
 *.sdf
 *.mol
 error_msg.txt
+log_chemreg.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
