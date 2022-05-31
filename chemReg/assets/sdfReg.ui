@@ -36,7 +36,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Compound id field</string>
+         <string>External id field</string>
         </property>
        </widget>
       </item>
@@ -48,7 +48,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Supplier batch field</string>
+         <string>External batch field</string>
         </property>
        </widget>
       </item>
