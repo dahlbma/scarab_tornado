@@ -510,21 +510,7 @@ background-color: rgb(255, 204, 204)
                  </widget>
                 </item>
                 <item>
-                 <widget class="QComboBox" name="libraryid_cb">
-                  <property name="styleSheet">
-                   <string notr="true">[ok='false']{
-	border-style: solid;
-	border-color: rgb(32, 74, 135);
-	border-width: 3px;
-	border-radius: 5px;
-}
-
-[ok='true']{}</string>
-                  </property>
-                  <property name="ok" stdset="0">
-                   <bool>false</bool>
-                  </property>
-                 </widget>
+                 <widget class="QComboBox" name="libraryid_cb"/>
                 </item>
                 <item>
                  <widget class="QLineEdit" name="librarydesc_eb">
@@ -1205,7 +1191,7 @@ background-color: rgb(255, 204, 204)
      <x>0</x>
      <y>0</y>
      <width>1240</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

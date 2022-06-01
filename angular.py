@@ -155,6 +155,7 @@ def make_app():
     return tornado.web.Application([
         (r"/login", login),
         (r"/getDatabase", dbInterface.GetDatabase),
+        (r"/pingDB", dbInterface.PingDB),
         (r"/api/bcpvsRegCompound", dbInterface.BcpvsRegCompound),
         (r"/api/chemRegAddMol", dbInterface.ChemRegAddMol),
         (r"/api/search", dbInterface.Search),
@@ -186,9 +187,11 @@ def make_app():
         (r"/getChemRegBinary/(?P<os_name>[^\/]+)", dbInterface.GetChemRegBinary), # upload
         (r"/uploadVersionNo", dbInterface.UploadVersionNo),
         (r"/uploadLauncher", dbInterface.UploadLauncher), # upload
+        (r"/getMolsoft/(.*)", web.StaticFileHandler, {"path": "dist/molsoft.zip"}),
         (r"/getChemRegLauncher/Windows/(.*)", web.StaticFileHandler, {"path": "dist/launchers/Windows/"}),
         (r"/getChemRegLauncher/Linux/(.*)", web.StaticFileHandler, {"path": "dist/launchers/Linux/"}),
-        (r"/getChemRegLauncher/Darwin/(.*)", web.StaticFileHandler, {"path": "dist/launchers/Darwin/"})
+        (r"/getChemRegLauncher/Darwin/(.*)", web.StaticFileHandler, {"path": "dist/launchers/Darwin/"}),
+        (r"/(.*)", web.StaticFileHandler,  {"path": "dist", "default_filename": "index.html"}),
     ], **settings)
 
 if __name__ == "__main__":

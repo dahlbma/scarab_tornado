@@ -202,7 +202,14 @@ def registerNewBatch(bcpvsDB,
         cur.execute(sSql)
     except Exception as e:
         logger.error(f"{sSql}")
-        logger.error(f"{str(e)}")        
+        logger.error(f"{str(e)}")
+
+    if suffix == '':
+        sNULL = 'NULL'
+        sSql = f"""update {bcpvsDB}.batch set
+        suffix = {sNULL}
+        where notebook_ref = '{notebook_ref}'"""
+        cur.execute(sSql)
 
 
 
@@ -268,6 +275,12 @@ def getMoleculeProperties(self, molfile, chemregDB):
     return (C_MF, C_MW, C_MONOISO, C_CHNS, saltSmile, '')
 
 
+class PingDB(tornado.web.RequestHandler):
+    def get(self):
+        sSql = "select * from hive.user_details where pkey = 0"
+        cur.execute(sSql)
+
+        
 @jwtauth
 class CreateSalt(tornado.web.RequestHandler):
     def put(self):
@@ -416,8 +429,12 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
                                                   C_MONOISO,
                                                   ip_rights,
                                                   compound_name = '')
+                sSql = f'''select bin2mol(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles'))'''
+                cur.execute(sSql)
+                strippedMolfile = cur.fetchall()[0][0].decode("utf-8")
+                
                 addStructure(f"{bcpvsDB}.JCMOL_MOLTABLE",
-                             molfile,
+                             strippedMolfile,
                              compound_id,
                              'compound_id')
         sSql = f'''update {chemregDB}.chem_info
@@ -554,9 +571,16 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         )
         """
         cur.execute(sSql)
+        if saSalts == '':
+            sNULL = 'NULL'
+            sSql = f"""update {chemregDB}.chem_info set
+            suffix = {sNULL}
+            where regno = {newRegno}"""
+            cur.execute(sSql)
+
         addStructure(f"{chemregDB}.CHEM", molfile, newRegno, 'regno')
         self.finish(sStatus)
-          
+
 
 @jwtauth
 class Search(tornado.web.RequestHandler):
@@ -565,8 +589,11 @@ class Search(tornado.web.RequestHandler):
         column = self.get_argument("column")
         value = self.get_argument("value")
         values = (value, )
-
-        sSql = f"select regno from {chemregDB}.chem_info where {column} = '{value}'"
+        
+        if column == 'JPAGE':
+            sSql = f"select regno from {chemregDB}.chem_info where {column} like '{value}%'"
+        else:
+            sSql = f"select regno from {chemregDB}.chem_info where {column} = '{value}'"
         cur.execute(sSql)
         res = res2json()
         self.write(res)
@@ -632,6 +659,14 @@ class LoadMolfile(tornado.web.RequestHandler):
                     suffix = '{saSalts}'
                   where regno = {regno}"""
         cur.execute(sSql)
+
+        if saSalts == '':
+            sNULL = 'NULL'
+            sSql = f"""update {chemregDB}.chem_info set
+            suffix = {sNULL}
+            where regno = {regno}"""
+            cur.execute(sSql)
+        
         createPngFromMolfile(regno, molfile)
 
 
@@ -709,12 +744,19 @@ class UpdateColumn(tornado.web.RequestHandler):
         value = self.get_argument("value")
         regno = self.get_argument("regno")
         values = (value, regno, )
-        if column == 'library_id':
-            sLib = re.search(r"(Lib-\d\d\d\d)", value)
-            value = sLib.group()
-
         sSql = f"""update {chemregDB}.chem_info set {column} = '{value}'
         where regno = {regno}"""
+
+        if column == 'library_id':
+            sLib = re.search(r"(Lib-\d\d\d\d)", value)
+            try:
+                value = sLib.group()
+                sSql = f"""update {chemregDB}.chem_info set {column} = '{value}'
+                where regno = {regno}"""
+            except:
+                sSql = f"""update {chemregDB}.chem_info set {column} = NULL
+                where regno = {regno}"""
+
         cur.execute(sSql)
 
 
@@ -753,8 +795,19 @@ class GetTextColumn(tornado.web.RequestHandler):
         chemregDB, bcpvsDB = getDatabase(self)
         column = self.get_argument("column")
         regno = self.get_argument("regno")
-        sSql = f"""select cast({column} as char)
-                from {chemregDB}.chem_info where regno = {regno}"""
+        if regno == None:
+            return
+        
+        if column == 'library_id':
+            sSql = f"""
+select IFNULL((select concat(library_id, " ", l.description)
+from {chemregDB}.chem_info c, {bcpvsDB}.compound_library l
+where c.library_id = l.library_name
+and c.regno = '{regno}'), null)
+            """
+        else:
+            sSql = f"""select cast({column} as char)
+            from {chemregDB}.chem_info where regno = {regno}"""
         cur.execute(sSql)
         res = res2json()
         self.write(res)
@@ -795,7 +848,10 @@ class GetColComboData(tornado.web.RequestHandler):
 class GetLibraryName(tornado.web.RequestHandler):
     def get(self):
         chemregDB, bcpvsDB = getDatabase(self)
-        library_id = self.get_argument("library_id")
+        try:
+            library_id = self.get_argument("library_id")
+        except:
+            library_id = ''
         sLib = re.search(r"(Lib-\d\d\d\d)", library_id)
         if sLib == None:
             self.write(b'[]')

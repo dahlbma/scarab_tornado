@@ -31,6 +31,7 @@ truncateTable("chem_reg.chemreg_dist")
 truncateTable("chem_reg.tmp_mol")
 
 truncateTable("bcpvs.JCMOL_MOLTABLE_ukey")
+truncateTable("bcpvs.batch_quality")
 
 cur.execute("update chem_reg.regno_sequence set pkey = 2000000")
 

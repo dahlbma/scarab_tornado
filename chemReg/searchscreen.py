@@ -4,7 +4,6 @@ from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtCore import QTimer
 
 from chemreglib import *
-
 from sdfreg import LoadSDF
 from addmetatags import AddMetaTags
 
@@ -143,12 +142,12 @@ class SearchScreen(QMainWindow):
                                               self.token)
             for tmpRegno in tmpInts:
                 self.regnos.append(str(tmpRegno))
-            if len(self.regnos) > 0:
+            if len(self.regnos) > 0 and self.regnos[0] != 'None':
                 sString = "1 of " + str(len(self.regnos))
                 self.numberOfHits_lab.setText(sString)
                 self.regno = str(self.regnos[0])
             else:
-                sString = "0 of " + str(len(self.regnos))
+                sString = "0 of 0"
                 self.numberOfHits_lab.setText(sString)
                 self.regno = None
             self.updateScreen()
@@ -236,7 +235,7 @@ class SearchScreen(QMainWindow):
             self.solvent_cb.addItems(solvents)
         
         # Set current values for this regno
-        if self.regno != None:
+        if self.regno not in (None, 'None'):
             self.editregno_btn.setEnabled(True)
             self.openmol_btn.setEnabled(True)
             self.regno_eb.setText(str(self.regno))
@@ -249,18 +248,18 @@ class SearchScreen(QMainWindow):
             updateMoleculeProperties(self)
             
             externalCompoundId = dbInterface.getTextColumn(self.token,
-                                                        'EXTERNAL_ID',
-                                                        self.regno)
+                                                           'EXTERNAL_ID',
+                                                           self.regno)
             self.externalid_eb.setText(externalCompoundId)
 
             externalBatch = dbInterface.getTextColumn(self.token,
-                                                    'SUPPLIER_BATCH',
-                                                    self.regno)
+                                                      'SUPPLIER_BATCH',
+                                                      self.regno)
             self.externalbatch_eb.setText(externalBatch)
 
             currentBatch = dbInterface.getTextColumn(self.token,
-                                                    'JPAGE',
-                                                    self.regno)
+                                                     'JPAGE',
+                                                     self.regno)
             self.batch_eb.setText(currentBatch)
 
             compound_id = dbInterface.getTextColumn(self.token,
@@ -269,8 +268,8 @@ class SearchScreen(QMainWindow):
             self.compoundid_lab.setText(compound_id)
             
             submitter = dbInterface.getTextColumn(self.token,
-                                                'chemist',
-                                                self.regno)
+                                                  'chemist',
+                                                  self.regno)
             self.submitter_cb.setCurrentText(submitter)
 
             project = dbInterface.getTextColumn(self.token,
@@ -285,21 +284,23 @@ class SearchScreen(QMainWindow):
 
             compoundType = dbInterface.getTextColumn(self.token,
                                                     'compound_type',
-                                                    self.regno)
+                                                     self.regno)
             self.compoundtype_cb.setCurrentText(compoundType)
 
             libraryId = dbInterface.getTextColumn(self.token,
-                                                'library_id',
-                                                self.regno)
+                                                  'library_id',
+                                                  self.regno)
+            if libraryId == None:
+                libraryId = ' '
             self.libraryid_cb.setCurrentText(libraryId)
 
             library_name = dbInterface.getLibraryName(self.token,
-                                                    self.libraryid_cb.currentText())
+                                                      libraryId)
             self.librarydesc_eb.setText(library_name)
 
             chromText = dbInterface.getTextColumn(self.token,
-                                                'chrom_text',
-                                                self.regno)
+                                                  'chrom_text',
+                                                  self.regno)
             self.chrom_text.setPlainText(chromText)
             
             nmrText = dbInterface.getTextColumn(self.token,
@@ -350,7 +351,7 @@ class SearchScreen(QMainWindow):
             self.regno_eb.setText(None)
             self.compoundid_lab.setText(None)
             self.batch_eb.setText(None)
-            self.submitter_cb.setCurrentText(' ')
+            self.submitter_cb.setCurrentText(None)
             self.project_cb.setCurrentText(' ')
             self.product_cb.setCurrentText(' ')
             self.compoundtype_cb.setCurrentText(' ')

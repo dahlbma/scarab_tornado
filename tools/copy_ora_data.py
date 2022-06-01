@@ -94,7 +94,16 @@ if copyTable(engineHIVE, 'hive.user_details', 'user_details'):
     cur.execute("ALTER TABLE hive.user_details Modify column organization varchar(255)")
     cur.execute("""update hive.user_details set organization = 'chemistry' where userid in
                    ('ANGUST', 'MAHARA', 'SLAS', 'DAHLBMA', 'BISJO')""")
+    cur.execute("""CREATE UNIQUE INDEX userid_idx ON hive.user_details(userid)""")
     
+    cur.execute("""update hive.user_details set fullname = 'Gustavsson, Anna-Lena' where userid = 'ANGUST'""")
+    cur.execute("""
+    INSERT INTO hive.user_details (userid,firstname,lastname,HIVELOCATION,HIVEPARENTLOCATION,email,TERMINATED_DATE,unix_account,location,organisation,fullname,CREATED_DATE,organization) VALUES
+    ('TOKOOL','Tobias','Koolmeister',NULL,NULL,'tobias.koolmeister@ki.se',NULL,NULL,NULL,NULL,'Koolmeister, Tobias',NULL,'chemistry')
+    """)
+
+
+                
     try:
         cur.execute("""ALTER TABLE hive.user_details CHANGE pkey pkey bigint AUTO_INCREMENT PRIMARY KEY""")
     except Exception as e:
@@ -116,7 +125,7 @@ if copyTable(engineHIVE, 'hive.project_details_lcb', 'project_details'):
 # BCPVS tables
 if copyTable(engineBCPVS, 'bcpvs.compound', 'compound'):
     cur.execute("ALTER TABLE bcpvs.compound Modify column compound_id varchar(26) CHARACTER SET utf8 COLLATE utf8_bin")
-    cur.execute("ALTER TABLE bcpvs.compound Modify column suffix varchar(5)")
+    cur.execute("ALTER TABLE bcpvs.compound Modify column suffix TEXT")
     cur.execute("ALTER TABLE bcpvs.compound Modify column ip_rights varchar(30)")
     cur.execute("ALTER TABLE bcpvs.compound Modify column mf varchar(200)")
     try:
@@ -149,7 +158,7 @@ if copyTable(engineBCPVS, 'bcpvs.batch', 'batch'):
     cur.execute("ALTER TABLE bcpvs.batch Modify column supplier_batch varchar(100)")
     cur.execute("ALTER TABLE bcpvs.batch Modify column chemspec_regno varchar(16)")
 
-    cur.execute("ALTER TABLE bcpvs.batch ADD COLUMN suffix varchar(100)")
+    cur.execute("ALTER TABLE bcpvs.batch ADD COLUMN suffix TEXT")
     
     """ These batches have 2 entries
     BC9614001
@@ -175,7 +184,6 @@ if copyTable(engineBCPVS, 'bcpvs.batch', 'batch'):
     (select compound_id from bcpvs.compound))tmpTbl)
     """)
 
-
     try:
         cur.execute("""CREATE UNIQUE INDEX batch_idx ON bcpvs.batch(notebook_ref)""")
     except Exception as e:
@@ -184,6 +192,35 @@ if copyTable(engineBCPVS, 'bcpvs.batch', 'batch'):
 
     cur.execute("""ALTER TABLE bcpvs.batch
                   ADD FOREIGN KEY (compound_id) REFERENCES bcpvs.compound(compound_id)""")
+
+##
+# Create batch_quality table
+cur.execute("""CREATE TABLE bcpvs.batch_quality (
+`pkey` int NOT NULL AUTO_INCREMENT,
+`notebook_ref` varchar(26) DEFAULT NULL,
+`raw_data_file` text,
+`method` varchar(80) DEFAULT NULL,
+`expected_mass_found` varchar(3) DEFAULT NULL,
+`purity_pct` int DEFAULT NULL,
+`status_ok` varchar(3) DEFAULT NULL,
+`comments` text,
+`tdate` datetime DEFAULT CURRENT_TIMESTAMP,
+`sop` varchar(26) DEFAULT NULL,
+UNIQUE KEY `pkey_idx` (`pkey`),
+KEY `notebook_ref` (`notebook_ref`),
+CONSTRAINT `batch_ibfk` FOREIGN KEY (`notebook_ref`) REFERENCES `batch` (`notebook_ref`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+""")
+
+##
+# Create JCMOL_MOLTABLE_ukey table
+cur.execute("""CREATE TABLE bcpvs.JCMOL_MOLTABLE_ukey(
+`COMPOUND_ID` varchar(26) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+`molkey` MEDIUMBLOB,
+`molkeyns` MEDIUMBLOB,
+`molkeyct` MEDIUMBLOB
+) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4 COLLATE = UTF8MB4_0900_AI_CI
+""")
 
 ##
 #if copyTable(engineBCPVS, 'bcpvs.jcmol_moltable', 'jcmol_moltable'):
@@ -665,6 +702,20 @@ if copyTable(engineMICROTUBE, 'microtube.tube_changes', 'tube_changes'):
 ################################################
 # COOL tables
 
+##
+if copyTable(engineCOOL, 'cool.plate', 'plate'):
+    cur.execute("ALTER TABLE cool.plate Modify column plate_id varchar(7)")
+    cur.execute("ALTER TABLE cool.plate Modify column config_id varchar(7)")
+    cur.execute("ALTER TABLE cool.plate Modify column location varchar(100)")
+    try:
+        cur.execute("""ALTER TABLE cool.plate CHANGE plate_id plate_id varchar(7) PRIMARY KEY""")
+    except Exception as e:
+        print(str(e))
+        print('Error creating index on cool.plate.config_id')
+
+    cur.execute("""CREATE INDEX plate_config_idx on cool.plate(config_id)""")
+
+##
 if copyTable(engineCOOL, 'cool.config', 'config'):
     cur.execute("ALTER TABLE cool.config Modify column config_id varchar(7)")
     cur.execute("ALTER TABLE cool.config Modify column well varchar(10)")
@@ -683,6 +734,7 @@ if copyTable(engineCOOL, 'cool.config', 'config'):
 
     cur.execute("""SET foreign_key_checks = 1""")
 
+    cur.execute("""CREATE INDEX config_idx on cool.config(config_id)""")
     cur.execute("""CREATE UNIQUE INDEX config_well_idx on cool.config(config_id, well)""")
 
 
@@ -702,19 +754,7 @@ if copyTable(engineCOOL, 'cool.map96to384', 'map96to384'):
     cur.execute("ALTER TABLE cool.map96to384 Modify column well96 varchar(3)")
 
     cur.execute("ALTER TABLE cool.map96to384 Modify column well384 varchar(4)")
-##
-if copyTable(engineCOOL, 'cool.plate', 'plate'):
-    cur.execute("ALTER TABLE cool.plate Modify column plate_id varchar(7)")
-    cur.execute("ALTER TABLE cool.plate Modify column config_id varchar(7)")
-    cur.execute("ALTER TABLE cool.plate Modify column location varchar(100)")
-    try:
-        cur.execute("""ALTER TABLE cool.plate CHANGE plate_id plate_id varchar(7) PRIMARY KEY""")
-    except Exception as e:
-        print(str(e))
-        print('Error creating index on cool.plate.config_id')
-
-    cur.execute("""CREATE INDEX plate_config_idx on cool.plate(config_id)""")
-
+    
 ##
 if copyTable(engineCOOL, 'cool.plate_type', 'plate_type'):
     try:
@@ -742,6 +782,11 @@ if copyTable(engineCOOL, 'cool.solubility_problem', 'solubility_problem'):
 if copyTable(engineASSAY, 'assay.lcb_sp', 'lcb_sp'):
     cur.execute("ALTER TABLE assay.lcb_sp Modify column compound_id varchar(26) CHARACTER SET utf8 COLLATE utf8_bin")
     cur.execute("ALTER TABLE assay.lcb_sp Modify column compound_batch varchar(16)")
+    
+    cur.execute("ALTER TABLE assay.lcb_sp Modify column CREATED_DATE datetime DEFAULT CURRENT_TIMESTAMP")
+
+    cur.execute("ALTER TABLE assay.lcb_sp Modify column WELL_ID varchar(16)")
+    cur.execute("ALTER TABLE assay.lcb_sp Modify column PLATE_ID varchar(16)")
     cur.execute("ALTER TABLE assay.lcb_sp Modify column project varchar(40)")
     cur.execute("ALTER TABLE assay.lcb_sp Modify column target varchar(40)")
     cur.execute("ALTER TABLE assay.lcb_sp Modify column operator varchar(40)")
@@ -759,6 +804,8 @@ if copyTable(engineASSAY, 'assay.lcb_sp', 'lcb_sp'):
     (select distinct(compound_batch) from assay.lcb_sp where compound_batch not in 
     (select notebook_ref from bcpvs.batch))tmpTbl)
     """)
+
+    cur.execute("""ALTER TABLE assay.lcb_sp MODIFY pkey BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT""")
 
     cur.execute("""ALTER TABLE assay.lcb_sp
                    ADD FOREIGN KEY (compound_batch) REFERENCES bcpvs.batch(notebook_ref)""")
