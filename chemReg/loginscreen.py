@@ -51,6 +51,8 @@ class LoginScreen(QDialog):
             self.errorlabel.setText("Wrong username/password")
             return
         self.jwt_token = r.content
+        app = QtCore.QCoreApplication.instance()
+        self.window().setWindowTitle(f"{app.applicationName()} {database}")
         self.gotoSearch(self.jwt_token)
 
     def gotoReg(self, token):
