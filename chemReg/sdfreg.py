@@ -204,7 +204,9 @@ class LoadSDF(QDialog):
             sMol = self.getNextMolecule(f)
             sMol = self.to_bytes(sMol)
             lTags = self.getTags(sMol)
-            if lTags == [] or sMol == "":
+            print(lTags)
+            #if lTags == [] or sMol == "":
+            if len(sMol) < 4:
                 break
             dTags = self.getValuePairs(lTags)
 
