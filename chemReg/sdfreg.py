@@ -84,7 +84,7 @@ class LoadSDF(QDialog):
              self.supplier_cb.currentText() == '' or \
              self.solvent_cb.currentText() == '' or \
              self.producttype_cb.currentText() == '' or \
-             self.library_cb.currentText() == '' or \
+             self.library_cb.currentText() in ('', ' ') or \
              self.ElnIdsOK == False or \
              self.ip_rights_cb.currentText() == '' or \
              self.iMolCount >= self.iFreeElnSpace:
