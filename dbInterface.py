@@ -212,7 +212,6 @@ def registerNewBatch(bcpvsDB,
         cur.execute(sSql)
 
 
-
 def getMoleculeProperties(self, molfile, chemregDB):
     sSql = f'''select
     bin2smiles(mol2bin('{molfile}'), 'mol') smiles,
@@ -905,6 +904,7 @@ class CreateLibrary(tornado.web.RequestHandler):
         '{sLibraryDescription}')
         """
         cur.execute(sSql)
+
 
 class GetDatabase(tornado.web.RequestHandler):
     def get(self):

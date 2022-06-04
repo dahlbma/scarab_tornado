@@ -69,6 +69,7 @@ class login(tornado.web.RequestHandler):
             'exp': datetime.utcnow() + timedelta(seconds=JWT_EXP_DELTA_SECONDS)
         }
         jwt_token = jwt.encode(payload, JWT_SECRET, JWT_ALGORITHM)
+        logging.info(f'Login: {username} Database; {database}')
         self.write({'token': jwt_token,
                     'database': database})
 
