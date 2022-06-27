@@ -267,7 +267,7 @@ def getMoleculeProperties(self, molfile, chemregDB):
     MolWeight(mol2bin('{mainMolSmile}', 'smiles'))
     """)
     resMolcart = cur.fetchall()
-    C_MW = resMolcart[0][0]
+    C_MW = Formula(C_MF).mass
     C_MONOISO = resMolcart[0][1]
     if C_MONOISO == None:
         C_MONOISO = C_MW
