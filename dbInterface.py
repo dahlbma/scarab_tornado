@@ -279,6 +279,10 @@ class PingDB(tornado.web.RequestHandler):
         sSql = "select * from hive.user_details where pkey = 0"
         cur.execute(sSql)
 
+    def head(self):
+        sSql = "select * from hive.user_details where pkey = 0"
+        cur.execute(sSql)
+
         
 @jwtauth
 class CreateSalt(tornado.web.RequestHandler):
