@@ -203,7 +203,6 @@ class RegScreen(QMainWindow):
         if self.submitter_cb.currentText() == ' ' or \
            self.compoundtype_cb.currentText() == ' ' or \
            self.project_cb.currentText() == ' ' or \
-           self.product_cb.currentText() == ' ' or \
            self.batchOk == False or \
            self.molOK == False or \
            self.ip_rights_cb.currentText() == ' ' or \
@@ -235,6 +234,7 @@ class RegScreen(QMainWindow):
             self.molOK = True
         else:
             self.molOK = False
+            self.molOK = True
         
         if self.allDataPresent():
             self.regcompound_btn.setEnabled(True)

@@ -204,7 +204,6 @@ class LoadSDF(QDialog):
             sMol = self.getNextMolecule(f)
             sMol = self.to_bytes(sMol)
             lTags = self.getTags(sMol)
-            print(lTags)
             #if lTags == [] or sMol == "":
             if len(sMol) < 4:
                 break
