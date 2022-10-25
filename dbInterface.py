@@ -80,7 +80,7 @@ def getAtomicComposition(saComp):
 def createPngFromMolfile(regno, molfile):
     m = Chem.MolFromMolBlock(molfile)
     try:
-        Draw.MolToFile(m, f'mols/{regno}.png', size=(280, 280))
+        Draw.MolToFile(m, f'mols/{regno}.png', kekulize=False, size=(280, 280))
     except:
         logger.error(f"regno {regno} is nostruct")
 
@@ -245,8 +245,7 @@ def getMoleculeProperties(self, molfile, chemregDB):
     if len(saSmileFragments) > 1 and iNrOfFragments == len(saSmileFragments):
         iFragPosition = 0
         for fragment in saSmileFragments:
-            sSql = f'''select MolWeight(mol2bin(UNIQUEKEY('{fragment}', 'cistrans')))
-            '''
+            sSql = f'''select MolWeight(mol2bin(UNIQUEKEY('{fragment}', 'cistrans')))'''
             cur.execute(sSql)
             res = cur.fetchall()
             if res[0][0] == mainFragMolWeight:
@@ -255,6 +254,7 @@ def getMoleculeProperties(self, molfile, chemregDB):
                     break
             iFragPosition += 1
 
+    saSmileFragments = sorted(saSmileFragments, key=len, reverse=True)
     mainMolSmile = sSmiles
     saltSmile = ''
     
@@ -413,7 +413,14 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
          errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
         mol = Chem.MolFromMolBlock(molfile)
         if compound_id in ('', None):
-            mols = checkUniqueStructure(molfile, bcpvsDB)
+
+            sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles')))'''
+            cur.execute(sSql)
+            strip = cur.fetchall()[0][0].decode("utf-8")
+
+            
+            mols = checkUniqueStructure(strip, bcpvsDB)
+            #mols = checkUniqueStructure(molfile, bcpvsDB)
             if mols == False:
                 logger.error(f'Error in molfile for regno {self.regno}')
                 return False
@@ -432,7 +439,9 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
                                                   C_MONOISO,
                                                   ip_rights,
                                                   compound_name = '')
-                sSql = f'''select bin2mol(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles'))'''
+                # Is the moldepict on the next line the solution to stereo problems?
+                sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles')))'''
+                #sSql = f'''select bin2mol(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles'))'''
                 cur.execute(sSql)
                 strippedMolfile = cur.fetchall()[0][0].decode("utf-8")
                 
@@ -509,7 +518,13 @@ class ChemRegAddMol(tornado.web.RequestHandler):
 
         ########################
         # Do exact match with molecule against the CBK database
-        mols = checkUniqueStructure(molfile, bcpvsDB)
+
+        sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles')))'''
+        cur.execute(sSql)
+        strip = cur.fetchall()[0][0].decode("utf-8")
+        
+        mols = checkUniqueStructure(strip, bcpvsDB)
+        #mols = checkUniqueStructure(molfile, bcpvsDB)
         if mols == False:
             return False
         sStatus = 'oldMolecule'
@@ -625,7 +640,10 @@ class CreateMolImage(tornado.web.RequestHandler):
         cur.execute(sSql)
         molfile = cur.fetchall()
         if len(molfile) > 0 and molfile[0][0] != None:
-            createPngFromMolfile(regno, molfile[0][0])
+            try:
+                createPngFromMolfile(regno, molfile[0][0])
+            except:
+                pass
         self.finish()
 
 
@@ -637,12 +655,14 @@ class LoadMolfile(tornado.web.RequestHandler):
         regnoBody = self.request.files['regno'][0]
         molfile = tornado.escape.xhtml_unescape(fBody.body)
         regno = tornado.escape.xhtml_unescape(regnoBody.body)
+        
         (C_MF,
          C_MW,
          C_MONOISO,
          C_CHNS,
          saSalts,
          errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
+        logger.error(str(saSalts))
         if C_MF == False:
             self.set_status(500)
             self.finish(f'Molfile failed {regno} {errorMessage}')
