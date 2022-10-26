@@ -811,6 +811,18 @@ class GetMolfile(tornado.web.RequestHandler):
         if len(res) > 0:
             self.write(res[0][0])
 
+@jwtauth
+class GetMolfileBcpvs(tornado.web.RequestHandler):
+    def get(self):
+        chemregDB, bcpvsDB = getDatabase(self)
+        compound_id = self.get_argument("compound_id")
+        sSql = f"""select mol from {bcpvsDB}.JCMOL_MOLTABLE
+                   where compound_id = '{compound_id}'"""
+        cur.execute(sSql)
+        res = cur.fetchall()
+        if len(res) > 0:
+            self.write(res[0][0])
+
 
 @jwtauth
 class GetTextColumn(tornado.web.RequestHandler):

@@ -179,6 +179,7 @@ def make_app():
         (r"/api/getNextSdfSequence", dbInterface.GetNextSdfSequence),
         (r"/api/getRegnosFromSequence", dbInterface.GetRegnosFromSdfSequence),
         (r"/api/getMolfile", dbInterface.GetMolfile),
+        (r"/api/getMolfileBcpvs", dbInterface.GetMolfileBcpvs),
         (r"/api/createMolImage", dbInterface.CreateMolImage),
         (r"/getCompound", dbInterface.GetCompound),
         (r"/mols/(.*)", web.StaticFileHandler, {"path": "mols/"}),
