@@ -77,12 +77,14 @@ def getAtomicComposition(saComp):
         sComp += f'{atom[0]} {round(atom[3] * 100, 2)}% '
     return sComp
 
+
 def createPngFromMolfile(regno, molfile):
     m = Chem.MolFromMolBlock(molfile)
     try:
         Draw.MolToFile(m, f'mols/{regno}.png', kekulize=False, size=(280, 280))
     except:
         logger.error(f"regno {regno} is nostruct")
+        
 
 def addStructure(database, molfile, newRegno, idColumnName):
     #####
@@ -628,6 +630,19 @@ class GetRegnoData(tornado.web.RequestHandler):
         cur.execute(sSql)
         res = res2json()
         self.write(res)
+
+
+@jwtauth
+class CreateMolImageFromMolfile(tornado.web.RequestHandler):
+    def post(self):
+        molfile = '\n' + self.get_body_argument('molfile')
+        sMolId = self.get_body_argument('mol_id')
+        m = Chem.MolFromMolBlock(molfile)
+        print(molfile)
+        try:
+            Draw.MolToFile(m, f'mols/{sMolId}.png', kekulize=True, size=(280, 280))
+        except:
+            logger.error(f"{sMolId} is nostruct")
 
 
 @jwtauth

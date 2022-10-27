@@ -181,6 +181,7 @@ def make_app():
         (r"/api/getMolfile", dbInterface.GetMolfile),
         (r"/api/getMolfileBcpvs", dbInterface.GetMolfileBcpvs),
         (r"/api/createMolImage", dbInterface.CreateMolImage),
+        (r"/api/createMolImageFromMolfile", dbInterface.CreateMolImageFromMolfile),
         (r"/getCompound", dbInterface.GetCompound),
         (r"/mols/(.*)", web.StaticFileHandler, {"path": "mols/"}),
         (r"/getVersionData", getVersionData), # dbInterface.
