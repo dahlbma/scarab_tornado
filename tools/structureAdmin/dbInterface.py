@@ -3,15 +3,6 @@ import json
 
 baseUrl = 'https://esox3.scilifelab.se/chemreg/'
 
-def chemRegAddMolFile(dict, token):
-    r = requests.post(f'{baseUrl}api/chemRegAddMol',
-                      data = dict,
-                      headers={'token': token})
-    if r.status_code != 200:
-        return False, r.content
-    else:
-        return True, r.content
-
 def listify(data, addBlank=True):
     res = data.content.decode()
     res = json.loads(res)
@@ -28,12 +19,6 @@ def getDatabase():
     r = requests.get(f'{baseUrl}getDatabase')
     res = listify(r, False)
     return res
-
-def createNewRegno(regno, token):
-    r = requests.put(f'{baseUrl}api/createRegno',
-                     params={'regno': regno},
-                     headers={'token': token})
-
 
 def getStructure(token, compound_id):
     r = requests.get(f'{baseUrl}api/getNextSdfSequence',
@@ -54,7 +39,6 @@ def getMolFileBcpvs(token, compound_id):
                      params={'compound_id': compound_id},
                      headers={'token': token})
     res = r.content.decode()
-    print(res)
     return res
 
 def createMolImage(token, regno):
@@ -68,6 +52,16 @@ def postMolfile(token, molfile):
     r = requests.post(f'{baseUrl}api/loadMolfile',
                       headers={'token': token},
                       files=molfile)
+    return r
+
+def createMolImageFromMolfile(token, molfile):
+    dValues = {
+        "mol_id": 'new_structure',
+        "molfile": molfile
+    }
+    r = requests.post(f'{baseUrl}api/createMolImageFromMolfile',
+                      data = dValues,
+                      headers={'token': token})
     return r
 
 def login(user, password, database):

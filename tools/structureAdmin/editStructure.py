@@ -46,26 +46,19 @@ class EditStructure(QMainWindow):
         retcode = open_file(self.fname_path)
 
         self.fs_watcher = QtCore.QFileSystemWatcher([self.fname_path])
-        self.fs_watcher.fileChanged.connect(self.test_msg)
+        self.fs_watcher.fileChanged.connect(self.createMolImage)
         
-        return
 
+    def createMolImage(self):
+        molfile_file = open(self.fname_path, "r")
+        molfile = molfile_file.read()
+        molfile_file.close()
+        print(molfile)
+
+        dbInterface.createMolImageFromMolfile(self.token, molfile)
+        displayMolfile(self, 'new_structure')
         
-        if self.new_structure_lab.pixmap().isNull():
-            # no loaded mol, copying template
-            shutil.copy(resource_path("nostruct.mol"), self.fname_path)
-        else:
-            # download molfile for selected regno, write to 'tmp.mol'
-            tmp_mol_str = dbInterface.getMolFileBcpvs(self.token,
-                                                 self.compound_id)
-            tmp_file = open(self.fname_path, "w")
-            n = tmp_file.write(tmp_mol_str)
-            tmp_file.close()
-        retcode = open_file(self.fname_path)
-        # confirm dialogue
-        self.fs_watcher = QtCore.QFileSystemWatcher([self.fname_path])
-        self.fs_watcher.fileChanged.connect(self.test_msg)
-
+    
     def test_msg(self):
         self.fs_watcher = None
         msg = QMessageBox()
@@ -79,12 +72,12 @@ class EditStructure(QMainWindow):
         ok_msg = QMessageBox()
         ok_msg.setStandardButtons(QMessageBox.Ok)
         ok_msg.setWindowTitle("Edit " + self.fname)
+        print('here')
         if (msg.clickedButton() == btnS):
             # save changes
             #postMolFile(self, self.fname_path, self.regno, logging.getLogger(self.mod_name))
             displayMolfile(self)
-            updateMoleculeProperties(self)
-            ok_msg.setText("Updated .mol file")
+            #updateMoleculeProperties(self)
             self.molChanged()
         else:
             # cancel, do nothing
@@ -94,7 +87,7 @@ class EditStructure(QMainWindow):
         os.remove(self.fname_path)
         self.fname = None
         self.fname_path = None
-        self.editmol_btn.setEnabled(True)
+
 
     def compoundIdChanged(self):
         sCompoundId = self.compoundId_eb.text()
@@ -112,11 +105,6 @@ class EditStructure(QMainWindow):
             self.molOK = False
             self.molOK = True
         
-        if self.allDataPresent():
-            self.regcompound_btn.setEnabled(True)
-        else:
-            self.regcompound_btn.setEnabled(False)
-
     def updateStructure(self):
         pass
         #compound_id = dbInterface.bcpvsRegCompound(self.token,

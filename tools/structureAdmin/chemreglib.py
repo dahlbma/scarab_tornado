@@ -48,13 +48,13 @@ def open_file(filename):
         proc = subprocess.Popen("open " + filename, shell=True)
     return proc
 
-def displayMolfile(self):
-    dbInterface.createMolImage(self.token,
-                               self.compound_id)
+def displayMolfile(self, sId):
+    #dbInterface.createMolImage(self.token,
+    #                           self.compound_id)
     image = QImage()
-    self.structure_lab.setScaledContents(True)
-    image.loadFromData(dbInterface.getMolImage(self.compound_id))
-    self.structure_lab.setPixmap(QPixmap(image))
+    self.new_structure_lab.setScaledContents(True)
+    image.loadFromData(dbInterface.getMolImage(sId))
+    self.new_structure_lab.setPixmap(QPixmap(image))
 
 def postMolFile(self, fname, regno, logger):
     logger.info("posting file %s to server", fname)
