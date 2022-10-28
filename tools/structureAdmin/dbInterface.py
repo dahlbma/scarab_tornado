@@ -41,6 +41,13 @@ def getMolFileBcpvs(token, compound_id):
     res = r.content.decode()
     return res
 
+def createBcpvsMolImage(token, compound_id):
+    r = requests.get(f'{baseUrl}api/createBcpvsMolImage',
+                     params={'compound_id': compound_id},
+                     headers={'token': token})
+    res = r.content.decode()
+    return res
+
 def createMolImage(token, regno):
     r = requests.get(f'{baseUrl}api/createMolImage',
                      params={'regno': regno},

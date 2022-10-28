@@ -15,15 +15,14 @@ class EditStructure(QMainWindow):
         self.token = token
         self.mod_name = "reg"
         logger = logging.getLogger(self.mod_name)
-        self.dirty = False
         self.updateStructure_btn.clicked.connect(self.updateStructure)
         self.window().setWindowTitle("Edit structure")
         self.updateStructure_btn.setEnabled(False)
-        self.batchOk = False
-        self.molOK = False
         self.compound_id = ''
+        self.regno = ''
         
         self.compoundId_eb.textChanged.connect(self.compoundIdChanged)
+        self.regno_eb.textChanged.connect(self.regnoChanged)
 
         self.editStructure_btn.clicked.connect(self.editMolFile)
         self.editStructure_btn.setEnabled(True)
@@ -53,51 +52,34 @@ class EditStructure(QMainWindow):
         molfile_file = open(self.fname_path, "r")
         molfile = molfile_file.read()
         molfile_file.close()
-        print(molfile)
 
         dbInterface.createMolImageFromMolfile(self.token, molfile)
-        displayMolfile(self, 'new_structure')
-        
+        displayMolfile(self, 'new_structure', self.new_structure_lab)
     
-    def test_msg(self):
-        self.fs_watcher = None
-        msg = QMessageBox()
-        msg.setWindowTitle("Edit " + self.fname)
-        msg.setIcon(QMessageBox.Question)
-        msg.setText("Do you want to save .mol-file changes to the database?")
-        msg.setStandardButtons(QMessageBox.Save | QMessageBox.Cancel)
-        msg.setDefaultButton(QMessageBox.Save)
-        btnS = msg.button(QMessageBox.Save)
-        msg.exec_()
-        ok_msg = QMessageBox()
-        ok_msg.setStandardButtons(QMessageBox.Ok)
-        ok_msg.setWindowTitle("Edit " + self.fname)
-        print('here')
-        if (msg.clickedButton() == btnS):
-            # save changes
-            #postMolFile(self, self.fname_path, self.regno, logging.getLogger(self.mod_name))
-            displayMolfile(self)
-            #updateMoleculeProperties(self)
-            self.molChanged()
-        else:
-            # cancel, do nothing
-            ok_msg.setText("Did not update .mol file in database. 'tmp.mol' deleted.")
-        ok_msg.exec_()
-        # cleanup, remove tmp.mol
-        os.remove(self.fname_path)
-        self.fname = None
-        self.fname_path = None
-
 
     def compoundIdChanged(self):
-        sCompoundId = self.compoundId_eb.text()
+        sCompoundId = self.compoundId_eb.text().upper()
         pattern = '^CBK[0-9]{6}$'
-        self.batchOk = False
         if len(re.findall(pattern, sCompoundId)) == 1:
             self.compound_id = sCompoundId
-            res = dbInterface.getMolFileBcpvs(self.token, sCompoundId)
-        self.updateStructure_btn.setEnabled(False)
-        
+            res = dbInterface.createBcpvsMolImage(self.token, sCompoundId)
+            displayMolfile(self, sCompoundId, self.current_structure_lab)
+        else:
+            self.updateStructure_btn.setEnabled(False)
+
+
+    def regnoChanged(self):
+        sRegno = self.regno_eb.text()
+        #3913654
+        pattern = '^[0-9]{7}$'
+        if len(re.findall(pattern, sRegno)) == 1:
+            self.regno = sRegno
+            res = dbInterface.createMolImage(self.token, sRegno)
+            displayMolfile(self, sRegno, self.original_structure_lab)
+        else:
+            self.updateStructure_btn.setEnabled(False)
+
+
     def molChanged(self):
         if (not self.new_structure_lab.pixmap().isNull()):
             self.molOK = True

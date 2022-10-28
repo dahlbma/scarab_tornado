@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>893</width>
+    <width>992</width>
     <height>622</height>
    </rect>
   </property>
@@ -17,7 +17,7 @@
    <widget class="QLabel" name="new_structure_lab">
     <property name="geometry">
      <rect>
-      <x>500</x>
+      <x>670</x>
       <y>160</y>
       <width>280</width>
       <height>280</height>
@@ -86,7 +86,7 @@
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>590</x>
+      <x>760</x>
       <y>130</y>
       <width>131</width>
       <height>16</height>
@@ -99,8 +99,8 @@
    <widget class="QPushButton" name="updateStructure_btn">
     <property name="geometry">
      <rect>
-      <x>340</x>
-      <y>530</y>
+      <x>390</x>
+      <y>510</y>
       <width>211</width>
       <height>24</height>
      </rect>
@@ -112,7 +112,7 @@
    <widget class="QWidget" name="horizontalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>330</x>
+      <x>390</x>
       <y>30</y>
       <width>221</width>
       <height>80</height>
@@ -134,7 +134,7 @@
    <widget class="QLabel" name="current_structure_lab">
     <property name="geometry">
      <rect>
-      <x>110</x>
+      <x>350</x>
       <y>160</y>
       <width>280</width>
       <height>280</height>
@@ -203,20 +203,20 @@
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>190</x>
+      <x>400</x>
       <y>130</y>
-      <width>131</width>
+      <width>191</width>
       <height>16</height>
      </rect>
     </property>
     <property name="text">
-     <string>Current structure</string>
+     <string>Current structure in compound</string>
     </property>
    </widget>
    <widget class="QPushButton" name="editStructure_btn">
     <property name="geometry">
      <rect>
-      <x>570</x>
+      <x>740</x>
       <y>450</y>
       <width>151</width>
       <height>24</height>
@@ -226,13 +226,143 @@
      <string>Edit structure</string>
     </property>
    </widget>
+   <widget class="QLabel" name="original_structure_lab">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>160</y>
+      <width>280</width>
+      <height>280</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>280</width>
+      <height>280</height>
+     </size>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>280</width>
+      <height>280</height>
+     </size>
+    </property>
+    <property name="sizeIncrement">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="baseSize">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="mouseTracking">
+     <bool>true</bool>
+    </property>
+    <property name="focusPolicy">
+     <enum>Qt::ClickFocus</enum>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">[ok='false']{
+	background-color: rgb(211, 215, 207); 
+	border: 3px solid rgb(32, 74, 135);
+}
+[ok='true']{
+	background-color: rgb(211, 215, 207);
+	border: 1px solid black;
+}
+</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="ok" stdset="0">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_5">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>130</y>
+      <width>191</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Original ChemReg structure</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="horizontalLayoutWidget_2">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>30</y>
+      <width>221</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Regno </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="regno_eb"/>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QPushButton" name="regnoBackward_btn">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>450</y>
+      <width>80</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>&lt;</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="regnoForward_btn">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>450</y>
+      <width>80</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string> &gt; </string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>893</width>
+     <width>992</width>
      <height>21</height>
     </rect>
    </property>
