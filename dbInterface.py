@@ -81,7 +81,7 @@ def getAtomicComposition(saComp):
 def createPngFromMolfile(regno, molfile):
     m = Chem.MolFromMolBlock(molfile)
     try:
-        Draw.MolToFile(m, f'mols/{regno}.png', kekulize=False, size=(280, 280))
+        Draw.MolToFile(m, f'mols/{regno}.png', kekulize=True, size=(280, 280))
     except:
         logger.error(f"regno {regno} is nostruct")
         
@@ -638,7 +638,6 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
         molfile = '\n' + self.get_body_argument('molfile')
         sMolId = self.get_body_argument('mol_id')
         m = Chem.MolFromMolBlock(molfile)
-        print(molfile)
         try:
             Draw.MolToFile(m, f'mols/{sMolId}.png', kekulize=True, size=(280, 280))
         except:
@@ -657,6 +656,23 @@ class CreateMolImage(tornado.web.RequestHandler):
         if len(molfile) > 0 and molfile[0][0] != None:
             try:
                 createPngFromMolfile(regno, molfile[0][0])
+            except:
+                pass
+        self.finish()
+
+
+@jwtauth
+class CreateBcpvsMolImage(tornado.web.RequestHandler):
+    def get(self):
+        chemregDB, bcpvsDB = getDatabase(self)
+        sCmpId = self.get_argument("compound_id")
+        sSql = f"""select mol from {bcpvsDB}.JCMOL_MOLTABLE
+                   where compound_id = '{sCmpId}'"""
+        cur.execute(sSql)
+        molfile = cur.fetchall()
+        if len(molfile) > 0 and molfile[0][0] != None:
+            try:
+                createPngFromMolfile(sCmpId, molfile[0][0])
             except:
                 pass
         self.finish()
