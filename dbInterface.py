@@ -14,6 +14,7 @@ from io import StringIO
 import sys
 import codecs
 import re
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -666,13 +667,18 @@ class CreateBcpvsMolImage(tornado.web.RequestHandler):
     def get(self):
         chemregDB, bcpvsDB = getDatabase(self)
         sCmpId = self.get_argument("compound_id")
-        sSql = f"""select mol from {bcpvsDB}.JCMOL_MOLTABLE
-                   where compound_id = '{sCmpId}'"""
+        sSql = f"""select mol, compound_id from {bcpvsDB}.JCMOL_MOLTABLE
+                   where compound_id like '{sCmpId}%'"""
         cur.execute(sSql)
         molfile = cur.fetchall()
         if len(molfile) > 0 and molfile[0][0] != None:
             try:
                 createPngFromMolfile(sCmpId, molfile[0][0])
+            except:
+                pass
+        else:
+            try:
+                os.remove(f'mols/{sCmpId}.png')
             except:
                 pass
         self.finish()
@@ -841,6 +847,59 @@ class GetMolfile(tornado.web.RequestHandler):
         res = cur.fetchall()
         if len(res) > 0:
             self.write(res[0][0])
+
+
+@jwtauth
+class GetForwardRegno(tornado.web.RequestHandler):
+    def get(self):
+        chemregDB, bcpvsDB = getDatabase(self)
+        regno = self.get_argument("regno")
+        sSql = f"""select regno from {chemregDB}.chem_info
+                   where regno > '{regno}' order by regno asc limit 1"""
+        cur.execute(sSql)
+        res = cur.fetchall()
+        if len(res) > 0:
+            self.write(json.dumps(res[0][0]))
+
+
+@jwtauth
+class GetBackwardRegno(tornado.web.RequestHandler):
+    def get(self):
+        chemregDB, bcpvsDB = getDatabase(self)
+        regno = self.get_argument("regno")
+        sSql = f"""select regno from {chemregDB}.chem_info
+                   where regno < '{regno}' order by regno desc limit 1"""
+        cur.execute(sSql)
+        res = cur.fetchall()
+        if len(res) > 0:
+            self.write(json.dumps(res[0][0]))
+
+
+@jwtauth
+class GetRegnoFromCompound(tornado.web.RequestHandler):
+    def get(self):
+        chemregDB, bcpvsDB = getDatabase(self)
+        sCmpId = self.get_argument("compound_id")
+        sSql = f"""select regno from {chemregDB}.chem_info
+                   where compound_id = '{sCmpId}'"""
+        cur.execute(sSql)
+        res = cur.fetchall()
+        if len(res) > 0:
+            self.write(json.dumps(res[0][0]))
+
+
+@jwtauth
+class GetCompoundFromRegno(tornado.web.RequestHandler):
+    def get(self):
+        chemregDB, bcpvsDB = getDatabase(self)
+        sRegno = self.get_argument("regno")
+        sSql = f"""select compound_id from {chemregDB}.chem_info
+                   where regno = '{sRegno}'"""
+        cur.execute(sSql)
+        res = cur.fetchall()
+        if len(res) > 0:
+            self.write(json.dumps(res[0][0]))
+
 
 @jwtauth
 class GetMolfileBcpvs(tornado.web.RequestHandler):
