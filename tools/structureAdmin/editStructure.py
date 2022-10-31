@@ -27,10 +27,12 @@ class EditStructure(QMainWindow):
         self.editStructure_btn.clicked.connect(self.editMolFile)
         self.editStructure_btn.setEnabled(True)
 
-
+        self.regnoForward_btn.clicked.connect(self.regnoForward)
+        self.regnoBackward_btn.clicked.connect(self.regnoBackward)
+        
     def uploadMolfile(self):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 
-                                                '.', "Molfiles (*.mol)")
+                                            '.', "Molfiles (*.mol)")
         if fname[0] != '':
             #res, sMessage = postMolFile(self, fname[0], self.regno, logging.getLogger(self.mod_name))
             displayMolfile(self)
@@ -64,10 +66,43 @@ class EditStructure(QMainWindow):
             self.compound_id = sCompoundId
             res = dbInterface.createBcpvsMolImage(self.token, sCompoundId)
             displayMolfile(self, sCompoundId, self.current_structure_lab)
+            res = dbInterface.getRegnoFromCompound(self.token, sCompoundId)
+            if res != '':
+                self.regno_eb.setText(res)
+            else:
+                self.regno_eb.setText('')
+                displayMolfile(self, 'no_struct', self.original_structure_lab)
+
         else:
             self.updateStructure_btn.setEnabled(False)
 
+            
+    def regnoForward(self):
+        sRegno = self.regno_eb.text()
+        forwardRegno = dbInterface.getForwardRegno(self.token, sRegno)
+        if forwardRegno != '':
+            self.regno_eb.setText(forwardRegno)
+            sCmpId = dbInterface.getCompoundFromRegno(self.token, forwardRegno)
+            if sCmpId != '':
+                self.compoundId_eb.setText(sCmpId)
+            else:
+                self.regno_eb.setText('')
+                displayMolfile(self, 'no_struct', self.current_structure_lab)
 
+        
+    def regnoBackward(self):
+        sRegno = self.regno_eb.text()
+        prevRegno = dbInterface.getBackwardRegno(self.token, sRegno)
+        if prevRegno != '':
+            self.regno_eb.setText(prevRegno)
+            sCmpId = dbInterface.getCompoundFromRegno(self.token, prevRegno)
+            if sCmpId not in  ('', 'null'):
+                self.compoundId_eb.setText(sCmpId)
+            else:
+                self.regno_eb.setText('')
+                displayMolfile(self, 'no_struct', self.current_structure_lab)
+
+        
     def regnoChanged(self):
         sRegno = self.regno_eb.text()
         #3913654
@@ -76,6 +111,12 @@ class EditStructure(QMainWindow):
             self.regno = sRegno
             res = dbInterface.createMolImage(self.token, sRegno)
             displayMolfile(self, sRegno, self.original_structure_lab)
+            sCmpId = dbInterface.getCompoundFromRegno(self.token, sRegno)
+            if sCmpId != '':
+                self.compoundId_eb.setText(sCmpId)
+            else:
+                self.regno_eb.setText('')
+                displayMolfile(self, 'no_struct', self.original_structure_lab)
         else:
             self.updateStructure_btn.setEnabled(False)
 

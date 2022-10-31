@@ -34,6 +34,38 @@ def getMolFile(token, regno):
     res = r.content.decode()
     return res
 
+
+def getForwardRegno(token, regno):
+    r = requests.get(f'{baseUrl}api/getForwardRegno', 
+                     params={'regno': regno},
+                     headers={'token': token})
+    res = r.content.decode()
+    return res
+
+
+def getBackwardRegno(token, regno):
+    r = requests.get(f'{baseUrl}api/getBackwardRegno',
+                     params={'regno': regno},
+                     headers={'token': token})
+    res = r.content.decode()
+    return res
+
+
+def getRegnoFromCompound(token, sCmpId):
+    r = requests.get(f'{baseUrl}api/getRegnoFromCompound', 
+                     params={'compound_id': sCmpId},
+                     headers={'token': token})
+    res = r.content.decode()
+    return res
+
+def getCompoundFromRegno(token, sRegno):
+    r = requests.get(f'{baseUrl}api/getCompoundFromRegno', 
+                     params={'regno': sRegno},
+                     headers={'token': token})
+    res = r.content.decode()
+    res = res.replace('"', '')
+    return res
+
 def getMolFileBcpvs(token, compound_id):
     r = requests.get(f'{baseUrl}api/getMolfileBcpvs', 
                      params={'compound_id': compound_id},
