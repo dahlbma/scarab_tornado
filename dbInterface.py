@@ -850,12 +850,25 @@ class GetMolfile(tornado.web.RequestHandler):
 
 
 @jwtauth
-class GetForwardRegno(tornado.web.RequestHandler):
+class GetForwardCompound(tornado.web.RequestHandler):
     def get(self):
         chemregDB, bcpvsDB = getDatabase(self)
-        regno = self.get_argument("regno")
-        sSql = f"""select regno from {chemregDB}.chem_info
-                   where regno > '{regno}' order by regno asc limit 1"""
+        sCmpId = self.get_argument("compound_id")
+        sSql = f"""select compound_id from {bcpvsDB}.compound
+                   where compound_id > '{sCmpId}' order by compound_id asc limit 1"""
+        cur.execute(sSql)
+        res = cur.fetchall()
+        if len(res) > 0:
+            self.write(json.dumps(res[0][0]))
+
+
+@jwtauth
+class GetBackwardCompound(tornado.web.RequestHandler):
+    def get(self):
+        chemregDB, bcpvsDB = getDatabase(self)
+        sCmpId = self.get_argument("compound_id")
+        sSql = f"""select compound_id from {bcpvsDB}.compound
+                   where compound_id < '{sCmpId}' order by compound_id desc limit 1"""
         cur.execute(sSql)
         res = cur.fetchall()
         if len(res) > 0:
@@ -869,6 +882,19 @@ class GetBackwardRegno(tornado.web.RequestHandler):
         regno = self.get_argument("regno")
         sSql = f"""select regno from {chemregDB}.chem_info
                    where regno < '{regno}' order by regno desc limit 1"""
+        cur.execute(sSql)
+        res = cur.fetchall()
+        if len(res) > 0:
+            self.write(json.dumps(res[0][0]))
+
+
+@jwtauth
+class GetForwardRegno(tornado.web.RequestHandler):
+    def get(self):
+        chemregDB, bcpvsDB = getDatabase(self)
+        regno = self.get_argument("regno")
+        sSql = f"""select regno from {chemregDB}.chem_info
+                   where regno > '{regno}' order by regno asc limit 1"""
         cur.execute(sSql)
         res = cur.fetchall()
         if len(res) > 0:
