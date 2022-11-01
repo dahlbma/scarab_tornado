@@ -4,6 +4,7 @@ from PyQt5.QtGui import QIntValidator
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5.Qt import QApplication, QClipboard
 
 from chemreglib import *
 
@@ -27,9 +28,15 @@ class EditStructure(QMainWindow):
         self.editStructure_btn.clicked.connect(self.editMolFile)
         self.editStructure_btn.setEnabled(True)
 
+        self.regnoCopyStructure_btn.clicked.connect(self.regnoCopyStructure)
+        
         self.regnoForward_btn.clicked.connect(self.regnoForward)
         self.regnoBackward_btn.clicked.connect(self.regnoBackward)
-        
+
+        self.compoundForward_btn.clicked.connect(self.compoundForward)
+        self.compoundBackward_btn.clicked.connect(self.compoundBackward)
+
+
     def uploadMolfile(self):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 
                                             '.', "Molfiles (*.mol)")
@@ -72,9 +79,47 @@ class EditStructure(QMainWindow):
             else:
                 self.regno_eb.setText('')
                 displayMolfile(self, 'no_struct', self.original_structure_lab)
-
         else:
             self.updateStructure_btn.setEnabled(False)
+
+
+    def regnoCopyStructure(self):
+        sRegno = self.regno_eb.text()
+        sSql = f'''select molfile from chem_reg.chem_info
+                   where regno = '{sRegno}' '''
+        sMolfile = dbInterface.getMolFile(self.token, sRegno)
+        
+        cb = QApplication.clipboard()
+        cb.clear(mode=cb.Clipboard)
+        cb.setText(sMolfile, mode=cb.Clipboard)
+        
+        
+    def compoundForward(self):
+        sCmpId = self.compoundId_eb.text()
+        forwardCompound = dbInterface.getForwardCompound(self.token, sCmpId)
+        forwardCompound = forwardCompound.replace('"', '')
+        if forwardCompound != '':
+            self.compoundId_eb.setText(forwardCompound)
+            sRegno = dbInterface.getRegnoFromCompound(self.token, forwardCompound)
+            if sRegno != '':
+                self.regno_eb.setText(sRegno)
+            else:
+                self.compoundId_eb.setText('')
+                displayMolfile(self, 'no_struct', self.original_structure_lab)
+
+            
+    def compoundBackward(self):
+        sCmpId = self.compoundId_eb.text()
+        backwardCompound = dbInterface.getBackwardCompound(self.token, sCmpId)
+        backwardCompound = backwardCompound.replace('"', '')
+        if backwardCompound != '':
+            self.compoundId_eb.setText(backwardCompound)
+            sRegno = dbInterface.getRegnoFromCompound(self.token, backwardCompound)
+            if sRegno != '':
+                self.regno_eb.setText(sRegno)
+            else:
+                self.compoundId_eb.setText('')
+                displayMolfile(self, 'no_struct', self.original_structure_lab)
 
             
     def regnoForward(self):

@@ -35,6 +35,22 @@ def getMolFile(token, regno):
     return res
 
 
+def getForwardCompound(token, sCmpId):
+    r = requests.get(f'{baseUrl}api/getForwardCompound',
+                     params={'compound_id': sCmpId},
+                     headers={'token': token})
+    res = r.content.decode()
+    return res
+
+
+def getBackwardCompound(token, sCmpId):
+    r = requests.get(f'{baseUrl}api/getBackwardCompound',
+                     params={'compound_id': sCmpId},
+                     headers={'token': token})
+    res = r.content.decode()
+    return res
+
+
 def getForwardRegno(token, regno):
     r = requests.get(f'{baseUrl}api/getForwardRegno', 
                      params={'regno': regno},
