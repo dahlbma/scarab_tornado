@@ -641,8 +641,20 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
         m = Chem.MolFromMolBlock(molfile)
         try:
             Draw.MolToFile(m, f'mols/{sMolId}.png', kekulize=True, size=(280, 280))
+            return
         except:
             logger.error(f"{sMolId} is nostruct")
+
+        sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles')))'''
+        cur.execute(sSql)
+        strip = cur.fetchall()[0][0].decode("utf-8")
+        print(strip)
+        m = Chem.MolFromMolBlock(strip)
+        try:
+            Draw.MolToFile(m, f'mols/{sMolId}.png', kekulize=True, size=(280, 280))
+            return
+        except:
+            logger.error(f"{sMolId} is nostruct again")
 
 
 @jwtauth
