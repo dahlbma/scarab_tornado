@@ -16,9 +16,7 @@ class EditStructure(QMainWindow):
         self.token = token
         self.mod_name = "reg"
         logger = logging.getLogger(self.mod_name)
-        self.updateStructure_btn.clicked.connect(self.updateStructure)
         self.window().setWindowTitle("Edit structure")
-        self.updateStructure_btn.setEnabled(False)
         self.compound_id = ''
         self.regno = ''
         
@@ -36,6 +34,9 @@ class EditStructure(QMainWindow):
         self.compoundForward_btn.clicked.connect(self.compoundForward)
         self.compoundBackward_btn.clicked.connect(self.compoundBackward)
 
+        self.updateStructure_btn.setEnabled(False)
+        self.updateStructure_btn.clicked.connect(self.updateStructure)
+
 
     def uploadMolfile(self):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 
@@ -47,7 +48,7 @@ class EditStructure(QMainWindow):
             self.molChanged()      
 
     def editMolFile(self, event=None):
-        self.editStructure_btn.setEnabled(False)
+        #self.editStructure_btn.setEnabled(False)
         self.fname = "tmp.mol" # temp file name
         self.fname_path = resource_path(self.fname) # file location / actual file name
         shutil.copy(resource_path("nostruct.mol"), self.fname_path)
@@ -64,7 +65,8 @@ class EditStructure(QMainWindow):
 
         dbInterface.createMolImageFromMolfile(self.token, molfile)
         displayMolfile(self, 'new_structure', self.new_structure_lab)
-    
+        self.molfile = molfile
+        self.updateStructure_btn.setEnabled(True)
 
     def compoundIdChanged(self):
         sCompoundId = self.compoundId_eb.text().upper()
@@ -174,9 +176,8 @@ class EditStructure(QMainWindow):
             self.molOK = True
         
     def updateStructure(self):
+        # Update the structure in db here
+        #dbInterface.updateStructure(self.token, self.compound_id, self.molfile)
+        print('Update structure through dbInterface')
         pass
-        #compound_id = dbInterface.bcpvsRegCompound(self.token,
-        #                                           self.regno)
-        #search = SearchScreen(self.token, self.regno)
-        #self.window().addWidget(search)
-        #self.window().setCurrentIndex(self.window().currentIndex() + 1)
+
