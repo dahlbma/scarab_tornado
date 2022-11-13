@@ -9,6 +9,7 @@ from rdkit import Chem
 from rdkit.Chem import Draw
 from rdkit.Chem import Descriptors
 from rdkit.Chem import rdMolDescriptors
+from rdkit.Chem.MolStandardize import rdMolStandardize
 from molmass import Formula
 from io import StringIO
 import sys
@@ -183,7 +184,7 @@ def registerNewBatch(bcpvsDB,
     product_type,
     supplier_id,
     supplier_batch,
-    chemspec_regno)
+    chemreg_regno)
     values (
     '{compound_id}',
     '{notebook_ref}',
@@ -638,13 +639,36 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
     def post(self):
         molfile = '\n' + self.get_body_argument('molfile')
         sMolId = self.get_body_argument('mol_id')
-        m = Chem.MolFromMolBlock(molfile)
+
+        print(molfile)
+        #mol = Chem.MolFromSmiles(smiles)
+        mol = Chem.MolFromMolBlock(molfile)
+        params = rdMolStandardize.CleanupParameters()
+        params.tautomerRemoveSp3Stereo = False
+        params.tautomerRemoveBondStereo = False
+        params.tautomerRemoveIsotopicHs = False
+        clean_mol = rdMolStandardize.Cleanup(mol, params)
+        parent_clean_mol = rdMolStandardize.FragmentParent(clean_mol, params)
+        uncharger = rdMolStandardize.Uncharger()
+        uncharged_parent_clean_mol = uncharger.uncharge(parent_clean_mol)
+        te = rdMolStandardize.TautomerEnumerator(params) # idem
+        taut_uncharged_parent_clean_mol = te.Canonicalize(uncharged_parent_clean_mol)
+
+        m = Chem.MolToMolBlock(taut_uncharged_parent_clean_mol)
+
+
+
+
+        
+        #m = Chem.MolFromMolBlock(molfile)
         try:
             Draw.MolToFile(m, f'mols/{sMolId}.png', kekulize=True, size=(280, 280))
             return
         except:
             logger.error(f"{sMolId} is nostruct")
 
+        
+            
         sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles')))'''
         cur.execute(sSql)
         strip = cur.fetchall()[0][0].decode("utf-8")
