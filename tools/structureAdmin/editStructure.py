@@ -179,5 +179,5 @@ class EditStructure(QMainWindow):
         # Update the structure in db here
         #dbInterface.updateStructure(self.token, self.compound_id, self.molfile)
         print('Update structure through dbInterface')
-        pass
+        prevRegno = dbInterface.updateStructureAdmin(self.token, self.compound_id, self.molfile)
 
