@@ -48,22 +48,26 @@ class EditStructure(QMainWindow):
             self.molChanged()      
 
     def editMolFile(self, event=None):
-        #self.editStructure_btn.setEnabled(False)
         self.fname = "tmp.mol" # temp file name
         self.fname_path = resource_path(self.fname) # file location / actual file name
         shutil.copy(resource_path("nostruct.mol"), self.fname_path)
         retcode = open_file(self.fname_path)
 
         self.fs_watcher = QtCore.QFileSystemWatcher([self.fname_path])
-        self.fs_watcher.fileChanged.connect(self.createMolImage)
-        
+        self.fs_watcher.fileChanged.connect(self.createMolImage)        
 
     def createMolImage(self):
         molfile_file = open(self.fname_path, "r")
         molfile = molfile_file.read()
         molfile_file.close()
+        self.statusMsg_lab.setText('')
 
-        dbInterface.createMolImageFromMolfile(self.token, molfile)
+        res = dbInterface.createMolImageFromMolfile(self.token, molfile)
+        res = json.loads(res)
+        
+        self.molfileToRegister = res['molfile']
+        if res['status'] != '':
+            self.statusMsg_lab.setText(res['status'])
         displayMolfile(self, 'new_structure', self.new_structure_lab)
         self.molfile = molfile
         self.updateStructure_btn.setEnabled(True)
@@ -72,6 +76,8 @@ class EditStructure(QMainWindow):
         sCompoundId = self.compoundId_eb.text().upper()
         pattern = '^CBK[0-9]{6}$'
         if len(re.findall(pattern, sCompoundId)) == 1:
+            displayMolfile(self, 'no_struct', self.new_structure_lab)
+            self.statusMsg_lab.setText('')
             self.compound_id = sCompoundId
             res = dbInterface.createBcpvsMolImage(self.token, sCompoundId)
             displayMolfile(self, sCompoundId, self.current_structure_lab)
@@ -155,6 +161,8 @@ class EditStructure(QMainWindow):
         #3913654
         pattern = '^[0-9]{7}$'
         if len(re.findall(pattern, sRegno)) == 1:
+            displayMolfile(self, 'no_struct', self.new_structure_lab)
+            self.statusMsg_lab.setText('')
             self.regno = sRegno
             res = dbInterface.createMolImage(self.token, sRegno)
             displayMolfile(self, sRegno, self.original_structure_lab)

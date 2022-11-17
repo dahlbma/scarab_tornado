@@ -395,6 +395,35 @@
      <string>Copy structure</string>
     </property>
    </widget>
+   <widget class="QLabel" name="status_lab">
+    <property name="geometry">
+     <rect>
+      <x>730</x>
+      <y>89</y>
+      <width>51</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Status: </string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="statusMsg_lab">
+    <property name="geometry">
+     <rect>
+      <x>780</x>
+      <y>90</y>
+      <width>181</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 0, 0);</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -402,7 +431,7 @@
      <x>0</x>
      <y>0</y>
      <width>992</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>

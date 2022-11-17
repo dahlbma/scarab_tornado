@@ -124,7 +124,7 @@ def createMolImageFromMolfile(token, molfile):
     r = requests.post(f'{baseUrl}api/createMolImageFromMolfile',
                       data = dValues,
                       headers={'token': token})
-    return r
+    return r.content.decode()
 
 def login(user, password, database):
     r = requests.post(f'{baseUrl}login',
