@@ -187,6 +187,7 @@ def make_app():
         (r"/api/getCompoundFromRegno", dbInterface.GetCompoundFromRegno),
         (r"/api/createMolImage", dbInterface.CreateMolImage),
         (r"/api/createBcpvsMolImage", dbInterface.CreateBcpvsMolImage),
+        (r"/api/updateStructureAdmin", dbInterface.UpdateStructureAdmin),
         (r"/api/createMolImageFromMolfile", dbInterface.CreateMolImageFromMolfile),
         (r"/getCompound", dbInterface.GetCompound),
         (r"/mols/(.*)", web.StaticFileHandler, {"path": "mols/"}),

@@ -86,7 +86,7 @@ def createPngFromMolfile(regno, molfile):
         Draw.MolToFile(m, f'mols/{regno}.png', kekulize=True, size=(280, 280))
     except:
         logger.error(f"regno {regno} is nostruct")
-        
+        print(molfile)
 
 def addStructure(database, molfile, newRegno, idColumnName):
     #####
@@ -350,6 +350,15 @@ class GetNextSdfSequence(tornado.web.RequestHandler):
         self.finish(f'{pkey}')
 
 
+@jwtauth
+class UpdateStructureAdmin(tornado.web.RequestHandler):
+    def post(self):
+        chemregDB, bcpvsDB = getDatabase(self)
+        molfile = self.get_body_argument('molfile')
+        compound_id = self.get_body_argument('compound_id')
+        print(compound_id)
+
+        
 @jwtauth
 class GetRegnosFromSdfSequence(tornado.web.RequestHandler):
     def get(self):
@@ -637,17 +646,43 @@ class GetRegnoData(tornado.web.RequestHandler):
 @jwtauth
 class CreateMolImageFromMolfile(tornado.web.RequestHandler):
     def post(self):
+        sStatus = ''
         molfile = '\n' + self.get_body_argument('molfile')
         sMolId = self.get_body_argument('mol_id')
 
-        print(molfile)
-        #mol = Chem.MolFromSmiles(smiles)
+        try:
+            os.remove(f'mols/{sMolId}.png')
+        except:
+            pass
+        if len(molfile) < 85:
+            # The molecule is a nostruct, rdkit doesn't like that
+            resDict = {
+                "molfile": '',
+                "status": ''
+            }
+            self.finish(json.dumps(resDict))
+            return
         mol = Chem.MolFromMolBlock(molfile)
         params = rdMolStandardize.CleanupParameters()
         params.tautomerRemoveSp3Stereo = False
         params.tautomerRemoveBondStereo = False
         params.tautomerRemoveIsotopicHs = False
-        clean_mol = rdMolStandardize.Cleanup(mol, params)
+        try:
+            clean_mol = rdMolStandardize.Cleanup(mol, params)
+        except:
+            sStatus = 'Molecule altered, checkit'
+            sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}',
+                                                                  'cistrans'),
+                                                                  'smiles')))'''
+            cur.execute(sSql)
+            molfile = cur.fetchall()[0][0].decode("utf-8")
+            mol = Chem.MolFromMolBlock(molfile)
+            params = rdMolStandardize.CleanupParameters()
+            params.tautomerRemoveSp3Stereo = False
+            params.tautomerRemoveBondStereo = False
+            params.tautomerRemoveIsotopicHs = False
+            clean_mol = rdMolStandardize.Cleanup(mol, params)
+
         parent_clean_mol = rdMolStandardize.FragmentParent(clean_mol, params)
         uncharger = rdMolStandardize.Uncharger()
         uncharged_parent_clean_mol = uncharger.uncharge(parent_clean_mol)
@@ -656,30 +691,20 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
 
         m = Chem.MolToMolBlock(taut_uncharged_parent_clean_mol)
 
-
-
-
-        
-        #m = Chem.MolFromMolBlock(molfile)
-        try:
-            Draw.MolToFile(m, f'mols/{sMolId}.png', kekulize=True, size=(280, 280))
-            return
-        except:
-            logger.error(f"{sMolId} is nostruct")
-
-        
-            
-        sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles')))'''
+        sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{m}', 'cistrans'), 'smiles')))'''
         cur.execute(sSql)
         strip = cur.fetchall()[0][0].decode("utf-8")
-        print(strip)
         m = Chem.MolFromMolBlock(strip)
+
         try:
             Draw.MolToFile(m, f'mols/{sMolId}.png', kekulize=True, size=(280, 280))
-            return
         except:
-            logger.error(f"{sMolId} is nostruct again")
-
+            logger.error(f"{sMolId} is nostruct, png failed")
+        resDict = {
+            "molfile": strip,
+            "status": sStatus
+        }
+        self.finish(json.dumps(resDict))
 
 @jwtauth
 class CreateMolImage(tornado.web.RequestHandler):
