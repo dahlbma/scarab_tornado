@@ -356,9 +356,76 @@ class UpdateStructureAdmin(tornado.web.RequestHandler):
         chemregDB, bcpvsDB = getDatabase(self)
         molfile = self.get_body_argument('molfile')
         compound_id = self.get_body_argument('compound_id')
-        print(compound_id)
-
+        smiles = self.get_body_argument('smiles')
+        (C_MF,
+         C_MW,
+         C_MONOISO,
+         C_CHNS,
+         saSalts,
+         errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
         
+        sSql = f'''
+        update {bcpvsDB}.compound
+        set
+        mf = '{C_MF}',
+        sep_mol_monoiso_mass = '{C_MONOISO}',
+        smiles_std = '{smiles}'
+        where compound_id = '{compound_id}'
+        '''
+        cur.execute(sSql)
+
+        sSql = f'''
+        update {bcpvsDB}.JCMOL_MOLTABLE
+        set mol = '{molfile}'
+        where compound_id = '{compound_id}'
+        '''
+        cur.execute(sSql)
+
+        ######################################################
+        ###  Update the molcart tables for compound
+        
+        database = bcpvsDB + '.JCMOL_MOLTABLE'
+        sSql = f"""
+        update {database}
+        set mol = '{molfile}'
+        where compound_id = '{compound_id}'
+        """
+        #cur.execute(sSql)
+    
+        sSql = f"""
+        update {database}_MOL
+        set mol = mol2bin('{molfile}', 'mol')
+        where compound_id = '{compound_id}'
+        """
+        #cur.execute(sSql)
+
+        sSql = f"""
+update {database}_ukey
+set
+molkey = (select uniquekey(mol)
+from {database} where compound_id = '{compound_id}'),
+molkeyns = (select uniquekey(`mol`,'nostereo')
+from {database} where compound_id = '{compound_id}'),
+molkeyct = (select uniquekey(`mol`,'cistrans')
+from {database} where compound_id = '{compound_id}')
+where compound_id = '{compound_id}'
+        """
+        print(sSql)
+        #cur.execute(sSql)
+        return
+        sSql = f"""
+        update {database}_MOL_keysim select {idColumnName}, fp(mol, 'sim') as molkey
+        from {database}_MOL where compound_id = '{compound_id}'
+        """
+        #cur.execute(sSql)
+
+        sSql = f"""
+        update {database}_MOL_key select {idColumnName}, fp(mol, 'sss') as molkey
+        from {database}_MOL where compound_id = '{compound_id}'
+        """
+        #cur.execute(sSql)
+
+
 @jwtauth
 class GetRegnosFromSdfSequence(tornado.web.RequestHandler):
     def get(self):
@@ -427,7 +494,9 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
         mol = Chem.MolFromMolBlock(molfile)
         if compound_id in ('', None):
 
-            sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles')))'''
+            sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}',
+                                                                  'cistrans'),
+                                                                  'smiles')))'''
             cur.execute(sSql)
             strip = cur.fetchall()[0][0].decode("utf-8")
 
@@ -453,7 +522,9 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
                                                   ip_rights,
                                                   compound_name = '')
                 # Is the moldepict on the next line the solution to stereo problems?
-                sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles')))'''
+                sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}',
+                                                                      'cistrans'),
+                                                                      'smiles')))'''
                 #sSql = f'''select bin2mol(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles'))'''
                 cur.execute(sSql)
                 strippedMolfile = cur.fetchall()[0][0].decode("utf-8")
@@ -658,7 +729,8 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
             # The molecule is a nostruct, rdkit doesn't like that
             resDict = {
                 "molfile": '',
-                "status": ''
+                "status": '',
+                "smiles": ''
             }
             self.finish(json.dumps(resDict))
             return
@@ -688,7 +760,7 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
         uncharged_parent_clean_mol = uncharger.uncharge(parent_clean_mol)
         te = rdMolStandardize.TautomerEnumerator(params) # idem
         taut_uncharged_parent_clean_mol = te.Canonicalize(uncharged_parent_clean_mol)
-
+        smiles = Chem.MolToSmiles(taut_uncharged_parent_clean_mol)
         m = Chem.MolToMolBlock(taut_uncharged_parent_clean_mol)
 
         sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{m}', 'cistrans'), 'smiles')))'''
@@ -702,7 +774,8 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
             logger.error(f"{sMolId} is nostruct, png failed")
         resDict = {
             "molfile": strip,
-            "status": sStatus
+            "status": sStatus,
+            "smiles": smiles
         }
         self.finish(json.dumps(resDict))
 
