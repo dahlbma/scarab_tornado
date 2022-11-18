@@ -109,10 +109,11 @@ def postMolfile(token, molfile):
                       files=molfile)
     return r
 
-def updateStructureAdmin(token, sCmpId, molfile):
+def updateStructureAdmin(token, sCmpId, molfile, smiles):
     r = requests.post(f'{baseUrl}api/updateStructureAdmin',
                       headers={'token': token},
                       data = {'molfile':molfile,
+                              'smiles': smiles,
                               'compound_id':sCmpId})
     return r
 

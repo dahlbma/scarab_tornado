@@ -66,6 +66,7 @@ class EditStructure(QMainWindow):
         res = json.loads(res)
         
         self.molfileToRegister = res['molfile']
+        self.smilesToRegister = res['smiles']
         if res['status'] != '':
             self.statusMsg_lab.setText(res['status'])
         displayMolfile(self, 'new_structure', self.new_structure_lab)
@@ -187,5 +188,8 @@ class EditStructure(QMainWindow):
         # Update the structure in db here
         #dbInterface.updateStructure(self.token, self.compound_id, self.molfile)
         print('Update structure through dbInterface')
-        prevRegno = dbInterface.updateStructureAdmin(self.token, self.compound_id, self.molfile)
+        prevRegno = dbInterface.updateStructureAdmin(self.token,
+                                                     self.compound_id,
+                                                     self.molfileToRegister,
+                                                     self.smilesToRegister)
 
