@@ -192,4 +192,9 @@ class EditStructure(QMainWindow):
                                                      self.compound_id,
                                                      self.molfileToRegister,
                                                      self.smilesToRegister)
+        res = dbInterface.createBcpvsMolImage(self.token, self.compound_id)
+        displayMolfile(self,
+                       self.compound_id,
+                       self.current_structure_lab)
+
 
