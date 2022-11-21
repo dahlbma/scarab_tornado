@@ -357,6 +357,7 @@ class UpdateStructureAdmin(tornado.web.RequestHandler):
         molfile = self.get_body_argument('molfile')
         compound_id = self.get_body_argument('compound_id')
         smiles = self.get_body_argument('smiles')
+        database = bcpvsDB + '.JCMOL_MOLTABLE'
         (C_MF,
          C_MW,
          C_MONOISO,
@@ -375,29 +376,21 @@ class UpdateStructureAdmin(tornado.web.RequestHandler):
         cur.execute(sSql)
 
         sSql = f'''
-        update {bcpvsDB}.JCMOL_MOLTABLE
-        set mol = '{molfile}'
-        where compound_id = '{compound_id}'
+update {database}
+set mol = '{molfile}'
+where compound_id = '{compound_id}'
         '''
         cur.execute(sSql)
-
+        
         ######################################################
         ###  Update the molcart tables for compound
         
-        database = bcpvsDB + '.JCMOL_MOLTABLE'
         sSql = f"""
-        update {database}
-        set mol = '{molfile}'
-        where compound_id = '{compound_id}'
+update {database}_MOL
+set mol = mol2bin('{molfile}', 'mol')
+where compound_id = '{compound_id}'
         """
-        #cur.execute(sSql)
-    
-        sSql = f"""
-        update {database}_MOL
-        set mol = mol2bin('{molfile}', 'mol')
-        where compound_id = '{compound_id}'
-        """
-        #cur.execute(sSql)
+        cur.execute(sSql)
 
         sSql = f"""
 update {database}_ukey
@@ -410,20 +403,21 @@ molkeyct = (select uniquekey(`mol`,'cistrans')
 from {database} where compound_id = '{compound_id}')
 where compound_id = '{compound_id}'
         """
-        print(sSql)
-        #cur.execute(sSql)
-        return
-        sSql = f"""
-        update {database}_MOL_keysim select {idColumnName}, fp(mol, 'sim') as molkey
-        from {database}_MOL where compound_id = '{compound_id}'
-        """
-        #cur.execute(sSql)
+        cur.execute(sSql)
 
         sSql = f"""
-        update {database}_MOL_key select {idColumnName}, fp(mol, 'sss') as molkey
-        from {database}_MOL where compound_id = '{compound_id}'
+update {database}_MOL_keysim set molkey = (select fp(mol, 'sim')
+from {database}_MOL where compound_id = '{compound_id}')
+where compound_id = '{compound_id}'
         """
-        #cur.execute(sSql)
+        cur.execute(sSql)
+
+        sSql = f"""
+update {database}_MOL_key set molkey = (select fp(mol, 'sss') as molkey
+from {database}_MOL where compound_id = '{compound_id}')
+where compound_id = '{compound_id}'
+        """
+        cur.execute(sSql)
 
 
 @jwtauth
