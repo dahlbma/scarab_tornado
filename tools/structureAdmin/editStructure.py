@@ -63,8 +63,12 @@ class EditStructure(QMainWindow):
         self.statusMsg_lab.setText('')
 
         res = dbInterface.createMolImageFromMolfile(self.token, molfile)
-        res = json.loads(res)
-        
+        try:
+            res = json.loads(res)
+        except:
+            print('Failed to create molecule image')
+            return
+            
         self.molfileToRegister = res['molfile']
         self.smilesToRegister = res['smiles']
         if res['status'] != '':
