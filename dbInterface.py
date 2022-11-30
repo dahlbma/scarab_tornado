@@ -767,8 +767,6 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
         m = 'Id' + m
         strip = m
         new_mol = Chem.MolFromMolBlock(strip)
-        print(strip)
-
         
         try:
             Draw.MolToFile(new_mol, f'mols/{sMolId}.png', kekulize=True, size=(280, 280))
