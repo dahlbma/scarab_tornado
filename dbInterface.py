@@ -79,7 +79,6 @@ def getAtomicComposition(saComp):
         sComp += f'{atom[0]} {round(atom[3] * 100, 2)}% '
     return sComp
 
-
 def createPngFromMolfile(regno, molfile):
     m = Chem.MolFromMolBlock(molfile)
     try:
@@ -364,7 +363,6 @@ class UpdateStructureAdmin(tornado.web.RequestHandler):
          C_CHNS,
          saSalts,
          errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
-        
         sSql = f'''
         update {bcpvsDB}.compound
         set
@@ -743,6 +741,9 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
             cur.execute(sSql)
             molfile = cur.fetchall()[0][0].decode("utf-8")
             mol = Chem.MolFromMolBlock(molfile)
+            if mol == None:
+                logger.error(f'Failed to standardize molfile: {molfile}')
+                return
             params = rdMolStandardize.CleanupParameters()
             params.tautomerRemoveSp3Stereo = False
             params.tautomerRemoveBondStereo = False
@@ -757,14 +758,22 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
         smiles = Chem.MolToSmiles(taut_uncharged_parent_clean_mol)
         m = Chem.MolToMolBlock(taut_uncharged_parent_clean_mol)
 
-        sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{m}', 'cistrans'), 'smiles')))'''
-        cur.execute(sSql)
-        strip = cur.fetchall()[0][0].decode("utf-8")
-        m = Chem.MolFromMolBlock(strip)
+        # Don't think we need to generate new coords with molcart
+        #sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{m}', 'cistrans'), 'smiles')))'''
+        #cur.execute(sSql)
+        #strip = cur.fetchall()[0][0].decode("utf-8")
+        #m = Chem.MolFromMolBlock(strip)
 
+        m = 'Id' + m
+        strip = m
+        new_mol = Chem.MolFromMolBlock(strip)
+        print(strip)
+
+        
         try:
-            Draw.MolToFile(m, f'mols/{sMolId}.png', kekulize=True, size=(280, 280))
-        except:
+            Draw.MolToFile(new_mol, f'mols/{sMolId}.png', kekulize=True, size=(280, 280))
+        except Exception as e:
+            logger.error(str(e))
             logger.error(f"{sMolId} is nostruct, png failed")
         resDict = {
             "molfile": strip,
@@ -827,7 +836,6 @@ class LoadMolfile(tornado.web.RequestHandler):
          C_CHNS,
          saSalts,
          errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
-        logger.error(str(saSalts))
         if C_MF == False:
             self.set_status(500)
             self.finish(f'Molfile failed {regno} {errorMessage}')
