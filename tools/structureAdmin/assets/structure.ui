@@ -483,7 +483,13 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="cmpDuplicates_eb"/>
+      <widget class="QLineEdit" name="cmpDuplicates_eb">
+       <property name="font">
+        <font>
+         <pointsize>7</pointsize>
+        </font>
+       </property>
+      </widget>
      </item>
     </layout>
    </widget>

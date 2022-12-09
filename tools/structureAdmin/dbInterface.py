@@ -48,6 +48,7 @@ def getCompoundDuplicates(token, sCmpId):
                      params={'compound_id': sCmpId.upper()},
                      headers={'token': token})
     res = r.content.decode()
+    res = json.loads(res)
     return res
 
 

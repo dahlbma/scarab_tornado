@@ -88,7 +88,12 @@ class EditStructure(QMainWindow):
             self.compound_id = sCompoundId
             molkeyct = dbInterface.getMolkeyct(self.token, sCompoundId)
             self.molkeyct_eb.setText(str(molkeyct))
-            saBatches = dbInterface.getCompoundDuplicates(self.token, sCompoundId)
+            saDuplicates = dbInterface.getCompoundDuplicates(self.token, sCompoundId)
+            sConcatedCmps = ''
+            for element in saDuplicates:
+                sConcatedCmps += ' ' + element[0]
+
+            self.cmpDuplicates_eb.setText(sConcatedCmps.strip())
             res = dbInterface.createBcpvsMolImage(self.token, sCompoundId)
             displayMolfile(self, sCompoundId, self.current_structure_lab)
             res = dbInterface.getRegnoFromCompound(self.token, sCompoundId)
