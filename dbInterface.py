@@ -288,6 +288,43 @@ class PingDB(tornado.web.RequestHandler):
 
         
 @jwtauth
+class GetMolkeyct(tornado.web.RequestHandler):
+    def get(self):
+        chemregDB, bcpvsDB = getDatabase(self)
+        sCmpId = self.get_argument("compound_id")
+        sSql = f'''
+        select CONVERT(molkeyct USING utf8) from {bcpvsDB}.JCMOL_MOLTABLE_ukey
+        where compound_id = '{sCmpId}'
+        '''
+        cur.execute(sSql)
+        res = cur.fetchall()
+        if len(res) > 0:
+            res = res[0][0]
+        else:
+            res = ''
+        self.finish(res)
+
+
+@jwtauth
+class GetCompoundDuplicates(tornado.web.RequestHandler):
+    def get(self):
+        chemregDB, bcpvsDB = getDatabase(self)
+        sCmpId = self.get_argument("compound_id")
+        sSql = f'''
+        select compound_id from {bcpvsDB}.JCMOL_MOLTABLE_ukey
+        where molkeyct = (select molkeyct from {bcpvsDB}.JCMOL_MOLTABLE_ukey
+                         where compound_id = '{sCmpId}')
+        '''
+        cur.execute(sSql)
+        res = cur.fetchall()
+        if len(res) > 0:
+            res = res[0][0]
+        else:
+            res = ''
+        self.finish(res)
+
+
+@jwtauth
 class CreateSalt(tornado.web.RequestHandler):
     def put(self):
         chemregDB, bcpvsDB = getDatabase(self)
