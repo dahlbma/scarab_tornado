@@ -22,7 +22,7 @@ def getDatabase():
 
 def getStructure(token, compound_id):
     r = requests.get(f'{baseUrl}api/getNextSdfSequence',
-                     params={'compound_id': compound_id},
+                     params={'compound_id': compound_id.upper()},
                      headers={'token': token})
     res = r.content.decode()
     return res
@@ -35,9 +35,25 @@ def getMolFile(token, regno):
     return res
 
 
+def getMolkeyct(token, sCmpId):
+    r = requests.get(f'{baseUrl}api/getMolkeyct',
+                     params={'compound_id': sCmpId.upper()},
+                     headers={'token': token})
+    res = r.content.decode()
+    return res
+
+
+def getCompoundDuplicates(token, sCmpId):
+    r = requests.get(f'{baseUrl}api/getCompoundDuplicates',
+                     params={'compound_id': sCmpId.upper()},
+                     headers={'token': token})
+    res = r.content.decode()
+    return res
+
+
 def getForwardCompound(token, sCmpId):
     r = requests.get(f'{baseUrl}api/getForwardCompound',
-                     params={'compound_id': sCmpId},
+                     params={'compound_id': sCmpId.upper()},
                      headers={'token': token})
     res = r.content.decode()
     return res
@@ -45,7 +61,7 @@ def getForwardCompound(token, sCmpId):
 
 def getBackwardCompound(token, sCmpId):
     r = requests.get(f'{baseUrl}api/getBackwardCompound',
-                     params={'compound_id': sCmpId},
+                     params={'compound_id': sCmpId.upper()},
                      headers={'token': token})
     res = r.content.decode()
     return res
@@ -69,7 +85,7 @@ def getBackwardRegno(token, regno):
 
 def getRegnoFromCompound(token, sCmpId):
     r = requests.get(f'{baseUrl}api/getRegnoFromCompound', 
-                     params={'compound_id': sCmpId},
+                     params={'compound_id': sCmpId.upper()},
                      headers={'token': token})
     res = r.content.decode()
     return res
@@ -84,14 +100,14 @@ def getCompoundFromRegno(token, sRegno):
 
 def getMolFileBcpvs(token, compound_id):
     r = requests.get(f'{baseUrl}api/getMolfileBcpvs', 
-                     params={'compound_id': compound_id},
+                     params={'compound_id': compound_id.upper()},
                      headers={'token': token})
     res = r.content.decode()
     return res
 
 def createBcpvsMolImage(token, compound_id):
     r = requests.get(f'{baseUrl}api/createBcpvsMolImage',
-                     params={'compound_id': compound_id},
+                     params={'compound_id': compound_id.upper()},
                      headers={'token': token})
     res = r.content.decode()
     return res

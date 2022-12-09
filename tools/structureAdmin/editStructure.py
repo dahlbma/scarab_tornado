@@ -79,11 +79,16 @@ class EditStructure(QMainWindow):
 
     def compoundIdChanged(self):
         sCompoundId = self.compoundId_eb.text().upper()
-        pattern = '^CBK[0-9]{6}$'
+        #pattern = '^CBK[0-9]{6}$'
+        pattern = '^CBK[0-9]{6}'
         if len(re.findall(pattern, sCompoundId)) == 1:
+            self.compoundId_eb.setText(sCompoundId)
             displayMolfile(self, 'no_struct', self.new_structure_lab)
             self.statusMsg_lab.setText('')
             self.compound_id = sCompoundId
+            molkeyct = dbInterface.getMolkeyct(self.token, sCompoundId)
+            self.molkeyct_eb.setText(str(molkeyct))
+            saBatches = dbInterface.getCompoundDuplicates(self.token, sCompoundId)
             res = dbInterface.createBcpvsMolImage(self.token, sCompoundId)
             displayMolfile(self, sCompoundId, self.current_structure_lab)
             res = dbInterface.getRegnoFromCompound(self.token, sCompoundId)
@@ -117,7 +122,7 @@ class EditStructure(QMainWindow):
             if sRegno != '':
                 self.regno_eb.setText(sRegno)
             else:
-                self.compoundId_eb.setText('')
+                #self.compoundId_eb.setText('')
                 displayMolfile(self, 'no_struct', self.original_structure_lab)
 
             
@@ -131,7 +136,7 @@ class EditStructure(QMainWindow):
             if sRegno != '':
                 self.regno_eb.setText(sRegno)
             else:
-                self.compoundId_eb.setText('')
+                #self.compoundId_eb.setText('')
                 displayMolfile(self, 'no_struct', self.original_structure_lab)
 
             

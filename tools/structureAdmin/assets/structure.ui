@@ -441,7 +441,7 @@
     <property name="geometry">
      <rect>
       <x>330</x>
-      <y>440</y>
+      <y>450</y>
       <width>321</width>
       <height>31</height>
      </rect>
@@ -455,7 +455,13 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="molkeyct_eb"/>
+      <widget class="QLineEdit" name="molkeyct_eb">
+       <property name="font">
+        <font>
+         <pointsize>7</pointsize>
+        </font>
+       </property>
+      </widget>
      </item>
     </layout>
    </widget>
@@ -463,7 +469,7 @@
     <property name="geometry">
      <rect>
       <x>330</x>
-      <y>470</y>
+      <y>480</y>
       <width>321</width>
       <height>31</height>
      </rect>
@@ -472,12 +478,12 @@
      <item>
       <widget class="QLabel" name="label_9">
        <property name="text">
-        <string>Batches</string>
+        <string>Duplicates</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="batches_eb"/>
+      <widget class="QLineEdit" name="cmpDuplicates_eb"/>
      </item>
     </layout>
    </widget>
@@ -485,7 +491,7 @@
     <property name="geometry">
      <rect>
       <x>330</x>
-      <y>500</y>
+      <y>510</y>
       <width>321</width>
       <height>31</height>
      </rect>
@@ -494,12 +500,12 @@
      <item>
       <widget class="QLabel" name="label_10">
        <property name="text">
-        <string>Plates</string>
+        <string>Mf</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="plates_eb"/>
+      <widget class="QLineEdit" name="scarabMf_eb"/>
      </item>
     </layout>
    </widget>
@@ -508,7 +514,7 @@
      <rect>
       <x>10</x>
       <y>470</y>
-      <width>321</width>
+      <width>311</width>
       <height>31</height>
      </rect>
     </property>
@@ -522,6 +528,28 @@
      </item>
      <item>
       <widget class="QLineEdit" name="stdSmiles_eb"/>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="horizontalLayoutWidget_7">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>500</y>
+      <width>311</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <item>
+      <widget class="QLabel" name="label_12">
+       <property name="text">
+        <string>Mf</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="chemregMf_eb_2"/>
      </item>
     </layout>
    </widget>
