@@ -316,9 +316,11 @@ class GetCompoundDuplicates(tornado.web.RequestHandler):
                          where compound_id = '{sCmpId}')
         '''
         cur.execute(sSql)
-        res = cur.fetchall()
+        res = res2json()
+        #res = cur.fetchall()
         if len(res) > 0:
-            res = res[0][0]
+            pass
+            #res = res2json()
         else:
             res = ''
         self.finish(res)
@@ -826,6 +828,13 @@ class CreateMolImage(tornado.web.RequestHandler):
                    where regno = '{regno}'"""
         cur.execute(sSql)
         molfile = cur.fetchall()
+
+        if len(molfile) == 0:
+            sSql = f"""select molfile from chemspec.chem_info
+            where regno = '{regno}'"""
+            cur.execute(sSql)
+            molfile = cur.fetchall()
+
         if len(molfile) > 0 and molfile[0][0] != None:
             try:
                 createPngFromMolfile(regno, molfile[0][0])
@@ -1066,6 +1075,16 @@ class GetForwardRegno(tornado.web.RequestHandler):
         regno = self.get_argument("regno")
         sSql = f"""select regno from {chemregDB}.chem_info
                    where regno > '{regno}' order by regno asc limit 1"""
+
+        sSql = f"""select least(chemreg,chemspec) from (
+        WITH
+        cte1 AS (SELECT regno chemreg FROM {chemregDB}.chem_info
+        where regno > '{regno}' order by regno asc limit 1),
+        cte2 AS (select IFNULL((SELECT regno chemspec FROM chemspec.chem_info
+        where regno > '{regno}' order by regno asc limit 1), 999999999) as chemspec)
+        SELECT chemreg, chemspec FROM cte1, cte2) ss
+        """
+        
         cur.execute(sSql)
         res = cur.fetchall()
         if len(res) > 0:
@@ -1077,8 +1096,16 @@ class GetRegnoFromCompound(tornado.web.RequestHandler):
     def get(self):
         chemregDB, bcpvsDB = getDatabase(self)
         sCmpId = self.get_argument("compound_id")
-        sSql = f"""select regno from {chemregDB}.chem_info
-                   where compound_id = '{sCmpId}'"""
+        if sCmpId.startswith('CBK6'):
+            sSql = f"""select regno from {chemregDB}.chem_info
+                       where compound_id = '{sCmpId}'"""
+        else:
+            sSql = f"""
+            select cs.regno from chemspec.chem_info cs
+            join {bcpvsDB}.batch b on cs.regno = b.chemspec_regno
+            where b.compound_id = '{sCmpId}'
+                    """
+            
         cur.execute(sSql)
         res = cur.fetchall()
         if len(res) > 0:
@@ -1096,6 +1123,17 @@ class GetCompoundFromRegno(tornado.web.RequestHandler):
         res = cur.fetchall()
         if len(res) > 0:
             self.write(json.dumps(res[0][0]))
+            return
+
+        sSql = f"""
+        select compound_id from {bcpvsDB}.batch b
+        join chemspec.chem_info ci on ci.regno = b.chemspec_regno
+        where regno = '{sRegno}'"""
+        cur.execute(sSql)
+        res = cur.fetchall()
+        if len(res) > 0:
+            self.write(json.dumps(res[0][0]))
+            
 
 
 @jwtauth
