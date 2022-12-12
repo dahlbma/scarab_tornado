@@ -174,7 +174,8 @@ class EditStructure(QMainWindow):
     def regnoChanged(self):
         sRegno = self.regno_eb.text()
         #3913654
-        pattern = '^[0-9]{7}$'
+        #pattern = '^[0-9]{7}'
+        pattern = '^[0-9]'
         if len(re.findall(pattern, sRegno)) == 1:
             displayMolfile(self, 'no_struct', self.new_structure_lab)
             self.statusMsg_lab.setText('')
@@ -185,7 +186,7 @@ class EditStructure(QMainWindow):
             if sCmpId != '':
                 self.compoundId_eb.setText(sCmpId)
             else:
-                self.regno_eb.setText('')
+                #self.regno_eb.setText('')
                 displayMolfile(self, 'no_struct', self.original_structure_lab)
         else:
             self.updateStructure_btn.setEnabled(False)
