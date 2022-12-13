@@ -154,7 +154,7 @@ class EditStructure(QMainWindow):
             if sCmpId != '':
                 self.compoundId_eb.setText(sCmpId)
             else:
-                self.regno_eb.setText('')
+                #self.regno_eb.setText('')
                 displayMolfile(self, 'no_struct', self.current_structure_lab)
 
         
@@ -167,7 +167,7 @@ class EditStructure(QMainWindow):
             if sCmpId not in  ('', 'null'):
                 self.compoundId_eb.setText(sCmpId)
             else:
-                self.regno_eb.setText('')
+                #self.regno_eb.setText('')
                 displayMolfile(self, 'no_struct', self.current_structure_lab)
 
         
@@ -186,7 +186,6 @@ class EditStructure(QMainWindow):
             if sCmpId != '':
                 self.compoundId_eb.setText(sCmpId)
             else:
-                #self.regno_eb.setText('')
                 displayMolfile(self, 'no_struct', self.original_structure_lab)
         else:
             self.updateStructure_btn.setEnabled(False)
