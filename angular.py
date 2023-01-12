@@ -177,6 +177,7 @@ def make_app():
         (r"/api/getLastBatchFromEln", dbInterface.GetLastBatchFromEln),
         (r"/api/getNextRegno", dbInterface.GetNextRegno),
         (r"/api/getBackwardCompound", dbInterface.GetBackwardCompound),
+        (r"/api/getBackwardRegno", dbInterface.GetBackwardRegno),
         (r"/api/getMolkeyct", dbInterface.GetMolkeyct),
         (r"/api/getCompoundDuplicates", dbInterface.GetCompoundDuplicates),
         (r"/api/getForwardCompound", dbInterface.GetForwardCompound),

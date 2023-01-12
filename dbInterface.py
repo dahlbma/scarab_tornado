@@ -85,8 +85,28 @@ def createPngFromMolfile(regno, molfile):
         Draw.MolToFile(m, f'mols/{regno}.png', kekulize=True, size=(280, 280))
     except:
         logger.error(f"regno {regno} is nostruct")
-        print(molfile)
+        #print(molfile)
 
+
+def isItNewStructure(self, molfile):
+    chemregDB, bcpvsDB = getDatabase(self)
+    sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles')))'''
+    cur.execute(sSql)
+    strip = cur.fetchall()[0][0].decode("utf-8")
+        
+    mols = checkUniqueStructure(strip, bcpvsDB)
+    
+    if mols == False:
+        return False
+    sStatus = 'oldMolecule'
+    if len(mols) == 0:
+        sStatus = 'newMolecule'
+        compound_id = ''
+    else:
+        compound_id = mols[0][0]
+    return compound_id
+        
+        
 def addStructure(database, molfile, newRegno, idColumnName):
     #####
     # Add the molecule to the structure tables
@@ -890,8 +910,10 @@ class LoadMolfile(tornado.web.RequestHandler):
             logger.error(str(e))
             logger.error(f'failed on regno {regno}')
             return
+        compound_id = isItNewStructure(self, molfile)
         sSql = f"""update {chemregDB}.chem_info set
                    `molfile` = '{molfile}',
+                    compound_id = '{compound_id}',
                     C_MF = '{C_MF}',
                     C_MW = {C_MW},
                     C_MONOISO = {C_MONOISO},
@@ -1027,6 +1049,14 @@ class GetMolfile(tornado.web.RequestHandler):
         res = cur.fetchall()
         if len(res) > 0:
             self.write(res[0][0])
+            return
+
+        sSql = f"""select molfile from chemspec.chem_info
+                   where regno = '{regno}'"""
+        cur.execute(sSql)
+        res = cur.fetchall()
+        if len(res) > 0:
+            self.write(res[0][0])
 
 
 @jwtauth
@@ -1060,8 +1090,15 @@ class GetBackwardRegno(tornado.web.RequestHandler):
     def get(self):
         chemregDB, bcpvsDB = getDatabase(self)
         regno = self.get_argument("regno")
-        sSql = f"""select regno from {chemregDB}.chem_info
-                   where regno < '{regno}' order by regno desc limit 1"""
+
+        sSql = f"""select greatest(chemreg, chemspec) from (
+        WITH
+        cte1 AS (SELECT IFNULL((SELECT regno FROM {chemregDB}.chem_info
+        where regno < '{regno}' order by regno desc limit 1), 0) as chemreg),
+        cte2 AS (select IFNULL((SELECT regno chemspec FROM chemspec.chem_info
+        where regno < '{regno}' order by regno desc limit 1), 0) as chemspec)
+        SELECT chemreg, chemspec FROM cte1, cte2) ss
+        """
         cur.execute(sSql)
         res = cur.fetchall()
         if len(res) > 0:
@@ -1073,10 +1110,8 @@ class GetForwardRegno(tornado.web.RequestHandler):
     def get(self):
         chemregDB, bcpvsDB = getDatabase(self)
         regno = self.get_argument("regno")
-        sSql = f"""select regno from {chemregDB}.chem_info
-                   where regno > '{regno}' order by regno asc limit 1"""
 
-        sSql = f"""select least(chemreg,chemspec) from (
+        sSql = f"""select least(chemreg, chemspec) from (
         WITH
         cte1 AS (SELECT regno chemreg FROM {chemregDB}.chem_info
         where regno > '{regno}' order by regno asc limit 1),
@@ -1084,9 +1119,9 @@ class GetForwardRegno(tornado.web.RequestHandler):
         where regno > '{regno}' order by regno asc limit 1), 999999999) as chemspec)
         SELECT chemreg, chemspec FROM cte1, cte2) ss
         """
-        
         cur.execute(sSql)
         res = cur.fetchall()
+
         if len(res) > 0:
             self.write(json.dumps(res[0][0]))
 
