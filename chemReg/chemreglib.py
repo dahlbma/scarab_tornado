@@ -67,6 +67,10 @@ def postMolFile(self, fname, regno, logger):
         return True, r.content
     
 def updateMoleculeProperties(self):
+    sCompoundId = dbInterface.getTextColumn(self.token,
+                                           'compound_id',
+                                           self.regno)
+    self.compoundid_lab.setText(sCompoundId)
     avgMolMass = dbInterface.getTextColumn(self.token,
                                            'C_MW',
                                            self.regno)
