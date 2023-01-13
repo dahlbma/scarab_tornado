@@ -205,9 +205,9 @@ class RegScreen(QMainWindow):
            self.project_cb.currentText() == ' ' or \
            self.batchOk == False or \
            self.molOK == False or \
-           self.ip_rights_cb.currentText() == ' ' or \
-           self.compoundid_lab.text() != '':
-            return False
+           self.ip_rights_cb.currentText() == ' ':
+            #or self.compoundid_lab.text() != '' \
+                return False
         else:
             return True
     
