@@ -792,6 +792,8 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
         params.tautomerRemoveIsotopicHs = False
         try:
             clean_mol = rdMolStandardize.Cleanup(mol, params)
+            logger.error(f'Failed to standardize molfile {regno}')
+
         except:
             sStatus = 'Molecule altered, checkit'
             sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}',
