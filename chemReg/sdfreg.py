@@ -222,6 +222,8 @@ class LoadSDF(QDialog):
                 sCurrentEln = self.saElnIds[iElnId]
                 iBatchCount = dbInterface.getLastBatchOfEln(self.token,
                                                             sCurrentEln)
+                if iBatchCount == 0:
+                    iBatchCount = 1
                 
             dTags['jpage'] = sCurrentEln + str(iBatchCount).zfill(3)
             dTags['molfile'] = sMol.decode('latin-1')
