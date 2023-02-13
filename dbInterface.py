@@ -789,7 +789,7 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
         params.tautomerRemoveIsotopicHs = False
         try:
             clean_mol = rdMolStandardize.Cleanup(mol, params)
-            logger.info(f'Cleaning mol')
+            logger.error(f'Failed to standardize molfile {regno}')
         except:
             logger.error(f'Failed to standardize molfile')
             sStatus = 'Molecule altered, checkit'
