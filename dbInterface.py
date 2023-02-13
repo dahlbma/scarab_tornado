@@ -85,7 +85,6 @@ def createPngFromMolfile(regno, molfile):
         Draw.MolToFile(m, f'mols/{regno}.png', kekulize=True, size=(280, 280))
     except:
         logger.error(f"regno {regno} is nostruct")
-        #print(molfile)
 
 
 def isItNewStructure(self, molfile):
@@ -438,7 +437,6 @@ set mol = '{molfile}'
 where compound_id = '{compound_id}'
         '''
         cur.execute(sSql)
-        
         ######################################################
         ###  Update the molcart tables for compound
         
@@ -771,7 +769,6 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
         sStatus = ''
         molfile = '\n' + self.get_body_argument('molfile')
         sMolId = self.get_body_argument('mol_id')
-
         try:
             os.remove(f'mols/{sMolId}.png')
         except:
@@ -792,7 +789,9 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
         params.tautomerRemoveIsotopicHs = False
         try:
             clean_mol = rdMolStandardize.Cleanup(mol, params)
+            logger.info(f'Cleaning mol')
         except:
+            logger.error(f'Failed to standardize molfile')
             sStatus = 'Molecule altered, checkit'
             sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}',
                                                                   'cistrans'),
@@ -826,7 +825,6 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
         m = 'Id' + m
         strip = m
         new_mol = Chem.MolFromMolBlock(strip)
-        
         try:
             Draw.MolToFile(new_mol, f'mols/{sMolId}.png', kekulize=True, size=(280, 280))
         except Exception as e:
@@ -837,6 +835,7 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
             "status": sStatus,
             "smiles": smiles
         }
+
         self.finish(json.dumps(resDict))
 
 @jwtauth
