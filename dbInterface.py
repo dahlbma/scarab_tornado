@@ -80,7 +80,7 @@ def getAtomicComposition(saComp):
     return sComp
 
 def createPngFromMolfile(regno, molfile):
-    m = Chem.MolFromMolBlock(molfile)
+    m = Chem.MolFromMolBlock(molfile, removeHs=False, sanitize=True)
     try:
         Draw.MolToFile(m, f'mols/{regno}.png', kekulize=True, size=(280, 280))
     except:
@@ -540,7 +540,7 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
          C_CHNS,
          saSalts,
          errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
-        mol = Chem.MolFromMolBlock(molfile)
+        mol = Chem.MolFromMolBlock(molfile, removeHs=False, sanitize=True)
         if compound_id in ('', None):
 
             sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}',
@@ -782,23 +782,22 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
             }
             self.finish(json.dumps(resDict))
             return
-        mol = Chem.MolFromMolBlock(molfile)
+        mol = Chem.MolFromMolBlock(molfile, removeHs=False, sanitize=True)
         params = rdMolStandardize.CleanupParameters()
         params.tautomerRemoveSp3Stereo = False
         params.tautomerRemoveBondStereo = False
         params.tautomerRemoveIsotopicHs = False
         try:
             clean_mol = rdMolStandardize.Cleanup(mol, params)
-            logger.error(f'Failed to standardize molfile {regno}')
         except:
-            logger.error(f'Failed to standardize molfile')
+            logger.error(f'Failed to standardize molfile {regno}')
             sStatus = 'Molecule altered, checkit'
             sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}',
                                                                   'cistrans'),
                                                                   'smiles')))'''
             cur.execute(sSql)
             molfile = cur.fetchall()[0][0].decode("utf-8")
-            mol = Chem.MolFromMolBlock(molfile)
+            mol = Chem.MolFromMolBlock(molfile, removeHs=False, sanitize=True)
             if mol == None:
                 logger.error(f'Failed to standardize molfile: {molfile}')
                 return
@@ -814,7 +813,7 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
         te = rdMolStandardize.TautomerEnumerator(params) # idem
         taut_uncharged_parent_clean_mol = te.Canonicalize(uncharged_parent_clean_mol)
         smiles = Chem.MolToSmiles(taut_uncharged_parent_clean_mol)
-        m = Chem.MolToMolBlock(taut_uncharged_parent_clean_mol)
+        m = Chem.MolToMolBlock(taut_uncharged_parent_clean_mol, removeHs=False, sanitize=True)
 
         # Don't think we need to generate new coords with molcart
         #sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{m}', 'cistrans'), 'smiles')))'''
@@ -824,7 +823,7 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
 
         m = 'Id' + m
         strip = m
-        new_mol = Chem.MolFromMolBlock(strip)
+        new_mol = Chem.MolFromMolBlock(strip, removeHs=False, sanitize=True)
         try:
             Draw.MolToFile(new_mol, f'mols/{sMolId}.png', kekulize=True, size=(280, 280))
         except Exception as e:
