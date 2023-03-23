@@ -7,6 +7,7 @@ mols/
 *.mol
 error_msg.txt
 log_chemreg.txt
+chemRegSqlError.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
