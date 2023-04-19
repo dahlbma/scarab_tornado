@@ -16,16 +16,14 @@ import sys
 import codecs
 import re
 import os
+import mydb
+
 
 logger = logging.getLogger(__name__)
 
-db_connection = MySQLdb.connect(
-    host=config.database['host'],
-    user=config.database['user'],
-    passwd=config.database['password']
-)
-db_connection.autocommit(True)
-cur = db_connection.cursor()
+db = mydb.disconnectSafeConnect()
+cur = db.cursor()
+
 
 def getDatabase(parent):
     data = parent.request.headers['Token']
@@ -105,7 +103,46 @@ def isItNewStructure(self, molfile):
         compound_id = mols[0][0]
     return compound_id
         
-        
+
+def cleanStructureRDKit(molfile):
+    mol = Chem.MolFromMolBlock(molfile, removeHs=False, sanitize=True)
+    params = rdMolStandardize.CleanupParameters()
+    params.tautomerRemoveSp3Stereo = False
+    params.tautomerRemoveBondStereo = False
+    params.tautomerRemoveIsotopicHs = False
+    try:
+        clean_mol = rdMolStandardize.Cleanup(mol, params)
+    except Exception as e:
+        print(str(e))
+        return False, False
+    try:
+        parent_clean_mol = rdMolStandardize.FragmentParent(clean_mol, params)
+    except:
+        print('Failed with rdMolStandardize.FragmentParent, skipping molecule')
+        return False, False
+
+    uncharger = rdMolStandardize.Uncharger()
+    uncharged_parent_clean_mol = uncharger.uncharge(parent_clean_mol)
+
+    mV5 = Chem.MolToSmiles(uncharged_parent_clean_mol)
+    mV5 = mV5.replace('\\', '\\\\')
+
+    te = rdMolStandardize.TautomerEnumerator(params) # idem
+    taut_uncharged_parent_clean_mol = te.Canonicalize(uncharged_parent_clean_mol)
+    mV4 = Chem.MolToSmiles(taut_uncharged_parent_clean_mol)
+    mV4 = mV4.replace('\\', '\\\\')
+
+    sSql = f'''select CONVERT(bin2mol(mol2bin('{mV4}' , 'smiles')) USING UTF8)'''
+    cur.execute(sSql)
+    saRes = cur.fetchall()
+
+    if len(saRes) == 1:
+        #cleanMolfile = 
+        print(saRes[0][0])
+        return saRes[0][0], mV4, mV5
+    else:
+        return False, False, False
+    
 def addStructure(database, molfile, newRegno, idColumnName):
     #####
     # Add the molecule to the structure tables
@@ -299,11 +336,11 @@ def getMoleculeProperties(self, molfile, chemregDB):
 class PingDB(tornado.web.RequestHandler):
     def get(self):
         sSql = "select * from hive.user_details where pkey = 0"
-        cur.execute(sSql)
+        cur.ping(sSql)
 
     def head(self):
         sSql = "select * from hive.user_details where pkey = 0"
-        cur.execute(sSql)
+        cur.ping(sSql)
 
         
 @jwtauth
@@ -813,7 +850,8 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
         te = rdMolStandardize.TautomerEnumerator(params) # idem
         taut_uncharged_parent_clean_mol = te.Canonicalize(uncharged_parent_clean_mol)
         smiles = Chem.MolToSmiles(taut_uncharged_parent_clean_mol)
-        m = Chem.MolToMolBlock(taut_uncharged_parent_clean_mol, removeHs=False, sanitize=True)
+        logger.error(taut_uncharged_parent_clean_mol)
+        m = Chem.MolToMolBlock(taut_uncharged_parent_clean_mol)
 
         # Don't think we need to generate new coords with molcart
         #sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{m}', 'cistrans'), 'smiles')))'''
@@ -1417,3 +1455,4 @@ class UploadLauncher(tornado.web.RequestHandler):
         output_file = open(bin_file, 'wb')
         output_file.write(file1['body'])
         output_file.close()
+

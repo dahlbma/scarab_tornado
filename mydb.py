@@ -97,7 +97,11 @@ class DisconnectSafeConnection(object):
             database=config.scarabDatabase['db']
         )
         self.scarabConn.autocommit(True)
+        self.scarabConn.query('SET GLOBAL connect_timeout=28800')
+        self.scarabConn.query('SET GLOBAL interactive_timeout=28800')
+        self.scarabConn.query('SET GLOBAL wait_timeout=28800')
 
+        
   
     def cursor(self, *args, **kwargs):
         self.cur = self.conn.cursor(*args, **kwargs)
