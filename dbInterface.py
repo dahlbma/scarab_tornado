@@ -87,6 +87,9 @@ def createPngFromMolfile(regno, molfile):
 
 def isItNewStructure(self, molfile):
     chemregDB, bcpvsDB = getDatabase(self)
+    molfile = cleanStructureRDKit(molfile)
+    if molfile == False:
+        return False
     sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles')))'''
     cur.execute(sSql)
     strip = cur.fetchall()[0][0].decode("utf-8")
@@ -105,6 +108,7 @@ def isItNewStructure(self, molfile):
         
 
 def cleanStructureRDKit(molfile):
+    # Function to clean molecule from charges etc.
     mol = Chem.MolFromMolBlock(molfile, removeHs=False, sanitize=True)
     params = rdMolStandardize.CleanupParameters()
     params.tautomerRemoveSp3Stereo = False
@@ -113,19 +117,16 @@ def cleanStructureRDKit(molfile):
     try:
         clean_mol = rdMolStandardize.Cleanup(mol, params)
     except Exception as e:
-        print(str(e))
-        return False, False
+        logger.error(f"Failed to standardize {str(e)}")
+        return False
     try:
         parent_clean_mol = rdMolStandardize.FragmentParent(clean_mol, params)
     except:
-        print('Failed with rdMolStandardize.FragmentParent, skipping molecule')
-        return False, False
+        logger.error('Failed with rdMolStandardize.FragmentParent, skipping molecule')
+        return False
 
     uncharger = rdMolStandardize.Uncharger()
     uncharged_parent_clean_mol = uncharger.uncharge(parent_clean_mol)
-
-    mV5 = Chem.MolToSmiles(uncharged_parent_clean_mol)
-    mV5 = mV5.replace('\\', '\\\\')
 
     te = rdMolStandardize.TautomerEnumerator(params) # idem
     taut_uncharged_parent_clean_mol = te.Canonicalize(uncharged_parent_clean_mol)
@@ -137,11 +138,9 @@ def cleanStructureRDKit(molfile):
     saRes = cur.fetchall()
 
     if len(saRes) == 1:
-        #cleanMolfile = 
-        print(saRes[0][0])
-        return saRes[0][0], mV4, mV5
+        return saRes[0][0]
     else:
-        return False, False, False
+        return False
     
 def addStructure(database, molfile, newRegno, idColumnName):
     #####
@@ -578,17 +577,18 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
          saSalts,
          errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
         mol = Chem.MolFromMolBlock(molfile, removeHs=False, sanitize=True)
+
+        molfile = cleanStructureRDKit(molfile)
         if compound_id in ('', None):
 
-            sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}',
-                                                                  'cistrans'),
-                                                                  'smiles')))'''
-            cur.execute(sSql)
-            strip = cur.fetchall()[0][0].decode("utf-8")
-
+            #sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}',
+            #                                                      'cistrans'),
+            #                                                      'smiles')))'''
+            #cur.execute(sSql)
+            #strip = cur.fetchall()[0][0].decode("utf-8")
+            #mols = checkUniqueStructure(strip, bcpvsDB)
             
-            mols = checkUniqueStructure(strip, bcpvsDB)
-            #mols = checkUniqueStructure(molfile, bcpvsDB)
+            mols = checkUniqueStructure(molfile, bcpvsDB)
             if mols == False:
                 logger.error(f'Error in molfile for regno {self.regno}')
                 return False
