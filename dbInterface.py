@@ -93,9 +93,9 @@ def isItNewStructure(self, molfile):
     sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles')))'''
     cur.execute(sSql)
     strip = cur.fetchall()[0][0].decode("utf-8")
-        
+
     mols = checkUniqueStructure(strip, bcpvsDB)
-    
+
     if mols == False:
         return False
     sStatus = 'oldMolecule'
@@ -105,7 +105,7 @@ def isItNewStructure(self, molfile):
     else:
         compound_id = mols[0][0]
     return compound_id
-        
+
 
 def cleanStructureRDKit(molfile):
     # Function to clean molecule from charges etc.
@@ -141,7 +141,7 @@ def cleanStructureRDKit(molfile):
         return saRes[0][0]
     else:
         return False
-    
+
 def addStructure(database, molfile, newRegno, idColumnName):
     #####
     # Add the molecule to the structure tables
@@ -151,7 +151,7 @@ def addStructure(database, molfile, newRegno, idColumnName):
     ('{molfile}', '{newRegno}')
     """
     cur.execute(sSql)
-    
+
     sSql = f"""
     insert into {database}_MOL (mol, {idColumnName})
     value
@@ -292,7 +292,7 @@ def getMoleculeProperties(self, molfile, chemregDB):
         C_CHNS = getAtomicComposition(molmassFormula.composition())
     except Exception as e:
         return (False, False, False, False, False, f'{str(e)}')
-    
+
     if sSmiles == '':
         return (False, False, False, False, False, 'Empty molfile')
     if iNrOfFragments > 1:
@@ -315,7 +315,7 @@ def getMoleculeProperties(self, molfile, chemregDB):
     saSmileFragments = sorted(saSmileFragments, key=len, reverse=True)
     mainMolSmile = sSmiles
     saltSmile = ''
-    
+
     if len(saSmileFragments) > 1:
         mainMolSmile = saSmileFragments[0]
         saltSmile = '.'.join(saSmileFragments[1:])
@@ -341,7 +341,7 @@ class PingDB(tornado.web.RequestHandler):
         sSql = "select * from hive.user_details where pkey = 0"
         cur.ping(sSql)
 
-        
+
 @jwtauth
 class GetMolkeyct(tornado.web.RequestHandler):
     def get(self):
@@ -412,7 +412,7 @@ class GetCanonicSmiles(tornado.web.RequestHandler):
         canonSmile = Chem.CanonSmiles(flattenSmile)
         sRes = json.dumps([f'{sLetters}', canonSmile])
         self.finish(sRes)
-        
+
 
 @jwtauth
 class GetLastBatchFromEln(tornado.web.RequestHandler):
@@ -429,7 +429,7 @@ class GetLastBatchFromEln(tornado.web.RequestHandler):
             self.finish(f'{iBatch}')
         else:
             self.finish(b'0')
-            
+
 
 @jwtauth
 class GetNextSdfSequence(tornado.web.RequestHandler):
@@ -475,7 +475,7 @@ where compound_id = '{compound_id}'
         cur.execute(sSql)
         ######################################################
         ###  Update the molcart tables for compound
-        
+
         sSql = f"""
 update {database}_MOL
 set mol = mol2bin('{molfile}', 'mol')
@@ -522,7 +522,7 @@ class GetRegnosFromSdfSequence(tornado.web.RequestHandler):
         cur.execute(sSql)
         res = res2json()
         self.finish(res)
-        
+
 
 @jwtauth
 class BcpvsRegCompound(tornado.web.RequestHandler):
@@ -587,7 +587,7 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
             #cur.execute(sSql)
             #strip = cur.fetchall()[0][0].decode("utf-8")
             #mols = checkUniqueStructure(strip, bcpvsDB)
-            
+
             mols = checkUniqueStructure(molfile, bcpvsDB)
             if mols == False:
                 logger.error(f'Error in molfile for regno {self.regno}')
@@ -614,7 +614,7 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
                 #sSql = f'''select bin2mol(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles'))'''
                 cur.execute(sSql)
                 strippedMolfile = cur.fetchall()[0][0].decode("utf-8")
-                
+
                 addStructure(f"{bcpvsDB}.JCMOL_MOLTABLE",
                              strippedMolfile,
                              compound_id,
@@ -666,7 +666,7 @@ class ChemRegAddMol(tornado.web.RequestHandler):
             self.set_status(500)
             self.finish(f'Nostruct for jpage: {jpage}')
             return
-        
+
         (C_MF,
          C_MW,
          C_MONOISO,
@@ -692,7 +692,7 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles')))'''
         cur.execute(sSql)
         strip = cur.fetchall()[0][0].decode("utf-8")
-        
+
         mols = checkUniqueStructure(strip, bcpvsDB)
         #mols = checkUniqueStructure(molfile, bcpvsDB)
         if mols == False:
@@ -777,7 +777,7 @@ class Search(tornado.web.RequestHandler):
         column = self.get_argument("column")
         value = self.get_argument("value")
         values = (value, )
-        
+
         if column == 'JPAGE':
             sSql = f"select regno from {chemregDB}.chem_info where {column} like '{value}%'"
         else:
@@ -793,7 +793,7 @@ class GetRegnoData(tornado.web.RequestHandler):
         chemregDB, bcpvsDB = getDatabase(self)
         column = self.get_argument("column")
         regno = self.get_argument("regno")
-        values = (regno, )        
+        values = (regno, )
         sSql = f"select {column} from {chemregDB}.chem_info where regno = {regno}"
         cur.execute(sSql)
         res = res2json()
@@ -929,7 +929,7 @@ class LoadMolfile(tornado.web.RequestHandler):
         regnoBody = self.request.files['regno'][0]
         molfile = tornado.escape.xhtml_unescape(fBody.body)
         regno = tornado.escape.xhtml_unescape(regnoBody.body)
-        
+
         (C_MF,
          C_MW,
          C_MONOISO,
@@ -964,7 +964,7 @@ class LoadMolfile(tornado.web.RequestHandler):
             suffix = {sNULL}
             where regno = {regno}"""
             cur.execute(sSql)
-        
+
         createPngFromMolfile(regno, molfile)
 
 
@@ -1176,7 +1176,7 @@ class GetRegnoFromCompound(tornado.web.RequestHandler):
             join {bcpvsDB}.batch b on cs.regno = b.chemspec_regno
             where b.compound_id = '{sCmpId}'
                     """
-            
+
         cur.execute(sSql)
         res = cur.fetchall()
         if len(res) > 0:
@@ -1204,7 +1204,6 @@ class GetCompoundFromRegno(tornado.web.RequestHandler):
         res = cur.fetchall()
         if len(res) > 0:
             self.write(json.dumps(res[0][0]))
-            
 
 
 @jwtauth
@@ -1228,7 +1227,7 @@ class GetTextColumn(tornado.web.RequestHandler):
         regno = self.get_argument("regno")
         if regno == None:
             return
-        
+
         if column == 'library_id':
             sSql = f"""
 select IFNULL((select concat(library_id, " ", l.description)
@@ -1326,7 +1325,7 @@ class CreateLibrary(tornado.web.RequestHandler):
         cur.execute(sSql)
 
         library_id = f'Lib-{pkey}'
-        
+
         sSql = f"""insert into {bcpvsDB}.compound_library
         (library_name,
         supplier,
@@ -1368,7 +1367,7 @@ class UploadBinary(tornado.web.RequestHandler):
             self.set_status(500)
             self.write({'message': 'OS not supported'})
             return
-        
+
         output_file = open(bin_file, 'wb')
         output_file.write(file1['body'])
         output_file.close()
@@ -1420,7 +1419,7 @@ class UploadVersionNo(tornado.web.RequestHandler):
 
         with open(ver_file, "r") as f:
             data = json.load(f)
-        
+
         data["version"] = ver_no
 
         with open(ver_file, "w") as f:
@@ -1451,7 +1450,7 @@ class UploadLauncher(tornado.web.RequestHandler):
             self.set_status(500)
             self.write({'message': 'OS not supported'})
             return
-        
+
         output_file = open(bin_file, 'wb')
         output_file.write(file1['body'])
         output_file.close()
