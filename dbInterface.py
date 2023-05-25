@@ -38,14 +38,16 @@ def res2json():
     result = [list(i) for i in cur.fetchall()]
     return json.dumps(result)
 
-def checkUniqueStructure(molfile, bcpvsDB):
+
+def checkUniqueStructure(stdSMILES, bcpvsDB):
     sSql = f"""
-SELECT * FROM {bcpvsDB}.`JCMOL_MOLTABLE_ukey` T1
-WHERE T1.molkeyct = UNIQUEKEY('{molfile}', 'cistrans')
+SELECT compound_id FROM {bcpvsDB}.`compound` T1
+WHERE smiles_std = '{stdSMILES}'
     """
     cur.execute(sSql)
     mols = cur.fetchall()
     return mols
+
 
 def getNewRegno(chemregDB):
     sSql = f"select pkey from {chemregDB}.regno_sequence"
@@ -90,11 +92,8 @@ def isItNewStructure(self, molfile):
     molfile, stdSMILES = cleanStructureRDKit(molfile)
     if molfile == False:
         return False
-    sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles')))'''
-    cur.execute(sSql)
-    strip = cur.fetchall()[0][0].decode("utf-8")
 
-    mols = checkUniqueStructure(strip, bcpvsDB)
+    mols = checkUniqueStructure(stdSMILES, bcpvsDB)
 
     if mols == False:
         return False
@@ -588,14 +587,7 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
         molfile, stdSMILES = cleanStructureRDKit(molfile)
         if compound_id in ('', None):
 
-            #sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}',
-            #                                                      'cistrans'),
-            #                                                      'smiles')))'''
-            #cur.execute(sSql)
-            #strip = cur.fetchall()[0][0].decode("utf-8")
-            #mols = checkUniqueStructure(strip, bcpvsDB)
-
-            mols = checkUniqueStructure(molfile, bcpvsDB)
+            mols = checkUniqueStructure(stdSMILES, bcpvsDB)
             if mols == False:
                 logger.error(f'Error in molfile for regno {self.regno}')
                 return False
@@ -697,11 +689,13 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         ########################
         # Do exact match with molecule against the CBK database
 
-        sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles')))'''
-        cur.execute(sSql)
-        strip = cur.fetchall()[0][0].decode("utf-8")
+        #sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles')))'''
+        #cur.execute(sSql)
+        #strip = cur.fetchall()[0][0].decode("utf-8")
 
-        mols = checkUniqueStructure(strip, bcpvsDB)
+        molfileRdkit, stdSMILES = cleanStructureRDKit(molfile)
+        mols = checkUniqueStructure(stdSMILES, bcpvsDB)
+        #mols = checkUniqueStructure(strip, bcpvsDB)
         #mols = checkUniqueStructure(molfile, bcpvsDB)
         if mols == False:
             return False
