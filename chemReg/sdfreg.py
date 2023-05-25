@@ -28,40 +28,40 @@ class LoadSDF(QDialog):
                                                  'chemist')
         self.submitter_cb.addItems(submitters)
         self.submitter_cb.currentTextChanged.connect(self.check_fields)
-        
+
         compoundTypes = dbInterface.getColComboData(self.token,
                                                     'compound_type')
         self.compoundtype_cb.addItems(compoundTypes)
         self.compoundtype_cb.currentTextChanged.connect(self.check_fields)
-        
+
         projects = dbInterface.getColComboData(self.token,
                                                'project')
         self.project_cb.addItems(projects)
         self.project_cb.currentTextChanged.connect(self.check_fields)
-        
+
         suppliers = dbInterface.getColComboData(self.token,
                                                 'supplier')
         self.supplier_cb.addItems(suppliers)
         self.supplier_cb.currentTextChanged.connect(self.check_fields)
-        
+
         solvents = dbInterface.getColComboData(self.token,
                                                'solvent')
         self.solvent_cb.addItems(solvents)
         self.solvent_cb.currentTextChanged.connect(self.check_fields)
-        
+
         productTypes = dbInterface.getColComboData(self.token,
                                                    'product')
         self.producttype_cb.addItems(productTypes)
         self.producttype_cb.currentTextChanged.connect(self.check_fields)
-        
+
         libraryIds = dbInterface.getColComboData(self.token,
                                                  'library_id')
         self.library_cb.addItems(libraryIds)
         self.library_cb.currentTextChanged.connect(self.update_librarydesc)
         self.library_cb.currentTextChanged.connect(self.check_fields)
-        
+
         self.librarydesc_eb.setText(None)
-        
+
         self.upload_btn.setEnabled(False)
         self.upload_btn.clicked.connect(self.uploadSDFile)
         self.selectsdf_btn.clicked.connect(self.getSDFile)
@@ -75,7 +75,7 @@ class LoadSDF(QDialog):
 
         self.exec_()
         self.show()
-    
+
     def check_fields(self):
         if self.sdfilename == None or \
              self.submitter_cb.currentText() == '' or \
@@ -128,11 +128,11 @@ class LoadSDF(QDialog):
             line = sFile.readline()
             line = line.replace(b'\r\n', b'\n')
             line = line.replace(b"'", b"")
-            
+
             # RDKit can't handle empty first line in molfile
             if iCount == 1:
                 line = b'id' + line
-                
+
             sMol += line
             if b'$$$$' in line:
                 sMol = sMol.decode(errors='replace')
@@ -146,12 +146,12 @@ class LoadSDF(QDialog):
             return codecs.encode(s, 'utf-8')
         else:
             raise TypeError("Expected bytes or string, but got %s." % type(s))
-    
+
     def getTags(self, sMol):
         pattern = b'>\s*<(.+)>.*\n(.*)\n'
         saTags = re.findall(pattern, sMol)
         return saTags
-    
+
     def getValuePairs(self, lList):
         dValues = {
             "external_id": '',
@@ -159,7 +159,7 @@ class LoadSDF(QDialog):
             "purity": -1
             }
 
-        for i in lList:            
+        for i in lList:
             if i[0] == str.encode(self.cmpidfield_cb.currentText()):
                 dammit = UnicodeDammit(i[1])
                 dValues['external_id'] = dammit.unicode_markup
@@ -215,7 +215,7 @@ class LoadSDF(QDialog):
                 send_msg("Purity error", f"Purity must be a number, got: {dTags['purity']}")
                 lError = True
                 break
-            
+
             iBatchCount += 1
             if iBatchCount == 1000:
                 iElnId += 1
@@ -224,7 +224,7 @@ class LoadSDF(QDialog):
                                                             sCurrentEln)
                 if iBatchCount == 0:
                     iBatchCount = 1
-                
+
             dTags['jpage'] = sCurrentEln + str(iBatchCount).zfill(3)
             dTags['molfile'] = sMol.decode('latin-1')
             dTags['chemist'] = self.submitter_cb.currentText()
@@ -236,7 +236,7 @@ class LoadSDF(QDialog):
             dTags['library_id'] = self.library_cb.currentText()
             dTags['ip_rights'] = self.ip_rights_cb.currentText()
             dTags['sdfile_sequence'] = iSdfSequence
-            
+
             lStatus, sMessage = dbInterface.chemRegAddMolFile(dTags,
                                                               self.token)
             if sMessage == b'newMolecule':
@@ -265,7 +265,7 @@ class LoadSDF(QDialog):
         QApplication.processEvents()
         self.pbar.hide()
         QApplication.restoreOverrideCursor()
-            
+
         if lError == False:
             send_msg("SDFile upload done", f'''Uploaded {self.iMolCount} compounds,
  {iNewMols} new compounds, {self.iMolCount - iNewMols} old compounds''')
@@ -285,7 +285,7 @@ class LoadSDF(QDialog):
             logging.getLogger(self.mod_name).error(f'''Wrote failed molecule registration to
  {f_err_path} and info to {f_err_msg_path}''')
             open_file(".")
-            
+
     def closeWindow(self):
         self.close()
 
