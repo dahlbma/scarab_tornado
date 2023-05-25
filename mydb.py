@@ -32,12 +32,15 @@ class DisconnectSafeCursor(object):
         self.scarabCursor.close()
 
     def ping(self, *args, **kwargs):
+        ret = ''
         try:
             self.scarabCursor.execute(*args, **kwargs)
         except Exception as e:
             scarabLogger.error(str(e))
             scarabLogger.error(args)
-        return self.cursor.execute(*args, **kwargs)
+            ret = 'error'
+        self.cursor.execute(*args, **kwargs)
+        return ret
             
 
     def execute(self, *args, **kwargs):

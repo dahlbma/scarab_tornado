@@ -335,12 +335,16 @@ def getMoleculeProperties(self, molfile, chemregDB):
 class PingDB(tornado.web.RequestHandler):
     def get(self):
         sSql = "select * from hive.user_details where pkey = 0"
-        cur.ping(sSql)
+        ret = cur.ping(sSql)
+        if ret == 'error':
+            self.set_status(400)
 
     def head(self):
         sSql = "select * from hive.user_details where pkey = 0"
-        cur.ping(sSql)
-
+        ret = cur.ping(sSql)
+        if ret == 'error':
+            self.set_status(400)
+   
         
 @jwtauth
 class GetMolkeyct(tornado.web.RequestHandler):
