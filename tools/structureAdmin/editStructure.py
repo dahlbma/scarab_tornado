@@ -19,7 +19,7 @@ class EditStructure(QMainWindow):
         self.window().setWindowTitle("Edit structure")
         self.compound_id = ''
         self.regno = ''
-        
+
         self.compoundId_eb.textChanged.connect(self.compoundIdChanged)
         self.regno_eb.textChanged.connect(self.regnoChanged)
 
@@ -27,7 +27,7 @@ class EditStructure(QMainWindow):
         self.editStructure_btn.setEnabled(True)
 
         self.regnoCopyStructure_btn.clicked.connect(self.regnoCopyStructure)
-        
+
         self.regnoForward_btn.clicked.connect(self.regnoForward)
         self.regnoBackward_btn.clicked.connect(self.regnoBackward)
 
@@ -45,7 +45,7 @@ class EditStructure(QMainWindow):
             #res, sMessage = postMolFile(self, fname[0], self.regno, logging.getLogger(self.mod_name))
             displayMolfile(self)
             updateMoleculeProperties(self)
-            self.molChanged()      
+            self.molChanged()
 
     def editMolFile(self, event=None):
         self.fname = "tmp.mol" # temp file name
@@ -54,7 +54,7 @@ class EditStructure(QMainWindow):
         retcode = open_file(self.fname_path)
 
         self.fs_watcher = QtCore.QFileSystemWatcher([self.fname_path])
-        self.fs_watcher.fileChanged.connect(self.createMolImage)        
+        self.fs_watcher.fileChanged.connect(self.createMolImage)
 
     def createMolImage(self):
         molfile_file = open(self.fname_path, "r")
@@ -68,7 +68,7 @@ class EditStructure(QMainWindow):
         except:
             print('Failed to create molecule image')
             return
-            
+
         self.molfileToRegister = res['molfile']
         self.smilesToRegister = res['smiles']
         if res['status'] != '':
@@ -111,12 +111,12 @@ class EditStructure(QMainWindow):
         sSql = f'''select molfile from chem_reg.chem_info
                    where regno = '{sRegno}' '''
         sMolfile = dbInterface.getMolFile(self.token, sRegno)
-        
+
         cb = QApplication.clipboard()
         cb.clear(mode=cb.Clipboard)
         cb.setText(sMolfile, mode=cb.Clipboard)
-        
-        
+
+
     def compoundForward(self):
         sCmpId = self.compoundId_eb.text()
         forwardCompound = dbInterface.getForwardCompound(self.token, sCmpId)
@@ -130,7 +130,7 @@ class EditStructure(QMainWindow):
                 #self.compoundId_eb.setText('')
                 displayMolfile(self, 'no_struct', self.original_structure_lab)
 
-            
+
     def compoundBackward(self):
         sCmpId = self.compoundId_eb.text()
         backwardCompound = dbInterface.getBackwardCompound(self.token, sCmpId)
@@ -144,7 +144,7 @@ class EditStructure(QMainWindow):
                 #self.compoundId_eb.setText('')
                 displayMolfile(self, 'no_struct', self.original_structure_lab)
 
-            
+
     def regnoForward(self):
         sRegno = self.regno_eb.text()
         forwardRegno = dbInterface.getForwardRegno(self.token, sRegno)
@@ -157,7 +157,7 @@ class EditStructure(QMainWindow):
                 #self.regno_eb.setText('')
                 displayMolfile(self, 'no_struct', self.current_structure_lab)
 
-        
+
     def regnoBackward(self):
         sRegno = self.regno_eb.text()
         prevRegno = dbInterface.getBackwardRegno(self.token, sRegno)
@@ -170,7 +170,7 @@ class EditStructure(QMainWindow):
                 #self.regno_eb.setText('')
                 displayMolfile(self, 'no_struct', self.current_structure_lab)
 
-        
+
     def regnoChanged(self):
         sRegno = self.regno_eb.text()
         #3913654
@@ -197,7 +197,7 @@ class EditStructure(QMainWindow):
         else:
             self.molOK = False
             self.molOK = True
-        
+
     def updateStructure(self):
         # Update the structure in db here
         #dbInterface.updateStructure(self.token, self.compound_id, self.molfile)
