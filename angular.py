@@ -46,6 +46,7 @@ class BaseHandler(tornado.web.RequestHandler):
         self.set_status(204)
         self.finish()
 
+
 class login(tornado.web.RequestHandler):
     def post(self, *args):
         username = self.get_argument('username')

@@ -1254,6 +1254,8 @@ class GetColComboData(tornado.web.RequestHandler):
         if column == 'project':
             sSql = """select project_name from hive.project_details
                       order by project_name"""
+            sSql = """select project_name from hive.project_details
+                      order by created_date desc"""
         elif column == 'chemist':
             sSql = """select fullname from hive.user_details
             where ORGANIZATION = 'chemistry'"""
