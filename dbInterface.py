@@ -608,13 +608,13 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
                                                   ip_rights,
                                                   compound_name = '')
                 # Is the moldepict on the next line the solution to stereo problems?
-                sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}',
-                                                                      'cistrans'),
-                                                                      'smiles')))'''
+                #sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}',
+                #                                                      'cistrans'),
+                #                                                      'smiles')))'''
                 #sSql = f'''select bin2mol(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles'))'''
-                cur.execute(sSql)
-                strippedMolfile = cur.fetchall()[0][0].decode("utf-8")
-
+                #cur.execute(sSql)
+                #strippedMolfile = cur.fetchall()[0][0].decode("utf-8")
+                strippedMolfile = molfile
                 addStructure(f"{bcpvsDB}.JCMOL_MOLTABLE",
                              strippedMolfile,
                              compound_id,
