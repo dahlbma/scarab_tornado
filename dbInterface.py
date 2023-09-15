@@ -829,7 +829,7 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
         try:
             clean_mol = rdMolStandardize.Cleanup(mol, params)
         except:
-            logger.error(f'Failed to standardize molfile {regno}')
+            logger.error(f'Failed to standardize molfile {sMolId}')
             sStatus = 'Molecule altered, checkit'
             sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}',
                                                                   'cistrans'),
