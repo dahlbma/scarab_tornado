@@ -667,6 +667,18 @@ class ChemRegAddMol(tornado.web.RequestHandler):
             self.finish(f'Nostruct for jpage: {jpage}')
             return
 
+        try:
+            l1, l2= cleanStructureRDKit(molfile)
+            if l1 == False:
+                self.set_status(500)
+                self.finish(f'RDKit failed to convert Molfile for: {jpage}')
+                return                
+        except:
+            self.set_status(500)
+            self.finish(f'RDKit failed to convert Molfile for: {jpage}')
+            return
+            
+            
         (C_MF,
          C_MW,
          C_MONOISO,
