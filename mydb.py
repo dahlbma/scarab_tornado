@@ -87,6 +87,12 @@ class DisconnectSafeConnection(object):
         self.reconnect()
 
     def reconnect(self):
+        try:
+            self.conn.close()
+            self.scarabConn.close()
+        except:
+            pass
+        
         self.conn = MySQLdb.connect(
             host=config.database['host'],
             user=config.database['user'],
