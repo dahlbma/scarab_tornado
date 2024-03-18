@@ -1055,6 +1055,13 @@ class UpdateColumn(tornado.web.RequestHandler):
         column = self.get_argument("column")
         value = self.get_argument("value")
         regno = self.get_argument("regno")
+
+        if column == 'PURITY':
+            try:
+                value = int(value)
+            except:
+                logger.info(f"Purity is non integer, setting purity to -1")
+                value = -1
         values = (value, regno, )
         sSql = f"""update {chemregDB}.chem_info set {column} = '{value}'
         where regno = {regno}"""
