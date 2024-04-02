@@ -302,7 +302,7 @@ class LoadSDF(QDialog):
                 iMolCount += 1
                 self.iMolCount = iMolCount
                 self.compoundcount_lab.setText(str(iMolCount))
-                self.iNrElnIds = int((iMolCount / 1000) + 1)
+                self.iNrElnIds = int((iMolCount / 999) + 1)
                 self.nrofelnids_lab.setText(str(self.iNrElnIds))
         f.close()
         f = open(fname[0], "rb")
