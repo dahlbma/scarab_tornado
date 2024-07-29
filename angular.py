@@ -10,6 +10,7 @@ import jwt
 from tornado import web
 import tornado.autoreload
 from tornado.log import enable_pretty_logging
+import chembl_export
 import logging
 import dbInterface
 from auth import jwtauth
@@ -24,6 +25,8 @@ enable_pretty_logging()
 root = os.path.dirname(__file__)
 settings = {
     "cookie_secret": config.secret_key,
+    "static_path": os.path.join(os.path.dirname(__file__), "dist"),
+    "static_url_prefix": "/dist/",
 }
 
 JWT_SECRET = config.secret_key
@@ -205,6 +208,8 @@ def make_app():
         (r"/getChemRegLauncher/Windows/(.*)", web.StaticFileHandler, {"path": "dist/launchers/Windows/"}),
         (r"/getChemRegLauncher/Linux/(.*)", web.StaticFileHandler, {"path": "dist/launchers/Linux/"}),
         (r"/getChemRegLauncher/Darwin/(.*)", web.StaticFileHandler, {"path": "dist/launchers/Darwin/"}),
+        (r"/chemblExport/(?P<sRIDX>[^\/]+)/(?P<project>[^\/]+)/(?P<ELN>[^\/]+)/(?P<sBatches>[^\/]+)", chembl_export.ChemblExport),
+        (r"/chemblExport", chembl_export.ChemblExport),
         (r"/(.*)", web.StaticFileHandler,  {"path": "dist", "default_filename": "index.html"}),
     ], **settings)
 

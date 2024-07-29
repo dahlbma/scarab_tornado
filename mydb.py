@@ -45,7 +45,7 @@ class DisconnectSafeCursor(object):
 
     def execute(self, *args, **kwargs):
         try:
-            if args[0].lstrip().upper().startswith('SELECT '):
+            if args[0].lstrip().upper().startswith('SELECT'):
                 return self.cursor.execute(*args, **kwargs)
             else:
                 try:
@@ -57,8 +57,12 @@ class DisconnectSafeCursor(object):
                         scarabLogger.error(str(e))
                         scarabLogger.error(args)
                 return self.cursor.execute(*args, **kwargs)
-        except MySQLdb.OperationalError:
+        except Exception as e:
+            scarabLogger.error(str(e))
+            scarabLogger.error(args)
+            #except MySQLdb.OperationalError:
             #self.db.reconnect()
+            return -1
             self.cursor = self.db.cursor()
             return self.cursor.execute(*args, **kwargs)
 

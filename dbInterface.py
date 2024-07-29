@@ -517,6 +517,7 @@ where compound_id = '{compound_id}'
         cur.execute(sSql)
 
 
+
 @jwtauth
 class GetRegnosFromSdfSequence(tornado.web.RequestHandler):
     def get(self):
@@ -864,7 +865,6 @@ class CreateMolImageFromMolfile(tornado.web.RequestHandler):
         te = rdMolStandardize.TautomerEnumerator(params) # idem
         taut_uncharged_parent_clean_mol = te.Canonicalize(uncharged_parent_clean_mol)
         smiles = Chem.MolToSmiles(taut_uncharged_parent_clean_mol)
-        logger.error(taut_uncharged_parent_clean_mol)
         m = Chem.MolToMolBlock(taut_uncharged_parent_clean_mol)
 
         # Don't think we need to generate new coords with molcart
@@ -1056,7 +1056,7 @@ class UpdateColumn(tornado.web.RequestHandler):
         value = self.get_argument("value")
         regno = self.get_argument("regno")
 
-        if column == 'PURITY':
+        if 'PURITY' in column:
             try:
                 value = int(value)
             except:
