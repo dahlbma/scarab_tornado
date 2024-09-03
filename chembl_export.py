@@ -115,6 +115,7 @@ tRes columns:
     '''
     iDataCol = 3
     sType = 'Inhibition'
+    
     if tRes[0][3] == None and tRes[0][4] != None:
         iDataCol = 4
         sType = 'Activation'
@@ -196,8 +197,7 @@ def exportFromElnProject(saCompounds,
     if sComp != '':
         sNotTheseCompounds = f''' and a.compound_id not in ({sComp}) '''
 
-    sSql = f'''select
-    a.compound_id,
+    sSql = f'''select a.compound_id,
     compound_batch,
     bin2mol( moldepict(mol) ),
     inhibition*100,

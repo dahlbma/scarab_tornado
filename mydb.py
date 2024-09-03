@@ -34,24 +34,28 @@ class DisconnectSafeCursor(object):
     def ping(self, *args, **kwargs):
         ret = ''
         try:
-            self.scarabCursor.execute(*args, **kwargs)
-        except Exception as e:
-            scarabLogger.error(str(e))
-            scarabLogger.error(args)
+            self.db.conn.ping(True)
+            self.db.scarabConn.ping(True)
+        except OperationalError as e:
+            scarabLogger.error(f"OperationalError: {str(e)}")
+            if e.args[0] == 2006:  # MySQL server has gone away
+                scarabLogger.error('Server gone away')
             ret = 'error'
-        self.cursor.execute(*args, **kwargs)
         return ret
-            
 
     def execute(self, *args, **kwargs):
         try:
-            if args[0].lstrip().upper().startswith('SELECT'):
+            sSql = args[0].encode('utf-8', 'replace').decode('utf-8')
+        except:
+            sSql = args[0]
+        try:
+            if sSql.lstrip().upper().startswith('SELECT'):
                 return self.cursor.execute(*args, **kwargs)
             else:
                 try:
                     self.scarabCursor.execute(*args, **kwargs)
                 except Exception as e:
-                    if '_test' in args[0]:
+                    if '_test' in sSql:
                         pass
                     else:
                         scarabLogger.error(str(e))
