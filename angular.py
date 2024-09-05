@@ -208,8 +208,8 @@ def make_app():
         (r"/getChemRegLauncher/Windows/(.*)", web.StaticFileHandler, {"path": "dist/launchers/Windows/"}),
         (r"/getChemRegLauncher/Linux/(.*)", web.StaticFileHandler, {"path": "dist/launchers/Linux/"}),
         (r"/getChemRegLauncher/Darwin/(.*)", web.StaticFileHandler, {"path": "dist/launchers/Darwin/"}),
-        (r"/chemblExport/(?P<sRIDX>[^\/]+)/(?P<project>[^\/]+)/(?P<ELN>[^\/]+)/(?P<sBatches>[^\/]+)", chembl_export.ChemblExport),
-        (r"/chemblExport", chembl_export.ChemblExport),
+        (r"/chemblExport/(?P<sRIDX>[^\/]+)/(?P<project>[^\/]+)/(?P<ELN>[^\/]+)/(?P<sBatches>[^\/]+)", dbInterface.ChemblExport),
+        (r"/chemblExport", dbInterface.ChemblExport),
         (r"/(.*)", web.StaticFileHandler,  {"path": "dist", "default_filename": "index.html"}),
     ], **settings)
 

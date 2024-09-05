@@ -17,7 +17,9 @@ import codecs
 import re
 import os
 import mydb
-
+import chembl_export
+import zipfile
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -1478,3 +1480,140 @@ class UploadLauncher(tornado.web.RequestHandler):
         output_file.write(file1['body'])
         output_file.close()
 
+
+class ChemblExport(tornado.web.RequestHandler):
+    def get(self, sRIDX, sBatches):
+        pass
+    def post(self, *args, **kwargs):
+        try:
+            sRIDX = self.get_argument("RIDX").strip()
+            sAIDX = self.get_argument("AIDX").strip()
+            sProject = self.get_argument("project").strip()
+            sELN = self.get_argument("ELN").strip()
+            sTARGET_TYPE = self.get_argument("TARGET_TYPE").strip()
+            sASSAY_TYPE = self.get_argument("ASSAY_TYPE").strip()
+            sACTION_TYPE = self.get_argument("ACTION_TYPE").strip()
+            sBatches = self.get_argument("batches").strip()
+        except:
+            logging.error(f"chembl error")
+            return
+        '''
+        if len(sProject) > 2 and len(sELN) > 2:
+            sBatches = ''
+        '''
+        saBatches = sBatches.split()
+        sMol = ''
+        random_number = str(random.randint(0, 1000000))
+        dir_name = f'dist/export/{random_number}'
+        os.makedirs(dir_name, exist_ok=True)
+        file_path = dir_name + "/COMPOUND_RECORD.tsv"
+        molfile_path = dir_name + "/COMPOUND_CTAB.sdf"
+        
+        with open(file_path, 'w') as compound_record_file, open(molfile_path, 'w') as molfile_file:
+            sHeader = ('CIDX', 'RIDX', 'COMPOUND_NAME', 'COMPOUND_KEY')
+
+            compound_record_file.write('\t'.join(map(str, sHeader)) + '\n')
+            if len(saBatches) > 10000000:
+                chembl_export.exportFromBatches(cur, saBatches, sRIDX, compound_record_file, molfile_file)
+            elif len(sProject) > 2 and len(sELN) > 2:
+                saCompounds = saBatches
+                chembl_export.exportFromElnProject(cur,
+                                                   saCompounds,
+                                                   sProject,
+                                                   sELN,
+                                                   sRIDX,
+                                                   sAIDX,
+                                                   sTARGET_TYPE,
+                                                   sASSAY_TYPE,
+                                                   sACTION_TYPE,
+                                                   compound_record_file,
+                                                   molfile_file,
+                                                   dir_name)
+
+        assay_tsv_name = dir_name + "/ASSAY.tsv"
+        with open(assay_tsv_name, 'w') as assay_tsv_file:
+            sHeader = (
+                'AIDX',
+                'RIDX',
+                'ASSAY_DESCRIPTION',
+                'ASSAY_TYPE',
+                'ASSAY_ORGANISM',
+                'ASSAY_STRAIN',
+                'ASSAY_TAX_ID',
+                'ASSAY_TISSUE',
+                'ASSAY_CELL_TYPE',
+                'ASSAY_SUBCELLULAR_FRACTION',
+                'ASSAY_SOURCE',
+                'TARGET_TYPE',
+                'TARGET_NAME',
+                'TARGET_ACCESSION',
+                'TARGET_ORGANISM',
+                'TARGET_TAX_ID')
+            # sAIDX =
+            # sRIDX =
+            sASSAY_DESCRIPTION = ''
+            # sASSAY_TYPE =
+            sASSAY_ORGANISM = ''
+            sASSAY_STRAIN = ''
+            sASSAY_TAX_ID = ''
+            sASSAY_TISSUE = ''
+            sASSAY_CELL_TYPE = ''
+            sASSAY_SUBCELLULAR_FRACTION = ''
+            sASSAY_SOURCE = ''
+            # sTARGET_TYPE = 
+            sTARGET_NAME = ''
+            sTARGET_ACCESSION = ''
+            sTARGET_ORGANISM = ''
+            sTARGET_TAX_ID = ''
+            assay_tsv_file.write('\t'.join(map(str, sHeader)) + '\n')
+            assay_tsv_file.write(f'''{sAIDX}\t{sRIDX}\t{sASSAY_DESCRIPTION}\t{sASSAY_TYPE}\t{sASSAY_ORGANISM}\t{sASSAY_STRAIN}\t{sASSAY_TAX_ID}\t{sASSAY_TISSUE}\t{sASSAY_CELL_TYPE}\t{sASSAY_SUBCELLULAR_FRACTION}\t{sASSAY_SOURCE}\t{sTARGET_TYPE}\t{sTARGET_NAME}\t{sTARGET_ACCESSION}\t{sTARGET_ORGANISM}\t{sTARGET_TAX_ID}\n''')
+        
+
+        reference_tsv_name = dir_name + "/REFERENCE.tsv"
+        with open(reference_tsv_name, 'w') as reference_tsv_file:
+            sHeader = (
+                'RIDX',
+                'PUBMED_ID',
+                'JOURNAL_NAME',
+                'YEAR',
+                'VOLUME',
+                'ISSUE',
+                'FIRST_PAGE',
+                'LAST_PAGE',
+                'REF_TYPE',
+                'TITLE',
+                'DOI',
+                'PATENT_ID',
+                'ABSTRACT',
+                'AUTHORS')
+            reference_tsv_file.write('\t'.join(map(str, sHeader)) + '\n')
+            reference_tsv_file.write(f'''{sRIDX}\t\t\t\t\t\t\t\t\t\t\t\t\t\n''')
+
+
+        assay_param_tsv_name = dir_name + "/ASSAY_PARAM.tsv"
+        with open(assay_param_tsv_name, 'w') as assay_param_tsv_file:
+            sHeader = (
+                'AIDX',
+                'TYPE',
+                'RELATION',
+                'VALUE',
+                'UNITS',
+                'TEXT_VALUE',
+                'COMMENTS')
+
+            assay_param_tsv_file.write('\t'.join(map(str, sHeader)) + '\n')
+            assay_param_tsv_file.write(f'''{sAIDX}\t\t\t\t\t\t\n''')
+
+            
+        zip_filepath = os.path.join(dir_name, "ChEMBL_deposit.zip")
+
+        with zipfile.ZipFile(zip_filepath, 'w') as zipf:
+            zipf.write(os.path.join(dir_name, "COMPOUND_RECORD.tsv"), arcname="COMPOUND_RECORD.tsv")
+            zipf.write(os.path.join(dir_name, "COMPOUND_CTAB.sdf"), arcname="COMPOUND_CTAB.sdf")
+            zipf.write(os.path.join(dir_name, "ACTIVITY.tsv"), arcname="ACTIVITY.tsv")
+            zipf.write(os.path.join(dir_name, "ASSAY.tsv"), arcname="ASSAY.tsv")
+            zipf.write(os.path.join(dir_name, "REFERENCE.tsv"), arcname="REFERENCE.tsv")
+            zipf.write(os.path.join(dir_name, "ASSAY_PARAM.tsv"), arcname="ASSAY_PARAM.tsv")
+
+        
+        self.write(json.dumps(f'''<a href=https://esox3.scilifelab.se/chemreg/dist/export/{random_number}/ChEMBL_deposit.zip>ChEMBL_deposit.zip</a>'''))
