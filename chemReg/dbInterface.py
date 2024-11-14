@@ -89,10 +89,11 @@ def getLibraryName(token, library_id):
         cleanList = cleanList[0]
     return cleanList
 
-def createLibrary(token, library_name, supplier):
+def createLibrary(token, library_name, supplier, restricted):
     r = requests.put(f'{baseUrl}api/createLibrary',
                      params={'library_name': library_name,
-                             'supplier': supplier},
+                             'supplier': supplier,
+                             'restricted': restricted},
                      headers={'token': token})
     if r.status_code != 200:
         return False, r.content

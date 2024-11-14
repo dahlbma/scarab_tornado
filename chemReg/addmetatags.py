@@ -40,6 +40,8 @@ class AddMetaTags(QDialog):
                 self.salt_save()
 
     def library_save(self):
+        lRestricted = False
+        lRestricted = self.restricted_cb.isChecked()
         lib_name = self.library_name_eb.text().strip()
         sup = self.supplier_cb.currentText()
         if lib_name == "":
@@ -59,7 +61,7 @@ class AddMetaTags(QDialog):
         ok = self.confirm_dialog("Do you want to add this library?" + f"\n Library name: {lib_name}" + f"\n Supplier: {sup}")
         if ok:
             #send
-            check, r = dbInterface.createLibrary(self.token, lib_name, sup)
+            check, r = dbInterface.createLibrary(self.token, lib_name, sup, lRestricted)
             if check:
                 send_msg("Library added", f"Library: \'{lib_name}\', Supplier: \'{sup}\' added.")
                 self.library_name_eb.setText(None)
