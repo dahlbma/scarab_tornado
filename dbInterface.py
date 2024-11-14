@@ -1342,7 +1342,12 @@ class CreateLibrary(tornado.web.RequestHandler):
         chemregDB, bcpvsDB = getDatabase(self)
         sLibraryDescription = self.get_argument("library_name")
         sSupplier = self.get_argument("supplier")
-
+        restricted = self.get_argument("restricted")
+        if restricted == 'False':
+            restricted = 'No'
+        else:
+            restricted = 'Yes'
+            
         sSql = f"select pkey from {bcpvsDB}.library_id_sequence"
         cur.execute(sSql)
         pkey = cur.fetchall()[0][0] +1
@@ -1354,10 +1359,12 @@ class CreateLibrary(tornado.web.RequestHandler):
         sSql = f"""insert into {bcpvsDB}.compound_library
         (library_name,
         supplier,
-        description) values
+        description,
+        restricted) values
         ('{library_id}',
         '{sSupplier}',
-        '{sLibraryDescription}')
+        '{sLibraryDescription}',
+        '{restricted}')
         """
         cur.execute(sSql)
 
@@ -1528,7 +1535,8 @@ class ChemblExport(tornado.web.RequestHandler):
                                                    sACTION_TYPE,
                                                    compound_record_file,
                                                    molfile_file,
-                                                   dir_name)
+                                                   dir_name,
+                                                   logging)
 
         assay_tsv_name = dir_name + "/ASSAY.tsv"
         with open(assay_tsv_name, 'w') as assay_tsv_file:

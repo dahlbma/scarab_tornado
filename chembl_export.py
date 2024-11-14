@@ -79,11 +79,12 @@ def create_ACTIVITY_tsv(tRes,
                         sTARGET_TYPE,
                         sASSAY_TYPE,
                         sACTION_TYPE,
-                        dir_name):
+                        dir_name,
+                        logg):
     '''
 RIDX
 CRIDX
-CRIDX_DOCID
+RIDX_DOCID
 CRIDX_CHEMBLID
 CIDX
 SRC_ID_CIDX
@@ -181,7 +182,8 @@ def exportFromElnProject(cur,
                          sACTION_TYPE,
                          compound_record_file,
                          molfile_file,
-                         dir_name):
+                         dir_name,
+                         logg):
     sComp = ''
     sNotTheseCompounds = ''
     if len(saCompounds) == 1:
@@ -199,8 +201,8 @@ def exportFromElnProject(cur,
     sSql = f'''select a.compound_id,
     compound_batch,
     bin2mol( moldepict(mol) ),
-    inhibition*100,
-    activation*100,
+    ROUND(inhibition * 100, 4) AS inhibition,
+    ROUND(activation * 100, 4) AS activation,
     CASE 
         WHEN hit = 0 THEN 'Not active'
         WHEN hit = 1 THEN 'Active'
@@ -213,7 +215,11 @@ def exportFromElnProject(cur,
     {sNotTheseCompounds}
     order by a.compound_id
     '''
-    cur.execute(sSql)
+    try:
+        cur.execute(sSql)
+    except:
+        logg.error(f"{sSql}")
+
     res = cur.fetchall()
     sPrevCompId = ''
     for row in res:
@@ -248,6 +254,7 @@ $$$$
                         sTARGET_TYPE,
                         sASSAY_TYPE,
                         sACTION_TYPE,
-                        dir_name)
+                        dir_name,
+                        logg)
 
 
