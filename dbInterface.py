@@ -659,6 +659,11 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         library_id = self.get_body_argument('library_id')
         sLib = re.search(r"(Lib-\d\d\d\d)", library_id)
         library_id = sLib.group()
+        if library_id.startswith("Lib"):
+            pass
+        else:
+            # If the library is blank set it to Compound collection lib
+            library_id = 'Lib-3002'
         external_id = self.get_body_argument('external_id')
         supplier_batch = self.get_body_argument('supplier_batch')
         purity = self.get_body_argument('purity')
