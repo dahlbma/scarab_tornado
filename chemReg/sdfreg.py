@@ -205,6 +205,9 @@ class LoadSDF(QDialog):
 
     def uploadNostructs(self):
         print(self.nostructs)
+
+        for nostruct in self.nostructs:
+            dbInterface.addNostructMol(nostruct, self.token)
         
     def uploadSDFile(self):
         

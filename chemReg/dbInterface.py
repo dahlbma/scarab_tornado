@@ -49,6 +49,16 @@ def createNewRegno(regno, token):
                      params={'regno': regno},
                      headers={'token': token})
 
+def addNostructMol(nostruct, token):
+    r = requests.put(f'{baseUrl}api/addNostructMol',
+                     params={'nostruct': nostruct},
+                     headers={'token': token})
+    if r.status_code != 200:
+        return False
+    else:
+        return True
+    
+    
 def updateBatch(token, regno, sBatch):
     r = requests.put(f'{baseUrl}api/updateRegnoBatch',
                      params={'regno': regno, 'batch': sBatch},
