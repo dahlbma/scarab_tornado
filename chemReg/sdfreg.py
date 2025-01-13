@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QFileDialog, QProgressBar, QMessageBox
 from chemreglib import *
 import chardet
 from bs4 import UnicodeDammit
+import openpyxl
 
 ip_rights_list = [None, 'External rights', 'LCBKI', 'Commercial']
 
@@ -16,6 +17,8 @@ class LoadSDF(QDialog):
         self.mod_name = "sdfreg"
         logger = logging.getLogger(self.mod_name)
         self.sdfilename = None
+        self.nostruct_name = None
+        self.nostructs = None
         self.iMolCount = 0
         self.iNrElnIds = None
         self.saElnIds = None
@@ -65,6 +68,7 @@ class LoadSDF(QDialog):
         self.upload_btn.setEnabled(False)
         self.upload_btn.clicked.connect(self.uploadSDFile)
         self.selectsdf_btn.clicked.connect(self.getSDFile)
+        self.nostruct_btn.clicked.connect(self.getNostructFile)
         self.cancel_btn.clicked.connect(self.closeWindow)
 
         self.elnids_text.textChanged.connect(self.parseElnIds)
@@ -78,6 +82,18 @@ class LoadSDF(QDialog):
 
     def check_fields(self):
         if self.sdfilename == None or \
+           self.submitter_cb.currentText() == '' or \
+           self.compoundtype_cb.currentText() == '' or \
+           self.project_cb.currentText() == '' or \
+           self.supplier_cb.currentText() == '' or \
+           self.solvent_cb.currentText() == '' or \
+           self.producttype_cb.currentText() == '' or \
+           self.library_cb.currentText() in ('', ' ') or \
+           self.ElnIdsOK == False or \
+           self.ip_rights_cb.currentText() == '' or \
+           self.iMolCount >= self.iFreeElnSpace:
+            self.upload_btn.setEnabled(False)
+        elif self.nostruct_name == None or \
              self.submitter_cb.currentText() == '' or \
              self.compoundtype_cb.currentText() == '' or \
              self.project_cb.currentText() == '' or \
@@ -88,9 +104,27 @@ class LoadSDF(QDialog):
              self.ElnIdsOK == False or \
              self.ip_rights_cb.currentText() == '' or \
              self.iMolCount >= self.iFreeElnSpace:
-            self.upload_btn.setEnabled(False)
+            self.upload_btn.setEnabled(False)            
         else:
             self.upload_btn.setEnabled(True)
+
+        if self.nostruct_name == None or \
+             self.submitter_cb.currentText() == '' or \
+             self.compoundtype_cb.currentText() == '' or \
+             self.project_cb.currentText() == '' or \
+             self.supplier_cb.currentText() == '' or \
+             self.solvent_cb.currentText() == '' or \
+             self.producttype_cb.currentText() == '' or \
+             self.library_cb.currentText() in ('', ' ') or \
+             self.ElnIdsOK == False or \
+             self.ip_rights_cb.currentText() == '' or \
+             self.iMolCount >= self.iFreeElnSpace:
+            print('Here')
+            self.upload_btn.setEnabled(False)            
+        else:
+            self.upload_btn.setEnabled(True)
+
+            
 
     def update_librarydesc(self):
         library_name = dbInterface.getLibraryName(self.token,
@@ -169,7 +203,15 @@ class LoadSDF(QDialog):
                 dValues['purity'] = i[1]
         return dValues
 
+    def uploadNostructs(self):
+        print(self.nostructs)
+        
     def uploadSDFile(self):
+        
+        if self.nostruct_name != None and self.nostructs != None:
+            self.uploadNostructs()
+            return
+
         mol_info = {'external_id': self.cmpidfield_cb.currentText()}
         f = open(self.sdfilename, "rb")
         currtime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -326,3 +368,68 @@ class LoadSDF(QDialog):
             self.sdfname_lab.setText(self.sdfilename[:5] + "..." + self.sdfilename[-15:])
         else:
             self.sdfname_lab.setText(self.sdfilename)
+
+
+    def getNostructFile(self):
+        fname = QFileDialog.getOpenFileName(self, 'Open file', 
+                                                '.', "Excel file (*.xlsx)")
+        if fname[0] == '':
+            return
+
+        #f = open(fname[0], "rb")
+        iMolCount = 0
+
+        self.nostruct_name = fname[0]
+        if len(self.nostruct_name) > 40:
+            self.nostructName_lab.setText(self.nostruct_name[:5] + "..." + self.nostruct_name[-19:])
+        else:
+            self.nostructName_lab.setText(self.nostruct_name)
+
+        try:
+            workbook = openpyxl.load_workbook(fname[0])
+            sheet = workbook.active  # Get the active sheet
+
+            header_row = [cell.value for cell in sheet[1]]  # Read the first row (header)
+
+            expected_columns = ['External ID', 'External Batch', 'MW']
+
+            if not all(col in header_row for col in expected_columns) or len(expected_columns) != len(header_row):
+                missing_cols = set(expected_columns) - set(header_row)
+                extra_cols = set(header_row) - set(expected_columns)
+                sError = ''
+                if missing_cols:
+                    sError = f'''Error: Missing columns: {missing_cols}\nName columns: 'External ID', 'External Batch', 'MW' '''
+                    print(f"Error: Missing columns: {missing_cols}")
+                if extra_cols:
+                    sError = f'''Error: Unexpected columns: {extra_cols}\nName columns: 'External ID', 'External Batch', 'MW' '''
+                    print(f"Error: Unexpected columns: {extra_cols}")
+                if len(expected_columns) != len(header_row):
+                    sError = f'''Error: Incorrect number of columns. Expected {len(expected_columns)}, found {len(header_row)}\n name columns: 'External ID', 'External Batch', 'MW' '''
+                    print(f"Error: Incorrect number of columns. Expected {len(expected_columns)}, found {len(header_row)}")
+
+                send_msg("Format error", sError)
+                return None  # Return None if the columns are not found
+
+            data = []
+            iMolCount = 0
+            for row in sheet.iter_rows(min_row=2):  # Iterate from the second row (skipping the header)
+                iMolCount += 1
+                self.iMolCount = iMolCount
+                self.compoundcount_lab.setText(str(iMolCount))
+                self.iNrElnIds = int((iMolCount / 999) + 1)
+                self.nrofelnids_lab.setText(str(self.iNrElnIds))
+                row_values = [cell.value for cell in row]
+                data.append(row_values)
+
+            self.nostructs = data
+
+        except FileNotFoundError:
+            print(f"Error: File not found: {filepath}")
+            return None
+        except openpyxl.utils.exceptions.InvalidFileException:
+            print(f"Error: Invalid Excel file: {filepath}")
+            return None
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            return None
+
