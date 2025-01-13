@@ -170,6 +170,7 @@ def make_app():
         (r"/api/createRegno", dbInterface.CreateRegno),
         (r"/api/updateRegnoBatch", dbInterface.UpdateRegnoBatch),
         (r"/api/createSalt", dbInterface.CreateSalt),
+        (r"/api/addNostructMol", dbInterface.AddNostructMol),
         (r"/api/createSupplier", dbInterface.CreateSupplier),
         (r"/api/createLibrary", dbInterface.CreateLibrary),
         (r"/api/deleteRegno", dbInterface.DeleteRegno),

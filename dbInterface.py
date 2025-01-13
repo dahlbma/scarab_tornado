@@ -351,6 +351,12 @@ class PingDB(tornado.web.RequestHandler):
 
 
 @jwtauth
+class AddNostructMol(tornado.web.RequestHandler):
+    def put(self):
+        chemregDB, bcpvsDB = getDatabase(self)
+
+
+@jwtauth
 class GetMolkeyct(tornado.web.RequestHandler):
     def get(self):
         chemregDB, bcpvsDB = getDatabase(self)
