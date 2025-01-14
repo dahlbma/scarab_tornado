@@ -260,6 +260,7 @@ def registerNewBatch(bcpvsDB,
     '{supplier_batch}',
     {chemreg_regno})
     '''
+
     try:
         cur.execute(sSql)
     except Exception as e:
@@ -352,9 +353,94 @@ class PingDB(tornado.web.RequestHandler):
 
 @jwtauth
 class AddNostructMol(tornado.web.RequestHandler):
-    def put(self):
+    def post(self):
+        compound_id = 'CBK999999'
         chemregDB, bcpvsDB = getDatabase(self)
+        jpage = self.get_body_argument('jpage')
+        chemist = self.get_body_argument('chemist')
+        compound_type = self.get_body_argument('compound_type')
+        project = self.get_body_argument('project')
+        source = self.get_body_argument('source')
+        solvent = self.get_body_argument('solvent')
+        product = self.get_body_argument('product')
+        library_id = self.get_body_argument('library_id')
+        sLib = re.search(r"(Lib-\d\d\d\d)", library_id)
+        library_id = sLib.group()
+        if library_id.startswith("Lib"):
+            pass
+        else:
+            # If the library is blank set it to Compound collection lib
+            library_id = 'Lib-3002'
+        external_id = self.get_body_argument('external_id')
+        supplier_batch = self.get_body_argument('supplier_batch')
+        purity = self.get_body_argument('purity')
+        ip_rights = self.get_body_argument('ip_rights')
+        mw = self.get_body_argument('mw')
+        newRegno = getNewRegno(chemregDB)
 
+        
+        sSql = f"""
+        insert into {chemregDB}.chem_info (
+        regno,
+        jpage,
+        compound_id,
+        rdate,
+        chemist,
+        compound_type,
+        project,
+        source,
+        solvent,
+        product,
+        library_id,
+        external_id,
+        supplier_batch,
+        purity,
+        ip_rights,
+        C_MW)
+        values (
+        '{newRegno}',
+        '{jpage}',
+        '{compound_id}',
+        now(),
+        '{chemist}',
+        '{compound_type}',
+        '{project}',
+        '{source}',
+        '{solvent}',
+        '{product}',
+        '{library_id}',
+        '{external_id}',
+        '{supplier_batch}',
+        {purity},
+        '{ip_rights}',
+        {mw}
+        )
+        """
+
+        try:
+            cur.execute(sSql)
+        except Exception as e:
+            logger.error(f"{sSql}")
+            logger.error(f"{str(e)}")
+        
+        saSalts = ''
+        registerNewBatch(bcpvsDB,
+                         compound_id,
+                         newRegno,
+                         jpage,
+                         saSalts,
+                         chemist,
+                         project,
+                         source,         #  Supplier
+                         mw,
+                         library_id,
+                         compound_type,
+                         product,
+                         external_id,
+                         supplier_batch,
+                         purity = -1)
+
+        
 
 @jwtauth
 class GetMolkeyct(tornado.web.RequestHandler):
@@ -691,8 +777,7 @@ class ChemRegAddMol(tornado.web.RequestHandler):
             self.set_status(500)
             self.finish(f'RDKit failed to convert Molfile for: {jpage}')
             return
-            
-            
+                        
         (C_MF,
          C_MW,
          C_MONOISO,
