@@ -119,7 +119,6 @@ class LoadSDF(QDialog):
              self.ElnIdsOK == False or \
              self.ip_rights_cb.currentText() == '' or \
              self.iMolCount >= self.iFreeElnSpace:
-            print('Here')
             self.upload_btn.setEnabled(False)            
         else:
             self.upload_btn.setEnabled(True)
@@ -204,10 +203,43 @@ class LoadSDF(QDialog):
         return dValues
 
     def uploadNostructs(self):
-        print(self.nostructs)
+        iElnId = 0
+        sCurrentEln = self.saElnIds[iElnId]
+        iBatchCount = dbInterface.getLastBatchOfEln(self.token, sCurrentEln)
 
+        def getTags(external_id, supplier_batch, mw):
+            if mw == None:
+                mw = 0
+            dTags = {
+                "external_id": external_id,
+                "supplier_batch": supplier_batch,
+                "purity": -1,
+                "mw": mw
+            }
+            dTags['chemist'] = self.submitter_cb.currentText()
+            dTags['compound_type'] = self.compoundtype_cb.currentText()
+            dTags['project'] = self.project_cb.currentText()
+            dTags['source'] = self.supplier_cb.currentText()
+            dTags['solvent'] = self.solvent_cb.currentText()
+            dTags['product'] = self.producttype_cb.currentText()
+            dTags['library_id'] = self.library_cb.currentText()
+            dTags['ip_rights'] = self.ip_rights_cb.currentText()
+            dTags['sdfile_sequence'] = 0
+            return dTags
+            
         for nostruct in self.nostructs:
-            dbInterface.addNostructMol(nostruct, self.token)
+
+            iBatchCount += 1
+            if iBatchCount == 1000:
+                iElnId += 1
+                sCurrentEln = self.saElnIds[iElnId]
+                iBatchCount = dbInterface.getLastBatchOfEln(self.token, sCurrentEln)
+                if iBatchCount == 0:
+                    iBatchCount = 1
+    
+            dTags = getTags(nostruct[0], nostruct[1], nostruct[2])
+            dTags['jpage'] = sCurrentEln + str(iBatchCount).zfill(3)
+            dbInterface.addNostructMol(dTags, self.token)
         
     def uploadSDFile(self):
         
@@ -381,7 +413,6 @@ class LoadSDF(QDialog):
 
         #f = open(fname[0], "rb")
         iMolCount = 0
-
         self.nostruct_name = fname[0]
         if len(self.nostruct_name) > 40:
             self.nostructName_lab.setText(self.nostruct_name[:5] + "..." + self.nostruct_name[-19:])
@@ -391,9 +422,7 @@ class LoadSDF(QDialog):
         try:
             workbook = openpyxl.load_workbook(fname[0])
             sheet = workbook.active  # Get the active sheet
-
             header_row = [cell.value for cell in sheet[1]]  # Read the first row (header)
-
             expected_columns = ['External ID', 'External Batch', 'MW']
 
             if not all(col in header_row for col in expected_columns) or len(expected_columns) != len(header_row):
@@ -407,7 +436,8 @@ class LoadSDF(QDialog):
                     sError = f'''Error: Unexpected columns: {extra_cols}\nName columns: 'External ID', 'External Batch', 'MW' '''
                     print(f"Error: Unexpected columns: {extra_cols}")
                 if len(expected_columns) != len(header_row):
-                    sError = f'''Error: Incorrect number of columns. Expected {len(expected_columns)}, found {len(header_row)}\n name columns: 'External ID', 'External Batch', 'MW' '''
+                    sError = f'''Error: Incorrect number of columns. Expected {len(expected_columns)}, found {len(header_row)}\n\
+Name columns: 'External ID', 'External Batch', 'MW' '''
                     print(f"Error: Incorrect number of columns. Expected {len(expected_columns)}, found {len(header_row)}")
 
                 send_msg("Format error", sError)

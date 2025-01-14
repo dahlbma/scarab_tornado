@@ -12,6 +12,16 @@ def chemRegAddMolFile(dict, token):
     else:
         return True, r.content
 
+def addNostructMol(dict, token):
+    print(dict)
+    r = requests.post(f'{baseUrl}api/addNostructMol',
+                      data = dict,
+                      headers={'token': token})
+    if r.status_code != 200:
+        return False
+    else:
+        return True
+    
 def listify(data, addBlank=True):
     res = data.content.decode()
     res = json.loads(res)
@@ -48,16 +58,6 @@ def createNewRegno(regno, token):
     r = requests.put(f'{baseUrl}api/createRegno',
                      params={'regno': regno},
                      headers={'token': token})
-
-def addNostructMol(nostruct, token):
-    r = requests.put(f'{baseUrl}api/addNostructMol',
-                     params={'nostruct': nostruct},
-                     headers={'token': token})
-    if r.status_code != 200:
-        return False
-    else:
-        return True
-    
     
 def updateBatch(token, regno, sBatch):
     r = requests.put(f'{baseUrl}api/updateRegnoBatch',
