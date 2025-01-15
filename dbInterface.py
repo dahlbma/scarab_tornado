@@ -226,6 +226,7 @@ def registerNewBatch(bcpvsDB,
                      product_type,
                      supplier_id,
                      supplier_batch,
+                     restriction_comment = '',
                      purity = -1):
     sSql = f'''insert into {bcpvsDB}.batch (
     compound_id,
@@ -242,7 +243,8 @@ def registerNewBatch(bcpvsDB,
     product_type,
     supplier_id,
     supplier_batch,
-    chemreg_regno)
+    chemreg_regno,
+    restriction_comment)
     values (
     '{compound_id}',
     '{notebook_ref}',
@@ -258,7 +260,8 @@ def registerNewBatch(bcpvsDB,
     '{product_type}',
     '{supplier_id}',
     '{supplier_batch}',
-    {chemreg_regno})
+    {chemreg_regno},
+    '{restriction_comment}')
     '''
 
     try:
@@ -376,6 +379,7 @@ class AddNostructMol(tornado.web.RequestHandler):
         purity = self.get_body_argument('purity')
         ip_rights = self.get_body_argument('ip_rights')
         mw = self.get_body_argument('mw')
+        restriction_comment = self.get_body_argument('restriction_comment')
         newRegno = getNewRegno(chemregDB)
 
         
@@ -419,6 +423,7 @@ class AddNostructMol(tornado.web.RequestHandler):
 
         try:
             cur.execute(sSql)
+            pass
         except Exception as e:
             logger.error(f"{sSql}")
             logger.error(f"{str(e)}")
@@ -438,6 +443,7 @@ class AddNostructMol(tornado.web.RequestHandler):
                          product,
                          external_id,
                          supplier_batch,
+                         restriction_comment,
                          purity = -1)
 
 
@@ -731,6 +737,7 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
                          product,
                          external_id,
                          supplier_batch,
+                         restriction_comment = '',
                          purity = -1)
         self.finish(b'compound_id')
 
