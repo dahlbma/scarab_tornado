@@ -440,7 +440,6 @@ class AddNostructMol(tornado.web.RequestHandler):
                          supplier_batch,
                          purity = -1)
 
-        
 
 @jwtauth
 class GetMolkeyct(tornado.web.RequestHandler):
