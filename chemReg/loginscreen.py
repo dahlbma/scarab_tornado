@@ -10,9 +10,10 @@ from searchscreen import SearchScreen
 
 
 class LoginScreen(QDialog):
-    def __init__(self):
+    def __init__(self, appName):
         super(LoginScreen, self).__init__()
         self.mod_name = "login"
+        self.appName = appName
 
         logger = logging.getLogger(self.mod_name)
         loadUi(resource_path("assets/welcomescreen.ui"), self)
@@ -62,6 +63,7 @@ class LoginScreen(QDialog):
 
     def gotoSearch(self, token):
         search = SearchScreen(token)
+        self.window().setWindowTitle(f"{self.appName}")
         self.window().addWidget(search)
         self.window().setCurrentIndex(self.window().currentIndex() + 1)
 

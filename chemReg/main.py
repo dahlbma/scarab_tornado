@@ -35,6 +35,16 @@ fh.setFormatter(formatter)
 logger.addHandler(ch)
 logger.addHandler(fh)
 
+#get app version
+v_path = os.path.join(".", "ver.dat")
+version = ""
+if os.path.exists(v_path):
+    with open(v_path) as f:
+        try:
+            js = json.load(f)
+            version = js['version']
+        except:
+            logging.getLogger().error(f"bad json in ./ver.dat")
 
 try:
     # base app settings
@@ -42,7 +52,7 @@ try:
     app = QApplication(['Chem Reg'])
     clipboard = app.clipboard()
 
-    welcome = LoginScreen()
+    welcome = LoginScreen(f'ChemReg {version}')
     widget = QtWidgets.QStackedWidget()
     widget.addWidget(welcome)
 

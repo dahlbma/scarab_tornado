@@ -227,6 +227,7 @@ class LoadSDF(QDialog):
             dTags['sdfile_sequence'] = 0
             return dTags
             
+        QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         for nostruct in self.nostructs:
 
             iBatchCount += 1
@@ -240,6 +241,7 @@ class LoadSDF(QDialog):
             dTags = getTags(nostruct[0], nostruct[1], nostruct[2])
             dTags['jpage'] = sCurrentEln + str(iBatchCount).zfill(3)
             dbInterface.addNostructMol(dTags, self.token)
+        QApplication.restoreOverrideCursor()
         
     def uploadSDFile(self):
         
@@ -431,14 +433,11 @@ class LoadSDF(QDialog):
                 sError = ''
                 if missing_cols:
                     sError = f'''Error: Missing columns: {missing_cols}\nName columns: 'External ID', 'External Batch', 'MW' '''
-                    print(f"Error: Missing columns: {missing_cols}")
                 if extra_cols:
                     sError = f'''Error: Unexpected columns: {extra_cols}\nName columns: 'External ID', 'External Batch', 'MW' '''
-                    print(f"Error: Unexpected columns: {extra_cols}")
                 if len(expected_columns) != len(header_row):
                     sError = f'''Error: Incorrect number of columns. Expected {len(expected_columns)}, found {len(header_row)}\n\
 Name columns: 'External ID', 'External Batch', 'MW' '''
-                    print(f"Error: Incorrect number of columns. Expected {len(expected_columns)}, found {len(header_row)}")
 
                 send_msg("Format error", sError)
                 return None  # Return None if the columns are not found
@@ -460,7 +459,7 @@ Name columns: 'External ID', 'External Batch', 'MW' '''
             print(f"Error: File not found: {filepath}")
             return None
         except openpyxl.utils.exceptions.InvalidFileException:
-            print(f"Error: Invalid Excel file: {filepath}")
+            #print(f"Error: Invalid Excel file: {filepath}")
             return None
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
