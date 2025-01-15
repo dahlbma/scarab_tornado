@@ -13,7 +13,6 @@ def chemRegAddMolFile(dict, token):
         return True, r.content
 
 def addNostructMol(dict, token):
-    print(dict)
     r = requests.post(f'{baseUrl}api/addNostructMol',
                       data = dict,
                       headers={'token': token})

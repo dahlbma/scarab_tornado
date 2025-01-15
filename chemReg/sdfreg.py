@@ -207,14 +207,17 @@ class LoadSDF(QDialog):
         sCurrentEln = self.saElnIds[iElnId]
         iBatchCount = dbInterface.getLastBatchOfEln(self.token, sCurrentEln)
 
-        def getTags(external_id, supplier_batch, mw):
+        def getTags(external_id, supplier_batch, mw, restriction_comment):
+            if restriction_comment == None:
+                restriction_comment = ''
             if mw == None:
                 mw = 0
             dTags = {
                 "external_id": external_id,
                 "supplier_batch": supplier_batch,
                 "purity": -1,
-                "mw": mw
+                "mw": mw,
+                "restriction_comment": restriction_comment
             }
             dTags['chemist'] = self.submitter_cb.currentText()
             dTags['compound_type'] = self.compoundtype_cb.currentText()
@@ -238,10 +241,12 @@ class LoadSDF(QDialog):
                 if iBatchCount == 0:
                     iBatchCount = 1
     
-            dTags = getTags(nostruct[0], nostruct[1], nostruct[2])
+            dTags = getTags(nostruct[0], nostruct[1], nostruct[2], nostruct[3])
             dTags['jpage'] = sCurrentEln + str(iBatchCount).zfill(3)
             dbInterface.addNostructMol(dTags, self.token)
         QApplication.restoreOverrideCursor()
+        send_msg("All done", f"Done")
+
         
     def uploadSDFile(self):
         
@@ -425,19 +430,19 @@ class LoadSDF(QDialog):
             workbook = openpyxl.load_workbook(fname[0])
             sheet = workbook.active  # Get the active sheet
             header_row = [cell.value for cell in sheet[1]]  # Read the first row (header)
-            expected_columns = ['External ID', 'External Batch', 'MW']
+            expected_columns = ['External ID', 'External Batch', 'MW', 'restriction_comment']
 
             if not all(col in header_row for col in expected_columns) or len(expected_columns) != len(header_row):
                 missing_cols = set(expected_columns) - set(header_row)
                 extra_cols = set(header_row) - set(expected_columns)
                 sError = ''
                 if missing_cols:
-                    sError = f'''Error: Missing columns: {missing_cols}\nName columns: 'External ID', 'External Batch', 'MW' '''
+                    sError = f'''Error: Missing columns: {missing_cols}\nName columns: 'External ID', 'External Batch', 'MW', 'restriction_comment'  '''
                 if extra_cols:
-                    sError = f'''Error: Unexpected columns: {extra_cols}\nName columns: 'External ID', 'External Batch', 'MW' '''
+                    sError = f'''Error: Unexpected columns: {extra_cols}\nName columns: 'External ID', 'External Batch', 'MW', 'restriction_comment' '''
                 if len(expected_columns) != len(header_row):
                     sError = f'''Error: Incorrect number of columns. Expected {len(expected_columns)}, found {len(header_row)}\n\
-Name columns: 'External ID', 'External Batch', 'MW' '''
+Name columns: 'External ID', 'External Batch', 'MW', 'restriction_comment' '''
 
                 send_msg("Format error", sError)
                 return None  # Return None if the columns are not found
