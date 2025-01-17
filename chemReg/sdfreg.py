@@ -93,36 +93,30 @@ class LoadSDF(QDialog):
            self.ip_rights_cb.currentText() == '' or \
            self.iMolCount >= self.iFreeElnSpace:
             self.upload_btn.setEnabled(False)
-        elif self.nostruct_name == None or \
-             self.submitter_cb.currentText() == '' or \
-             self.compoundtype_cb.currentText() == '' or \
-             self.project_cb.currentText() == '' or \
-             self.supplier_cb.currentText() == '' or \
-             self.solvent_cb.currentText() == '' or \
-             self.producttype_cb.currentText() == '' or \
-             self.library_cb.currentText() in ('', ' ') or \
-             self.ElnIdsOK == False or \
-             self.ip_rights_cb.currentText() == '' or \
-             self.iMolCount >= self.iFreeElnSpace:
-            self.upload_btn.setEnabled(False)            
         else:
             self.upload_btn.setEnabled(True)
 
-        if self.nostruct_name == None or \
-             self.submitter_cb.currentText() == '' or \
-             self.compoundtype_cb.currentText() == '' or \
-             self.project_cb.currentText() == '' or \
-             self.supplier_cb.currentText() == '' or \
-             self.solvent_cb.currentText() == '' or \
-             self.producttype_cb.currentText() == '' or \
-             self.library_cb.currentText() in ('', ' ') or \
-             self.ElnIdsOK == False or \
-             self.ip_rights_cb.currentText() == '' or \
-             self.iMolCount >= self.iFreeElnSpace:
+        if self.nostruct_name != None:
+            if self.nostruct_name == None or \
+               self.submitter_cb.currentText() == '' or \
+               self.compoundtype_cb.currentText() == '' or \
+               self.project_cb.currentText() == '' or \
+               self.supplier_cb.currentText() == '' or \
+               self.solvent_cb.currentText() == '' or \
+               self.producttype_cb.currentText() == '' or \
+               self.library_cb.currentText() in ('', ' ') or \
+               self.ElnIdsOK == False or \
+               self.ip_rights_cb.currentText() == '' or \
+               self.iMolCount >= self.iFreeElnSpace:
+                self.upload_btn.setEnabled(False)            
+            else:
+                self.upload_btn.setEnabled(True)
+                
+        if self.nostruct_name != None and self.sdfilename != None:
             self.upload_btn.setEnabled(False)            
-        else:
-            self.upload_btn.setEnabled(True)
+            
 
+    
             
 
     def update_librarydesc(self):
