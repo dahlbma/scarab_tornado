@@ -12,10 +12,10 @@ import zipfile
 
 
 
-def getMolfile(cur, sCmpId):
+def getMolfile(curs, sCmpId):
     sSql = f"""select mol from bcpvs.JCMOL_MOLTABLE where compound_id = '{sCmpId}'"""
-    cur.execute(sSql)
-    res = cur.fetchall()
+    curs.execute(sSql)
+    res = curs.fetchall()
     sMol = ''
     if len(res) == 1:
         sMol = f'''{res[0][0]}
@@ -58,12 +58,12 @@ TEOID
 '''
 
 
-def exportFromBatches(cur, saBatches, sRIDX, compound_record_file, molfile_file):
+def exportFromBatches(curs, saBatches, sRIDX, compound_record_file, molfile_file):
     for batch in saBatches:
         sMol = ''
         sSql = f"""select compound_id, "{sRIDX}", notebook_ref, compound_id from bcpvs.batch where notebook_ref = '{batch}'"""
-        cur.execute(sSql)
-        res = cur.fetchall()
+        curs.execute(sSql)
+        res = curs.fetchall()
         if len(res) == 1:
             sMol = getMolfile(res[0][0])
             compound_record_file.write('\t'.join(map(str, res[0])) + '\n')
@@ -114,7 +114,11 @@ tRes columns:
     '''
     iDataCol = 3
     sType = 'Inhibition'
-    
+
+    try:
+        tTest = tRes[0][3]
+    except:
+        return
     if tRes[0][3] == None and tRes[0][4] != None:
         iDataCol = 4
         sType = 'Activation'
@@ -171,7 +175,7 @@ tRes columns:
             activity_tsv_file.write(f'''{sRIDX}\t{sCRIDX}\t{sCRIDX_DOCID}\t{sCRIDX_CHEMBLID}\t{sCIDX}\t{sSRC_ID_CIDX}\t{sAIDX}\t{sTYPE}\t{sACTION_TYPE}\t{sTEXT_VALUE}\t{sRELATION}\t{sValue}\t{sUPPER_VALUE}\t{sUNITS}\t{sSD_PLUS}\t{sSD_MINUS}\t{sActivityComment}\t{sACT_ID}\t{sTEOID}\n''')
 
         
-def exportFromElnProject(cur,
+def exportFromElnProject(curs,
                          saCompounds,
                          sProject,
                          sELN,
@@ -207,20 +211,23 @@ def exportFromElnProject(cur,
         WHEN hit = 0 THEN 'Not active'
         WHEN hit = 1 THEN 'Active'
     END AS hit_description
-
     from assay.lcb_sp a, bcpvs.JCMOL_MOLTABLE m
     where a.compound_id = m.compound_id
     and a.project = '{sProject}'
     and a.eln_id = '{sELN}'
+    and LENGTH(mol) > 130
     {sNotTheseCompounds}
     order by a.compound_id
     '''
     try:
-        cur.execute(sSql)
+        curs.execute(sSql)
     except:
         logg.error(f"{sSql}")
-
-    res = cur.fetchall()
+        return
+    res = curs.fetchall()
+    if len(res) == 0:
+        return False
+    
     sPrevCompId = ''
     for row in res:
         sCmpId = row[0]
@@ -257,4 +264,4 @@ $$$$
                         dir_name,
                         logg)
 
-
+    return True

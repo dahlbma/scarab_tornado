@@ -1626,19 +1626,22 @@ class ChemblExport(tornado.web.RequestHandler):
                 chembl_export.exportFromBatches(cur, saBatches, sRIDX, compound_record_file, molfile_file)
             elif len(sProject) > 2 and len(sELN) > 2:
                 saCompounds = saBatches
-                chembl_export.exportFromElnProject(cur,
-                                                   saCompounds,
-                                                   sProject,
-                                                   sELN,
-                                                   sRIDX,
-                                                   sAIDX,
-                                                   sTARGET_TYPE,
-                                                   sASSAY_TYPE,
-                                                   sACTION_TYPE,
-                                                   compound_record_file,
-                                                   molfile_file,
-                                                   dir_name,
-                                                   logging)
+                retVal = chembl_export.exportFromElnProject(cur,
+                                                            saCompounds,
+                                                            sProject,
+                                                            sELN,
+                                                            sRIDX,
+                                                            sAIDX,
+                                                            sTARGET_TYPE,
+                                                            sASSAY_TYPE,
+                                                            sACTION_TYPE,
+                                                            compound_record_file,
+                                                            molfile_file,
+                                                            dir_name,
+                                                            logging)
+                if retVal == False:
+                    self.write(json.dumps(f'''The combination {sProject} and {sELN} is not valid'''))
+                    return
 
         assay_tsv_name = dir_name + "/ASSAY.tsv"
         with open(assay_tsv_name, 'w') as assay_tsv_file:
