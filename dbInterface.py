@@ -757,6 +757,9 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         library_id = self.get_body_argument('library_id')
         sLib = re.search(r"(Lib-\d\d\d\d)", library_id)
         library_id = sLib.group()
+
+        jpage = re.sub(r"\s+", "", jpage) # Remove any whitespace from batch_id (Excel pasting)
+        
         if library_id.startswith("Lib"):
             pass
         else:
