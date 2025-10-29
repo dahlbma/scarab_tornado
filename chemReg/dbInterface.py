@@ -20,7 +20,16 @@ def addNostructMol(dict, token):
         return False
     else:
         return True
-    
+
+def addCtrlMol(dict, token):
+    r = requests.post(f'{baseUrl}api/addCtrlMol',
+                      data = dict,
+                      headers={'token': token})
+    if r.status_code != 200:
+        return False
+    else:
+        return True
+
 def listify(data, addBlank=True):
     res = data.content.decode()
     res = json.loads(res)
@@ -174,6 +183,13 @@ def getMolImage(regno):
 
 def getLastBatchOfEln(token, sEln):
     r = requests.get(f'{baseUrl}api/getLastBatchFromEln',
+                     params={'eln': sEln},
+                     headers={'token': token})
+    res = r.content.decode()
+    return int(res)
+
+def getLastCtrlComp(token, sEln):
+    r = requests.get(f'{baseUrl}api/getLastCtrlComp',
                      params={'eln': sEln},
                      headers={'token': token})
     res = r.content.decode()

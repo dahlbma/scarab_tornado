@@ -81,6 +81,13 @@ class LoadSDF(QDialog):
         self.show()
 
     def check_fields(self):
+        if self.compoundtype_cb.currentText() == 'CTRL Compound':
+            self.elnids_text.textChanged.disconnect()
+            self.elnids_text.setPlainText('CTRL')
+            self.ElnIdsOK = True
+            self.iFreeElnSpace = 1000000
+            self.elnids_text.textChanged.connect(self.parseElnIds)
+
         if self.sdfilename == None or \
            self.submitter_cb.currentText() == '' or \
            self.compoundtype_cb.currentText() == '' or \
@@ -92,6 +99,7 @@ class LoadSDF(QDialog):
            self.ElnIdsOK == False or \
            self.ip_rights_cb.currentText() == '' or \
            self.iMolCount >= self.iFreeElnSpace:
+            print(f'disable2 {self.ElnIdsOK} {self.iMolCount} {self.iFreeElnSpace}')
             self.upload_btn.setEnabled(False)
         else:
             self.upload_btn.setEnabled(True)
@@ -108,16 +116,15 @@ class LoadSDF(QDialog):
                self.ElnIdsOK == False or \
                self.ip_rights_cb.currentText() == '' or \
                self.iMolCount >= self.iFreeElnSpace:
+                print(f'disable {self.ElnIdsOK} {self.iMolCount} {self.iFreeElnSpace}')
                 self.upload_btn.setEnabled(False)            
             else:
                 self.upload_btn.setEnabled(True)
                 
         if self.nostruct_name != None and self.sdfilename != None:
             self.upload_btn.setEnabled(False)            
-            
 
-    
-            
+
 
     def update_librarydesc(self):
         library_name = dbInterface.getLibraryName(self.token,
@@ -130,6 +137,15 @@ class LoadSDF(QDialog):
         iElnIdsFound = 0
         pattern = '^[a-zA-Z0-9]{6}$'
         iFreeElnPages = 0
+
+        # Special case for CTRL, which means that no ELN IDs are used
+        if sIds.strip() == 'CTRL' and self.compoundtype_cb.currentText() == 'CTRL Compound':
+            self.saElnIds = ['CTRL']
+            self.ElnIdsOK = True
+            self.iFreeElnSpace = 1000000
+            self.check_fields()
+            return
+        
         for sId in saStrings:
             if len(re.findall(pattern, sId)) == 1:
                 iElnIdsFound += 1
@@ -196,33 +212,57 @@ class LoadSDF(QDialog):
                 dValues['purity'] = i[1]
         return dValues
 
+
+    def getTags(self, external_id, supplier_batch, mw, restriction_comment):
+        if restriction_comment == None:
+            restriction_comment = ''
+        if mw == None:
+            mw = 0
+        dTags = {
+            "external_id": external_id,
+            "supplier_batch": supplier_batch,
+            "purity": -1,
+            "mw": mw,
+            "restriction_comment": restriction_comment
+        }
+        dTags['chemist'] = self.submitter_cb.currentText()
+        dTags['compound_type'] = self.compoundtype_cb.currentText()
+        dTags['project'] = self.project_cb.currentText()
+        dTags['source'] = self.supplier_cb.currentText()
+        dTags['solvent'] = self.solvent_cb.currentText()
+        dTags['product'] = self.producttype_cb.currentText()
+        dTags['library_id'] = self.library_cb.currentText()
+        dTags['ip_rights'] = self.ip_rights_cb.currentText()
+        dTags['sdfile_sequence'] = 0
+        return dTags
+
+
+    def uploadControls(self):
+        print('Uploading controls')
+        sCurrentEln = self.saElnIds[0]
+        iBatchCount = dbInterface.getLastCtrlComp(self.token, sCurrentEln)
+        QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        for nostruct in self.nostructs:
+
+            iBatchCount += 1
+            dTags = self.getTags(nostruct[0], nostruct[1], nostruct[2], nostruct[3])
+            dTags['jpage'] = sCurrentEln + str(iBatchCount).zfill(5)
+            dTags['iCtrlComp'] = iBatchCount
+
+            dbInterface.addCtrlMol(dTags, self.token)
+        QApplication.restoreOverrideCursor()
+        send_msg("All done", f"Done")
+
+
     def uploadNostructs(self):
         iElnId = 0
         sCurrentEln = self.saElnIds[iElnId]
-        iBatchCount = dbInterface.getLastBatchOfEln(self.token, sCurrentEln)
 
-        def getTags(external_id, supplier_batch, mw, restriction_comment):
-            if restriction_comment == None:
-                restriction_comment = ''
-            if mw == None:
-                mw = 0
-            dTags = {
-                "external_id": external_id,
-                "supplier_batch": supplier_batch,
-                "purity": -1,
-                "mw": mw,
-                "restriction_comment": restriction_comment
-            }
-            dTags['chemist'] = self.submitter_cb.currentText()
-            dTags['compound_type'] = self.compoundtype_cb.currentText()
-            dTags['project'] = self.project_cb.currentText()
-            dTags['source'] = self.supplier_cb.currentText()
-            dTags['solvent'] = self.solvent_cb.currentText()
-            dTags['product'] = self.producttype_cb.currentText()
-            dTags['library_id'] = self.library_cb.currentText()
-            dTags['ip_rights'] = self.ip_rights_cb.currentText()
-            dTags['sdfile_sequence'] = 0
-            return dTags
+        if sCurrentEln == 'CTRL' and self.compoundtype_cb.currentText() == 'CTRL Compound':
+            self.uploadControls()
+            return
+
+        iBatchCount = dbInterface.getLastBatchOfEln(self.token, sCurrentEln)
             
         QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         for nostruct in self.nostructs:
@@ -234,8 +274,8 @@ class LoadSDF(QDialog):
                 iBatchCount = dbInterface.getLastBatchOfEln(self.token, sCurrentEln)
                 if iBatchCount == 0:
                     iBatchCount = 1
-    
-            dTags = getTags(nostruct[0], nostruct[1], nostruct[2], nostruct[3])
+
+            dTags = self.getTags(nostruct[0], nostruct[1], nostruct[2], nostruct[3])
             dTags['jpage'] = sCurrentEln + str(iBatchCount).zfill(3)
             dbInterface.addNostructMol(dTags, self.token)
         QApplication.restoreOverrideCursor()
