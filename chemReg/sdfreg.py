@@ -81,32 +81,31 @@ class LoadSDF(QDialog):
         self.show()
 
     def check_fields(self):
-        if self.compoundtype_cb.currentText() == 'CTRL Compound':
-            self.elnids_text.textChanged.disconnect()
+        # Special handling for CTRL Compound - skip the iMolCount check
+        is_ctrl_compound = self.compoundtype_cb.currentText() == 'CTRL Compound'
+        
+        if is_ctrl_compound:
+            # Block signals to prevent recursion, then set the values
+            self.elnids_text.blockSignals(True)
             self.elnids_text.setPlainText('CTRL')
+            self.elnids_text.blockSignals(False)
+            # Set the flags directly for CTRL compounds
+            self.saElnIds = ['CTRL']
             self.ElnIdsOK = True
             self.iFreeElnSpace = 1000000
-            self.elnids_text.textChanged.connect(self.parseElnIds)
-
-        if self.sdfilename == None or \
-           self.submitter_cb.currentText() == '' or \
-           self.compoundtype_cb.currentText() == '' or \
-           self.project_cb.currentText() == '' or \
-           self.supplier_cb.currentText() == '' or \
-           self.solvent_cb.currentText() == '' or \
-           self.producttype_cb.currentText() == '' or \
-           self.library_cb.currentText() in ('', ' ') or \
-           self.ElnIdsOK == False or \
-           self.ip_rights_cb.currentText() == '' or \
-           self.iMolCount >= self.iFreeElnSpace:
-            print(f'disable2 {self.ElnIdsOK} {self.iMolCount} {self.iFreeElnSpace}')
-            self.upload_btn.setEnabled(False)
         else:
-            self.upload_btn.setEnabled(True)
+            # If switching away from CTRL Compound, clear the CTRL text and reset flags
+            if self.elnids_text.toPlainText() == 'CTRL':
+                self.elnids_text.blockSignals(True)
+                self.elnids_text.setPlainText('')
+                self.elnids_text.blockSignals(False)
+                self.saElnIds = None
+                self.ElnIdsOK = False
+                self.iFreeElnSpace = 0
 
-        if self.nostruct_name != None:
-            if self.nostruct_name == None or \
-               self.submitter_cb.currentText() == '' or \
+        # Check if we have an SDF file (not nostruct)
+        if self.sdfilename != None and self.nostruct_name == None:
+            if self.submitter_cb.currentText() == '' or \
                self.compoundtype_cb.currentText() == '' or \
                self.project_cb.currentText() == '' or \
                self.supplier_cb.currentText() == '' or \
@@ -115,13 +114,31 @@ class LoadSDF(QDialog):
                self.library_cb.currentText() in ('', ' ') or \
                self.ElnIdsOK == False or \
                self.ip_rights_cb.currentText() == '' or \
-               self.iMolCount >= self.iFreeElnSpace:
+               (not is_ctrl_compound and self.iMolCount >= self.iFreeElnSpace):
+                print(f'disable2 {self.ElnIdsOK} {self.iMolCount} {self.iFreeElnSpace}')
+                self.upload_btn.setEnabled(False)
+            else:
+                self.upload_btn.setEnabled(True)
+
+        # Check if we have a nostruct file (not SDF)
+        elif self.nostruct_name != None and self.sdfilename == None:
+            if self.submitter_cb.currentText() == '' or \
+               self.compoundtype_cb.currentText() == '' or \
+               self.project_cb.currentText() == '' or \
+               self.supplier_cb.currentText() == '' or \
+               self.solvent_cb.currentText() == '' or \
+               self.producttype_cb.currentText() == '' or \
+               self.library_cb.currentText() in ('', ' ') or \
+               self.ElnIdsOK == False or \
+               self.ip_rights_cb.currentText() == '' or \
+               (not is_ctrl_compound and self.iMolCount >= self.iFreeElnSpace):
                 print(f'disable {self.ElnIdsOK} {self.iMolCount} {self.iFreeElnSpace}')
                 self.upload_btn.setEnabled(False)            
             else:
                 self.upload_btn.setEnabled(True)
-                
-        if self.nostruct_name != None and self.sdfilename != None:
+        
+        # Both files selected or no file selected - disable
+        else:
             self.upload_btn.setEnabled(False)            
 
 
@@ -493,6 +510,8 @@ Name columns: 'External ID', 'External Batch', 'MW', 'restriction_comment' '''
                 data.append(row_values)
 
             self.nostructs = data
+            # Trigger check_fields to re-evaluate button state with the loaded file
+            self.check_fields()
 
         except FileNotFoundError:
             print(f"Error: File not found: {filepath}")
