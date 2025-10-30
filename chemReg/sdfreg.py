@@ -207,7 +207,7 @@ class LoadSDF(QDialog):
         else:
             raise TypeError("Expected bytes or string, but got %s." % type(s))
 
-    def getTags(self, sMol):
+    def getMolfileTags(self, sMol):
         pattern = b'>\s*<(.+)>.*\n(.*)\n'
         saTags = re.findall(pattern, sMol)
         return saTags
@@ -338,7 +338,7 @@ class LoadSDF(QDialog):
                 self.pbar.setValue(progress)
             sMol = self.getNextMolecule(f)
             sMol = self.to_bytes(sMol)
-            lTags = self.getTags(sMol)
+            lTags = self.getMolfileTags(sMol)
             #if lTags == [] or sMol == "":
             if len(sMol) < 4:
                 break
