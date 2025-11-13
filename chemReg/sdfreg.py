@@ -208,7 +208,7 @@ class LoadSDF(QDialog):
             raise TypeError("Expected bytes or string, but got %s." % type(s))
 
     def getMolfileTags(self, sMol):
-        pattern = b'>\s*<(.+)>.*\n(.*)\n'
+        pattern = rb'>\s*<(.+)>.*\n(.*)\n'
         saTags = re.findall(pattern, sMol)
         return saTags
 
@@ -447,7 +447,7 @@ class LoadSDF(QDialog):
             if b'$$$$' in line:
                 break
         sMol = sMol.decode(errors='replace')
-        pattern = '>\s*<(.+)>'
+        pattern = r'>\s*<(.+)>'
         saTags = re.findall(pattern, sMol)
         saTags.insert(0, '')
         self.cmpidfield_cb.clear()
