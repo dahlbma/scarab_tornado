@@ -19,7 +19,7 @@ class LoginScreen(QDialog):
         loadUi(resource_path("assets/welcomescreen.ui"), self)
         self.passwordfield.setEchoMode(QtWidgets.QLineEdit.Password)
         self.login.clicked.connect(self.loginfunction)
-        saDatabases = None
+        saDatabases = ['Live', 'Test']
         try:
             saDatabases = dbInterface.getDatabase()
         except Exception as e:
