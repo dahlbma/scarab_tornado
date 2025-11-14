@@ -137,7 +137,8 @@ class getChemRegBin(tornado.web.RequestHandler):
 
         bin_file = ""
         if os_name == 'Windows':
-            bin_file = os_name + "/chemreg.exe"
+            #bin_file = os_name + "/chemreg.exe"
+            bin_file = "dist/" + os_name + "/ch.exe"
         elif os_name == 'Linux':
             bin_file = os_name + "/chemreg"
         elif os_name == 'Darwin':
@@ -170,6 +171,7 @@ def make_app():
         (r"/api/createRegno", dbInterface.CreateRegno),
         (r"/api/updateRegnoBatch", dbInterface.UpdateRegnoBatch),
         (r"/api/createSalt", dbInterface.CreateSalt),
+        (r"/api/addCtrlMol", dbInterface.AddCtrlMol),
         (r"/api/addNostructMol", dbInterface.AddNostructMol),
         (r"/api/createSupplier", dbInterface.CreateSupplier),
         (r"/api/createLibrary", dbInterface.CreateLibrary),
@@ -179,6 +181,7 @@ def make_app():
         (r"/api/getCanonicSmiles", dbInterface.GetCanonicSmiles),
         (r"/api/getLibraryName", dbInterface.GetLibraryName),
         (r"/api/getLibraries", dbInterface.GetLibraries),
+        (r"/api/getLastCtrlComp", dbInterface.GetLastCtrlComp),
         (r"/api/getLastBatchFromEln", dbInterface.GetLastBatchFromEln),
         (r"/api/getNextRegno", dbInterface.GetNextRegno),
         (r"/api/getBackwardCompound", dbInterface.GetBackwardCompound),

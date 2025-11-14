@@ -88,7 +88,17 @@ def createPngFromMolfile(regno, molfile):
     except:
         logger.error(f"regno {regno} is nostruct")
 
+def updateCtrlCompSequence(self, iCtrlComp):
+    chemregDB, bcpvsDB = getDatabase(self)
+    sSql = f"select pkey from {bcpvsDB}.CTRL_COMPOUND_SEQUENCE"
+    cur.execute(sSql)
+    pkey = cur.fetchall()[0][0]
+    if int(iCtrlComp) > int(pkey):
+        logger.info(f"Updating CTRL Comp counter to: {iCtrlComp}")
+        sSql = f"update {bcpvsDB}.CTRL_COMPOUND_SEQUENCE set pkey={iCtrlComp}"
+        cur.execute(sSql)
 
+        
 def isItNewStructure(self, molfile):
     chemregDB, bcpvsDB = getDatabase(self)
     molfile, stdSMILES = cleanStructureRDKit(molfile)
@@ -355,6 +365,102 @@ class PingDB(tornado.web.RequestHandler):
 
 
 @jwtauth
+class AddCtrlMol(tornado.web.RequestHandler):
+    def post(self):
+        compound_id = 'CBK999999'
+        chemregDB, bcpvsDB = getDatabase(self)
+        jpage = self.get_body_argument('jpage')
+        chemist = self.get_body_argument('chemist')
+        compound_type = self.get_body_argument('compound_type')
+        project = self.get_body_argument('project')
+        source = self.get_body_argument('source')
+        solvent = self.get_body_argument('solvent')
+        product = self.get_body_argument('product')
+        library_id = self.get_body_argument('library_id')
+        iCtrlComp =  self.get_body_argument('iCtrlComp')
+        if updateCtrlCompSequence(self, iCtrlComp) == False:
+            logger.error(f"Failed to update CTRL Comp counter")
+            return
+        sLib = re.search(r"(Lib-\d\d\d\d)", library_id)
+        library_id = sLib.group()
+        if library_id.startswith("Lib"):
+            pass
+        else:
+            # If the library is blank set it to Compound collection lib
+            library_id = 'Lib-3002'
+        external_id = self.get_body_argument('external_id')
+        supplier_batch = self.get_body_argument('supplier_batch')
+        purity = self.get_body_argument('purity')
+        ip_rights = self.get_body_argument('ip_rights')
+        mw = self.get_body_argument('mw')
+        restriction_comment = self.get_body_argument('restriction_comment')
+        newRegno = getNewRegno(chemregDB)
+
+        sSql = f"""
+        insert into {chemregDB}.chem_info (
+        regno,
+        jpage,
+        compound_id,
+        rdate,
+        chemist,
+        compound_type,
+        project,
+        source,
+        solvent,
+        product,
+        library_id,
+        external_id,
+        supplier_batch,
+        purity,
+        ip_rights,
+        C_MW)
+        values (
+        '{newRegno}',
+        '{jpage}',
+        '{compound_id}',
+        now(),
+        '{chemist}',
+        '{compound_type}',
+        '{project}',
+        '{source}',
+        '{solvent}',
+        '{product}',
+        '{library_id}',
+        '{external_id}',
+        '{supplier_batch}',
+        {purity},
+        '{ip_rights}',
+        {mw}
+        )
+        """
+
+        try:
+            cur.execute(sSql)
+            pass
+        except Exception as e:
+            logger.error(f"{sSql}")
+            logger.error(f"{str(e)}")
+        
+        saSalts = ''
+        registerNewBatch(bcpvsDB,
+                         compound_id,
+                         newRegno,
+                         jpage,
+                         saSalts,
+                         chemist,
+                         project,
+                         source,         #  Supplier
+                         mw,
+                         library_id,
+                         compound_type,
+                         product,
+                         external_id,
+                         supplier_batch,
+                         restriction_comment,
+                         purity = -1)
+
+
+@jwtauth
 class AddNostructMol(tornado.web.RequestHandler):
     def post(self):
         compound_id = 'CBK999999'
@@ -517,6 +623,19 @@ class GetCanonicSmiles(tornado.web.RequestHandler):
         canonSmile = Chem.CanonSmiles(flattenSmile)
         sRes = json.dumps([f'{sLetters}', canonSmile])
         self.finish(sRes)
+
+
+@jwtauth
+class GetLastCtrlComp(tornado.web.RequestHandler):
+    def get(self):
+        chemregDB, bcpvsDB = getDatabase(self)
+        sEln = self.get_argument("eln")
+        eln_id = sEln[0:6]
+        sSql = f'''select pkey from {bcpvsDB}.CTRL_COMPOUND_SEQUENCE'''
+        cur.execute(sSql)
+        cRes = cur.fetchall()
+        iBatch = int(cRes[0][0])
+        self.finish(f'{iBatch}')
 
 
 @jwtauth
