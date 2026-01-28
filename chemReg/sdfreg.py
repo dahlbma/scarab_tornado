@@ -259,16 +259,17 @@ class LoadSDF(QDialog):
         sCurrentEln = self.saElnIds[0]
         iBatchCount = dbInterface.getLastCtrlComp(self.token, sCurrentEln)
         QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        sCtrls = ""
         for nostruct in self.nostructs:
 
             iBatchCount += 1
             dTags = self.getTags(nostruct[0], nostruct[1], nostruct[2], nostruct[3])
             dTags['jpage'] = sCurrentEln + str(iBatchCount).zfill(5)
             dTags['iCtrlComp'] = iBatchCount
-
+            sCtrls += dTags['jpage'] + " "
             dbInterface.addCtrlMol(dTags, self.token)
         QApplication.restoreOverrideCursor()
-        send_msg("All done", f"Done")
+        send_msg("All done", f"Done, added control compounds: {sCtrls}")
 
 
     def uploadNostructs(self):

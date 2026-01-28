@@ -11,6 +11,7 @@ def send_msg(title, text, icon=QMessageBox.Information, e=None):
     msg.setWindowTitle(title)
     msg.setIcon(icon)
     msg.setText(text)
+    msg.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
     clipboard = QApplication.clipboard()
     if e is not None:
         # add clipboard btn
