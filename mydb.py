@@ -49,6 +49,13 @@ class DisconnectSafeCursor(object):
         except:
             sSql = args[0]
         try:
+            return self.cursor.execute(*args, **kwargs)
+        except Exception as e:
+            scarabLogger.error(str(e))
+            scarabLogger.error(args)
+            return -1
+        '''
+        try:
             if sSql.lstrip().upper().startswith('SELECT'):
                 return self.cursor.execute(*args, **kwargs)
             else:
@@ -69,7 +76,8 @@ class DisconnectSafeCursor(object):
             return -1
             self.cursor = self.db.cursor()
             return self.cursor.execute(*args, **kwargs)
-
+        '''
+        
     def fetchone(self):
         return self.cursor.fetchone()
 

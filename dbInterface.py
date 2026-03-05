@@ -209,7 +209,8 @@ def registerNewCompound(bcpvsDB,
     mf,
     ip_rights,
     sep_mol_monoiso_mass,
-    smiles_std)
+    smiles_std,
+    smiles_std_string)
     values (
     '{compound_id}',
     {compound_id_numeric},
@@ -217,6 +218,7 @@ def registerNewCompound(bcpvsDB,
     '{mf}',
     '{ip_rights}',
     {sep_mol_monoiso_mass},
+    '{stdSmiles}',
     '{stdSmiles}')
     '''
     cur.execute(sSql)
