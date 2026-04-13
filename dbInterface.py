@@ -6,10 +6,13 @@ import config
 import logging
 import rdkit.Chem
 from rdkit import Chem
+from rdkit import RDLogger
+RDLogger.DisableLog('rdApp.*')
 from rdkit.Chem import Draw
 from rdkit.Chem import Descriptors
 from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem.MolStandardize import rdMolStandardize
+from rdkit.Chem.inchi import MolToInchi, InchiToInchiKey
 from molmass import Formula
 from io import StringIO
 import sys
@@ -118,40 +121,153 @@ def isItNewStructure(self, molfile):
     return compound_id
 
 
-def cleanStructureRDKit(molfile):
+def _getInchiKey(mol):
+    """Helper to get InChI key for a mol object, or None on failure."""
+    try:
+        inchi = MolToInchi(mol, options='-w')
+        if inchi:
+            return InchiToInchiKey(inchi)
+    except:
+        pass
+    return None
+
+def cleanStructureRDKit(molfile, identifier=''):
     # Function to clean molecule from charges etc.
     mol = Chem.MolFromMolBlock(molfile, removeHs=False, sanitize=True)
     params = rdMolStandardize.CleanupParameters()
     params.tautomerRemoveSp3Stereo = False
     params.tautomerRemoveBondStereo = False
     params.tautomerRemoveIsotopicHs = False
+    tag = f"[{identifier}] " if identifier else ''
+
+    # --- Step-by-step structure identity tracing ---
+    input_smiles = Chem.MolToSmiles(mol) if mol else None
+    input_key = _getInchiKey(mol) if mol else None
+
     try:
         clean_mol = rdMolStandardize.Cleanup(mol, params)
     except Exception as e:
-        logger.error(f"Failed to standardize {str(e)}")
+        logger.error(f"{tag}Failed to standardize {str(e)}")
         return False, False
+
+    cleanup_smiles = Chem.MolToSmiles(clean_mol)
+    cleanup_key = _getInchiKey(clean_mol)
+    if input_key and cleanup_key and input_key[:14] != cleanup_key[:14]:
+        logger.warning(f"{tag}cleanStructureRDKit STEP Cleanup changed connectivity: "
+                       f"{input_smiles} [{input_key}] -> {cleanup_smiles} [{cleanup_key}]")
+
     try:
         parent_clean_mol = rdMolStandardize.FragmentParent(clean_mol, params)
     except:
-        logger.error('Failed with rdMolStandardize.FragmentParent, skipping molecule')
+        logger.error(f'{tag}Failed with rdMolStandardize.FragmentParent, skipping molecule')
         return False, False
+
+    fragment_smiles = Chem.MolToSmiles(parent_clean_mol)
+    fragment_key = _getInchiKey(parent_clean_mol)
 
     uncharger = rdMolStandardize.Uncharger()
     uncharged_parent_clean_mol = uncharger.uncharge(parent_clean_mol)
 
+    uncharge_smiles = Chem.MolToSmiles(uncharged_parent_clean_mol)
+    uncharge_key = _getInchiKey(uncharged_parent_clean_mol)
+    if fragment_key and uncharge_key and fragment_key[:14] != uncharge_key[:14]:
+        logger.warning(f"{tag}cleanStructureRDKit STEP Uncharge changed connectivity: "
+                       f"{fragment_smiles} [{fragment_key}] -> {uncharge_smiles} [{uncharge_key}]")
+
     te = rdMolStandardize.TautomerEnumerator(params) # idem
     taut_uncharged_parent_clean_mol = te.Canonicalize(uncharged_parent_clean_mol)
-    mV4 = Chem.MolToSmiles(taut_uncharged_parent_clean_mol)
+
+    taut_smiles = Chem.MolToSmiles(taut_uncharged_parent_clean_mol)
+    taut_key = _getInchiKey(taut_uncharged_parent_clean_mol)
+    if uncharge_key and taut_key and uncharge_key[:14] != taut_key[:14]:
+        logger.warning(f"{tag}cleanStructureRDKit STEP TautomerCanonicalize changed connectivity: "
+                       f"{uncharge_smiles} [{uncharge_key}] -> {taut_smiles} [{taut_key}]")
+
+    mV4 = taut_smiles
     mV4 = mV4.replace('\\', '\\\\')
 
     sSql = f'''select CONVERT(bin2mol(mol2bin('{mV4}' , 'smiles')) USING UTF8)'''
     cur.execute(sSql)
     saRes = cur.fetchall()
 
+    molcart_key = None
+    if len(saRes) == 1:
+        molcart_molfile = saRes[0][0]
+        molcart_mol = Chem.MolFromMolBlock(molcart_molfile, removeHs=True, sanitize=True) if molcart_molfile else None
+        molcart_key = _getInchiKey(molcart_mol) if molcart_mol else None
+        if taut_key and molcart_key and taut_key[:14] != molcart_key[:14]:
+            logger.warning(f"{tag}cleanStructureRDKit STEP molcart roundtrip changed connectivity: "
+                           f"{taut_smiles} [{taut_key}] -> "
+                           f"{Chem.MolToSmiles(molcart_mol) if molcart_mol else 'None'} [{molcart_key}]")
+
+    # Log full pipeline summary if overall connectivity changed
+    if input_key and molcart_key and input_key[:14] != molcart_key[:14]:
+        logger.error(f"{tag}cleanStructureRDKit PIPELINE SUMMARY: connectivity changed from "
+                     f"input={input_smiles} [{input_key}] to final output [{molcart_key}]")
+
     if len(saRes) == 1:
         return saRes[0][0], mV4
     else:
         return False, False
+
+def checkStructureIdentity(molfile, stdSMILES):
+    """Compare original molfile with standardized SMILES to detect
+    if tautomer canonicalization changed the molecular connectivity.
+    Returns (is_match, original_smiles, details_string)"""
+    try:
+        orig_mol = Chem.MolFromMolBlock(molfile, removeHs=True, sanitize=True)
+        if orig_mol is None:
+            return True, '', 'Could not parse original molfile'
+
+        params = rdMolStandardize.CleanupParameters()
+        params.tautomerRemoveSp3Stereo = False
+        params.tautomerRemoveBondStereo = False
+        params.tautomerRemoveIsotopicHs = False
+        try:
+            clean_mol = rdMolStandardize.Cleanup(orig_mol, params)
+            parent_mol = rdMolStandardize.FragmentParent(clean_mol, params)
+            uncharger = rdMolStandardize.Uncharger()
+            parent_mol = uncharger.uncharge(parent_mol)
+        except:
+            return True, '', 'Could not standardize original molfile for identity check'
+
+        orig_smiles = Chem.MolToSmiles(parent_mol)
+
+        std_mol = Chem.MolFromSmiles(stdSMILES)
+        if std_mol is None:
+            return True, orig_smiles, 'Could not parse stdSMILES'
+
+        orig_inchi = MolToInchi(parent_mol, options='-w')
+        std_inchi = MolToInchi(std_mol, options='-w')
+
+        if orig_inchi is None or std_inchi is None:
+            return True, orig_smiles, 'Could not generate InChI'
+
+        orig_inchi_key = InchiToInchiKey(orig_inchi)
+        std_inchi_key = InchiToInchiKey(std_inchi)
+
+        if orig_inchi_key[:14] != std_inchi_key[:14]:
+            # Check if this is just a tautomer (same molecular formula) or a real connectivity change
+            orig_mf = rdMolDescriptors.CalcMolFormula(parent_mol)
+            std_mf = rdMolDescriptors.CalcMolFormula(std_mol)
+
+            if orig_mf == std_mf:
+                # Same formula, different InChI = tautomer. Allow registration but log it.
+                logger.info(f"checkStructureIdentity: tautomer difference allowed: "
+                            f"original_smiles={orig_smiles}, std_smiles={stdSMILES}, "
+                            f"MF={orig_mf}, orig_inchi_key={orig_inchi_key}, std_inchi_key={std_inchi_key}")
+                return True, orig_smiles, ''
+
+            details = (f"STRUCTURE MISMATCH: "
+                      f"original_smiles={orig_smiles}, std_smiles={stdSMILES}, "
+                      f"orig_mf={orig_mf}, std_mf={std_mf}, "
+                      f"orig_inchi_key={orig_inchi_key}, std_inchi_key={std_inchi_key}")
+            return False, orig_smiles, details
+
+        return True, orig_smiles, ''
+    except Exception as e:
+        logger.error(f"checkStructureIdentity error: {str(e)}")
+        return True, '', f'Error in structure identity check: {str(e)}'
 
 def addStructure(database, molfile, newRegno, idColumnName):
     #####
@@ -885,7 +1001,17 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
          errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
         mol = Chem.MolFromMolBlock(molfile, removeHs=False, sanitize=True)
 
-        molfile, stdSMILES = cleanStructureRDKit(molfile)
+        original_molfile = molfile
+        molfile, stdSMILES = cleanStructureRDKit(molfile, identifier=f'regno={regno} jpage={jpage}')
+
+        # Check if standardization changed the molecular connectivity
+        is_match, orig_smiles, mismatch_details = checkStructureIdentity(original_molfile, stdSMILES)
+        if not is_match:
+            logger.error(f"BcpvsRegCompound: Structure identity FAILED for regno {regno}, jpage {jpage}: {mismatch_details}")
+            self.set_status(500)
+            self.finish(f'Structure mismatch blocked bcpvs registration for regno {regno}: original={orig_smiles}, standardized={stdSMILES}'.encode())
+            return
+
         if compound_id in ('', None):
 
             mols = checkUniqueStructure(stdSMILES, bcpvsDB)
@@ -1014,7 +1140,15 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         #cur.execute(sSql)
         #strip = cur.fetchall()[0][0].decode("utf-8")
 
-        molfileRdkit, stdSMILES = cleanStructureRDKit(molfile)
+        molfileRdkit, stdSMILES = cleanStructureRDKit(molfile, identifier=f'jpage={jpage}')
+
+        # Check if standardization changed the molecular connectivity
+        is_match, orig_smiles, mismatch_details = checkStructureIdentity(molfile, stdSMILES)
+        structureMismatch = False
+        if not is_match:
+            structureMismatch = True
+            logger.error(f"ChemRegAddMol: Structure identity FAILED for jpage {jpage}: {mismatch_details}")
+
         mols = checkUniqueStructure(stdSMILES, bcpvsDB)
         #mols = checkUniqueStructure(strip, bcpvsDB)
         #mols = checkUniqueStructure(molfile, bcpvsDB)
@@ -1090,6 +1224,12 @@ class ChemRegAddMol(tornado.web.RequestHandler):
             cur.execute(sSql)
 
         addStructure(f"{chemregDB}.CHEM", molfile, newRegno, 'regno')
+
+        if structureMismatch:
+            self.set_status(500)
+            self.finish(f'Structure mismatch for {jpage}: original={orig_smiles}, standardized={stdSMILES}')
+            return
+
         self.finish(sStatus)
 
 
