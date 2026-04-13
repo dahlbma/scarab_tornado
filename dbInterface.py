@@ -224,7 +224,84 @@ def registerNewCompound(bcpvsDB,
     cur.execute(sSql)
     return compound_id
 
+
 def registerNewBatch(bcpvsDB,
+                     compound_id,
+                     chemreg_regno,
+                     notebook_ref,
+                     suffix,
+                     submitter,
+                     project,
+                     supplier,
+                     biological_mw,
+                     library_id,
+                     compound_type,
+                     product_type,
+                     supplier_id,
+                     supplier_batch,
+                     restriction_comment='',
+                     purity=-1):
+    
+    # --- Clean up default and empty values ---
+    if not library_id:
+        library_id = 'Lib-3002'
+        
+    # Convert empty suffix to Python's None, which MySQL translates to NULL
+    if suffix == '':
+        suffix = None
+
+    # --- Parameterized SQL Query ---
+    # Note: We still use an f-string for {bcpvsDB} because database/table names 
+    # cannot be parameterized, only the actual data values can use %s placeholders.
+    sSql = f'''INSERT INTO {bcpvsDB}.batch (
+        compound_id,
+        notebook_ref,
+        suffix,
+        submitter,
+        submittal_date,
+        project,
+        purity,
+        supplier,
+        biological_mw,
+        library_id,
+        compound_type,
+        product_type,
+        supplier_id,
+        supplier_batch,
+        chemreg_regno,
+        restriction_comment
+    ) VALUES (
+        %s, %s, %s, %s, now(), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+    )'''
+    
+    # --- Tuple of values matching the %s placeholders in exact order ---
+    values = (
+        compound_id,
+        notebook_ref,
+        suffix,
+        submitter,
+        project,
+        purity,
+        supplier,
+        biological_mw,
+        library_id,
+        compound_type,
+        product_type,
+        supplier_id,
+        supplier_batch,
+        chemreg_regno,
+        restriction_comment
+    )
+
+    # --- Execute and handle errors ---
+    try:
+        cur.execute(sSql, values)
+    except Exception as e:
+        logger.error(f"Failed SQL: {sSql.strip()} | Values: {values}")
+        logger.error(f"Error Details: {str(e)}")
+        
+
+def registerNewBatch_old(bcpvsDB,
                      compound_id,
                      chemreg_regno,
                      notebook_ref,
@@ -240,6 +317,8 @@ def registerNewBatch(bcpvsDB,
                      supplier_batch,
                      restriction_comment = '',
                      purity = -1):
+    if not library_id:
+        library_id = 'Lib-3002'
     sSql = f'''insert into {bcpvsDB}.batch (
     compound_id,
     notebook_ref,
@@ -688,7 +767,8 @@ class UpdateStructureAdmin(tornado.web.RequestHandler):
         set
         mf = '{C_MF}',
         sep_mol_monoiso_mass = '{C_MONOISO}',
-        smiles_std = '{smiles}'
+        smiles_std = '{smiles}',
+        smiles_std_string = '{smiles}'
         where compound_id = '{compound_id}'
         '''
         cur.execute(sSql)
