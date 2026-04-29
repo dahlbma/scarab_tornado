@@ -44,14 +44,20 @@ def res2json():
     return json.dumps(result)
 
 
-def checkUniqueStructure(stdSMILES, bcpvsDB):
-    sSql = f"""
-SELECT compound_id FROM {bcpvsDB}.`compound` T1
-WHERE smiles_std = '{stdSMILES}'
+def checkUniqueStructure(inchiKey, bcpvsDB):
+    """Look up an existing compound by InChIKey.
+
+    Historically this matched on `smiles_std`, but a canonical SMILES is
+    sensitive to the (non-deterministic) RDKit tautomer canonicalizer
+    and to atom ordering, which caused the same compound to be
+    registered twice across different runs. The `inchi_key` column on
+    `bcpvs.compound` is indexed and is what should be used for identity.
     """
-    cur.execute(sSql)
-    mols = cur.fetchall()
-    return mols
+    if not inchiKey:
+        return ()
+    sSql = f"SELECT compound_id FROM {bcpvsDB}.`compound` WHERE inchi_key = %s"
+    cur.execute(sSql, (inchiKey,))
+    return cur.fetchall()
 
 
 def getNewRegno(chemregDB):
@@ -103,22 +109,15 @@ def updateCtrlCompSequence(self, iCtrlComp):
 
         
 def isItNewStructure(self, molfile):
+    """Return the compound_id of an existing match, '' if new, False on error."""
     chemregDB, bcpvsDB = getDatabase(self)
-    molfile, stdSMILES = cleanStructureRDKit(molfile)
-    if molfile == False:
+    std = standardizeMolecule(molfile)
+    if not std.ok:
         return False
-
-    mols = checkUniqueStructure(stdSMILES, bcpvsDB)
-
-    if mols == False:
-        return False
-    sStatus = 'oldMolecule'
-    if len(mols) == 0:
-        sStatus = 'newMolecule'
-        compound_id = ''
-    else:
-        compound_id = mols[0][0]
-    return compound_id
+    mols = checkUniqueStructure(std.inchi_key, bcpvsDB)
+    if not mols:
+        return ''
+    return mols[0][0]
 
 
 def _getInchiKey(mol):
@@ -131,84 +130,150 @@ def _getInchiKey(mol):
         pass
     return None
 
-def cleanStructureRDKit(molfile, identifier=''):
-    # Function to clean molecule from charges etc.
+
+class StandardizedMolecule:
+    """Single, deterministic result of running the registration
+    standardization pipeline on an input molfile.
+
+    Encapsulates everything downstream code needs so neither
+    ChemRegAddMol nor BcpvsRegCompound has to call the RDKit tautomer
+    canonicalizer twice on the same molecule (which used to be the
+    source of duplicate compound rows because
+    TautomerEnumerator.Canonicalize() is not deterministic across calls
+    in RDKit 2022.3 for some scaffolds).
+    """
+    __slots__ = ('ok', 'std_molfile', 'std_smiles', 'inchi_key',
+                 'tautomer_warning', 'error')
+
+    def __init__(self, ok=False, std_molfile=None, std_smiles=None,
+                 inchi_key=None, tautomer_warning='', error=''):
+        self.ok = ok
+        self.std_molfile = std_molfile
+        self.std_smiles = std_smiles
+        self.inchi_key = inchi_key
+        self.tautomer_warning = tautomer_warning
+        self.error = error
+
+
+def standardizeMolecule(molfile, identifier=''):
+    """Run the canonical standardization pipeline ONCE and return a
+    `StandardizedMolecule` describing the result.
+
+    Pipeline: parse -> Cleanup -> FragmentParent -> Uncharger ->
+    TautomerEnumerator.Canonicalize -> molcart `mol2bin/bin2mol`
+    roundtrip (so the molfile that goes into the structure tables
+    matches what molcart will index).
+
+    Two identity keys are derived:
+      - `std_smiles`: canonical SMILES of the canonicalized tautomer
+        (kept for the legacy `bcpvs.compound.smiles_std` column).
+      - `inchi_key`: InChIKey computed AFTER cleanup/fragment/uncharge
+        but BEFORE tautomer canonicalization. InChI normalizes
+        tautomers itself, so the key is stable even when the RDKit
+        tautomer canonicalizer flips. This is what registration uses
+        to decide whether a compound is new.
+
+    `tautomer_warning` is non-empty when the tautomer canonicalizer
+    produced a different connectivity (same molecular formula) than
+    the input. Registration is still allowed (this matches existing
+    behavior) but the message is propagated to the client UI.
+    """
+    tag = f"[{identifier}] " if identifier else ''
+
     mol = Chem.MolFromMolBlock(molfile, removeHs=False, sanitize=True)
+    if mol is None:
+        return StandardizedMolecule(error=f'{tag}RDKit could not parse molfile')
+
     params = rdMolStandardize.CleanupParameters()
     params.tautomerRemoveSp3Stereo = False
     params.tautomerRemoveBondStereo = False
     params.tautomerRemoveIsotopicHs = False
-    tag = f"[{identifier}] " if identifier else ''
-
-    # --- Step-by-step structure identity tracing ---
-    input_smiles = Chem.MolToSmiles(mol) if mol else None
-    input_key = _getInchiKey(mol) if mol else None
 
     try:
         clean_mol = rdMolStandardize.Cleanup(mol, params)
     except Exception as e:
-        logger.error(f"{tag}Failed to standardize {str(e)}")
-        return False, False
+        logger.error(f"{tag}Cleanup failed: {e}")
+        return StandardizedMolecule(error=f'{tag}Cleanup failed')
+    try:
+        parent_mol = rdMolStandardize.FragmentParent(clean_mol, params)
+    except Exception as e:
+        logger.error(f"{tag}FragmentParent failed: {e}")
+        return StandardizedMolecule(error=f'{tag}FragmentParent failed')
 
-    cleanup_smiles = Chem.MolToSmiles(clean_mol)
-    cleanup_key = _getInchiKey(clean_mol)
-    if input_key and cleanup_key and input_key[:14] != cleanup_key[:14]:
-        logger.warning(f"{tag}cleanStructureRDKit STEP Cleanup changed connectivity: "
-                       f"{input_smiles} [{input_key}] -> {cleanup_smiles} [{cleanup_key}]")
+    uncharged_mol = rdMolStandardize.Uncharger().uncharge(parent_mol)
+
+    # InChIKey BEFORE tautomer canonicalization. InChI is the stable
+    # tautomer-aware identity used for de-duplication.
+    pre_taut_key = _getInchiKey(uncharged_mol)
 
     try:
-        parent_clean_mol = rdMolStandardize.FragmentParent(clean_mol, params)
-    except:
-        logger.error(f'{tag}Failed with rdMolStandardize.FragmentParent, skipping molecule')
-        return False, False
+        taut_mol = rdMolStandardize.TautomerEnumerator(params).Canonicalize(uncharged_mol)
+    except Exception as e:
+        logger.error(f"{tag}TautomerEnumerator failed: {e}")
+        return StandardizedMolecule(error=f'{tag}TautomerEnumerator failed')
 
-    fragment_smiles = Chem.MolToSmiles(parent_clean_mol)
-    fragment_key = _getInchiKey(parent_clean_mol)
+    post_taut_key = _getInchiKey(taut_mol)
 
-    uncharger = rdMolStandardize.Uncharger()
-    uncharged_parent_clean_mol = uncharger.uncharge(parent_clean_mol)
+    tautomer_warning = ''
+    if pre_taut_key and post_taut_key and pre_taut_key[:14] != post_taut_key[:14]:
+        # Same input pre-tautomer InChIKey, different post. Same molecular
+        # formula = tautomer flip; different formula = real connectivity
+        # change which is suspicious and should also surface to the user.
+        try:
+            pre_mf = rdMolDescriptors.CalcMolFormula(uncharged_mol)
+            post_mf = rdMolDescriptors.CalcMolFormula(taut_mol)
+        except Exception:
+            pre_mf = post_mf = ''
+        if pre_mf == post_mf:
+            tautomer_warning = (f'{tag}Tautomer canonicalization changed connectivity '
+                                f'(same MF={pre_mf}); registered structure may differ '
+                                f'from the supplier drawing.')
+        else:
+            tautomer_warning = (f'{tag}Tautomer canonicalization changed molecular '
+                                f'formula ({pre_mf} -> {post_mf}); registered '
+                                f'structure differs from the supplier drawing.')
+        logger.warning(tautomer_warning)
 
-    uncharge_smiles = Chem.MolToSmiles(uncharged_parent_clean_mol)
-    uncharge_key = _getInchiKey(uncharged_parent_clean_mol)
-    if fragment_key and uncharge_key and fragment_key[:14] != uncharge_key[:14]:
-        logger.warning(f"{tag}cleanStructureRDKit STEP Uncharge changed connectivity: "
-                       f"{fragment_smiles} [{fragment_key}] -> {uncharge_smiles} [{uncharge_key}]")
+    std_smiles = Chem.MolToSmiles(taut_mol)
+    smiles_for_sql = std_smiles.replace('\\', '\\\\')
 
-    te = rdMolStandardize.TautomerEnumerator(params) # idem
-    taut_uncharged_parent_clean_mol = te.Canonicalize(uncharged_parent_clean_mol)
-
-    taut_smiles = Chem.MolToSmiles(taut_uncharged_parent_clean_mol)
-    taut_key = _getInchiKey(taut_uncharged_parent_clean_mol)
-    if uncharge_key and taut_key and uncharge_key[:14] != taut_key[:14]:
-        logger.warning(f"{tag}cleanStructureRDKit STEP TautomerCanonicalize changed connectivity: "
-                       f"{uncharge_smiles} [{uncharge_key}] -> {taut_smiles} [{taut_key}]")
-
-    mV4 = taut_smiles
-    mV4 = mV4.replace('\\', '\\\\')
-
-    sSql = f'''select CONVERT(bin2mol(mol2bin('{mV4}' , 'smiles')) USING UTF8)'''
-    cur.execute(sSql)
+    # molcart roundtrip so the molfile we store matches what its
+    # cartridge will index for substructure / similarity searches.
+    cur.execute(f"select CONVERT(bin2mol(mol2bin(%s, 'smiles')) USING UTF8)",
+                (smiles_for_sql,))
     saRes = cur.fetchall()
+    if len(saRes) != 1 or saRes[0][0] is None:
+        return StandardizedMolecule(error=f'{tag}molcart roundtrip failed')
 
-    molcart_key = None
-    if len(saRes) == 1:
-        molcart_molfile = saRes[0][0]
-        molcart_mol = Chem.MolFromMolBlock(molcart_molfile, removeHs=True, sanitize=True) if molcart_molfile else None
-        molcart_key = _getInchiKey(molcart_mol) if molcart_mol else None
-        if taut_key and molcart_key and taut_key[:14] != molcart_key[:14]:
-            logger.warning(f"{tag}cleanStructureRDKit STEP molcart roundtrip changed connectivity: "
-                           f"{taut_smiles} [{taut_key}] -> "
-                           f"{Chem.MolToSmiles(molcart_mol) if molcart_mol else 'None'} [{molcart_key}]")
+    std_molfile = saRes[0][0]
+    if isinstance(std_molfile, bytes):
+        std_molfile = std_molfile.decode('utf-8', errors='replace')
 
-    # Log full pipeline summary if overall connectivity changed
-    if input_key and molcart_key and input_key[:14] != molcart_key[:14]:
-        logger.error(f"{tag}cleanStructureRDKit PIPELINE SUMMARY: connectivity changed from "
-                     f"input={input_smiles} [{input_key}] to final output [{molcart_key}]")
+    # Use the pre-tautomer InChIKey as the canonical identity, NOT
+    # the post-tautomer one (the latter is what made registration
+    # non-deterministic).
+    inchi_key = pre_taut_key or post_taut_key
 
-    if len(saRes) == 1:
-        return saRes[0][0], mV4
-    else:
+    return StandardizedMolecule(
+        ok=True,
+        std_molfile=std_molfile,
+        std_smiles=std_smiles,
+        inchi_key=inchi_key,
+        tautomer_warning=tautomer_warning,
+    )
+
+
+def cleanStructureRDKit(molfile, identifier=''):
+    """Backwards-compat shim that returns (std_molfile, std_smiles).
+
+    New code should call `standardizeMolecule()` and use the returned
+    `StandardizedMolecule.inchi_key` for compound lookups.
+    """
+    std = standardizeMolecule(molfile, identifier=identifier)
+    if not std.ok:
         return False, False
+    return std.std_molfile, std.std_smiles
+
 
 def checkStructureIdentity(molfile, stdSMILES):
     """Compare original molfile with standardized SMILES to detect
@@ -272,39 +337,38 @@ def checkStructureIdentity(molfile, stdSMILES):
 def addStructure(database, molfile, newRegno, idColumnName):
     #####
     # Add the molecule to the structure tables
-    sSql = f"""
-    insert into {database} (mol, {idColumnName})
-    value
-    ('{molfile}', '{newRegno}')
-    """
-    cur.execute(sSql)
+    cur.execute(
+        f"INSERT INTO {database} (mol, {idColumnName}) VALUES (%s, %s)",
+        (molfile, newRegno),
+    )
 
-    sSql = f"""
-    insert into {database}_MOL (mol, {idColumnName})
-    value
-    (mol2bin('{molfile}', 'mol'), '{newRegno}')
-    """
-    cur.execute(sSql)
+    cur.execute(
+        f"INSERT INTO {database}_MOL (mol, {idColumnName}) VALUES (mol2bin(%s, 'mol'), %s)",
+        (molfile, newRegno),
+    )
 
-    sSql = f"""
-    insert into {database}_ukey select {idColumnName}, uniquekey(mol) as molkey,
-    uniquekey(`mol`,'nostereo') as molkeyns,
-    uniquekey(`mol`,'cistrans') as molkeyct
-    from {database} where {idColumnName} = '{newRegno}'
-    """
-    cur.execute(sSql)
+    cur.execute(
+        f"""INSERT INTO {database}_ukey
+            SELECT {idColumnName}, uniquekey(mol) AS molkey,
+                   uniquekey(`mol`,'nostereo') AS molkeyns,
+                   uniquekey(`mol`,'cistrans') AS molkeyct
+            FROM {database} WHERE {idColumnName} = %s""",
+        (newRegno,),
+    )
 
-    sSql = f"""
-    insert into {database}_MOL_keysim select {idColumnName}, fp(mol, 'sim') as molkey
-    from {database}_MOL where {idColumnName} = '{newRegno}'
-    """
-    cur.execute(sSql)
+    cur.execute(
+        f"""INSERT INTO {database}_MOL_keysim
+            SELECT {idColumnName}, fp(mol, 'sim') AS molkey
+            FROM {database}_MOL WHERE {idColumnName} = %s""",
+        (newRegno,),
+    )
 
-    sSql = f"""
-    insert into {database}_MOL_key select {idColumnName}, fp(mol, 'sss') as molkey
-    from {database}_MOL where {idColumnName} = '{newRegno}'
-    """
-    cur.execute(sSql)
+    cur.execute(
+        f"""INSERT INTO {database}_MOL_key
+            SELECT {idColumnName}, fp(mol, 'sss') AS molkey
+            FROM {database}_MOL WHERE {idColumnName} = %s""",
+        (newRegno,),
+    )
     #
     #####
 
@@ -312,32 +376,31 @@ def registerNewCompound(bcpvsDB,
                         compound_id_numeric,
                         molfile,
                         stdSmiles,
+                        inchiKey,
                         mf,
                         sep_mol_monoiso_mass,
-                        ip_rights = '',
-                        compound_name = ''):
+                        ip_rights='',
+                        compound_name=''):
     compound_id = f'CBK{compound_id_numeric}'
-    sSql = f'''
-    insert into {bcpvsDB}.compound (
-    compound_id,
-    compound_id_numeric,
-    created_date,
-    mf,
-    ip_rights,
-    sep_mol_monoiso_mass,
-    smiles_std,
-    smiles_std_string)
-    values (
-    '{compound_id}',
-    {compound_id_numeric},
-    now(),
-    '{mf}',
-    '{ip_rights}',
-    {sep_mol_monoiso_mass},
-    '{stdSmiles}',
-    '{stdSmiles}')
-    '''
-    cur.execute(sSql)
+    sSql = f'''INSERT INTO {bcpvsDB}.compound (
+        compound_id,
+        compound_id_numeric,
+        created_date,
+        mf,
+        ip_rights,
+        sep_mol_monoiso_mass,
+        smiles_std,
+        smiles_std_string,
+        inchi_key)
+        VALUES (%s, %s, now(), %s, %s, %s, %s, %s, %s)'''
+    cur.execute(sSql, (compound_id,
+                       compound_id_numeric,
+                       mf,
+                       ip_rights,
+                       sep_mol_monoiso_mass,
+                       stdSmiles,
+                       stdSmiles,
+                       inchiKey))
     return compound_id
 
 
@@ -952,27 +1015,17 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
     def put(self):
         chemregDB, bcpvsDB = getDatabase(self)
         regno = self.get_argument("regno")
-        sSql = f'''select regno,
-        compound_id,
-        c_mf,
-        ip_rights,
-        c_monoiso,
-        molfile,
-        jpage,
-        suffix,
-        chemist,
-        project,
-        source,
-        c_mw,
-        library_id,
-        compound_type,
-        product,
-        external_id,
-        supplier_batch,
-        purity
-        from {chemregDB}.chem_info
-        where regno = {regno}'''
-        cur.execute(sSql)
+        cur.execute(f'''SELECT regno, compound_id, c_mf, ip_rights, c_monoiso,
+                              molfile, jpage, suffix, chemist, project, source,
+                              c_mw, library_id, compound_type, product,
+                              external_id, supplier_batch, purity, inchi_key
+                       FROM {chemregDB}.chem_info WHERE regno = %s''',
+                    (regno,))
+        row = cur.fetchall()
+        if not row:
+            self.set_status(404)
+            self.finish(f'No chem_info row for regno {regno}'.encode())
+            return
         (regno,
          compound_id,
          c_mf,
@@ -983,73 +1036,85 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
          suffix,
          chemist,
          project,
-         source,         #  Supplier
+         source,
          c_mw,
          library_id,
          compound_type,
          product,
          external_id,
          supplier_batch,
-         purity
-        ) = cur.fetchall()[0]
+         purity,
+         inchi_key) = row[0]
 
-        (C_MF,
-         C_MW,
-         C_MONOISO,
-         C_CHNS,
-         saSalts,
-         errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
-        mol = Chem.MolFromMolBlock(molfile, removeHs=False, sanitize=True)
-
-        original_molfile = molfile
-        molfile, stdSMILES = cleanStructureRDKit(molfile, identifier=f'regno={regno} jpage={jpage}')
-
-        # Check if standardization changed the molecular connectivity
-        is_match, orig_smiles, mismatch_details = checkStructureIdentity(original_molfile, stdSMILES)
-        if not is_match:
-            logger.error(f"BcpvsRegCompound: Structure identity FAILED for regno {regno}, jpage {jpage}: {mismatch_details}")
-            self.set_status(500)
-            self.finish(f'Structure mismatch blocked bcpvs registration for regno {regno}: original={orig_smiles}, standardized={stdSMILES}'.encode())
+        # Idempotency: if a batch already exists for this regno + jpage,
+        # do not create a duplicate batch row. (The retry path in the
+        # client iterates regnos one-by-one and a transient network
+        # error used to register the same batch twice.)
+        cur.execute(f'''SELECT compound_id FROM {bcpvsDB}.batch
+                       WHERE chemreg_regno = %s AND notebook_ref = %s''',
+                    (regno, jpage))
+        existing = cur.fetchall()
+        if existing:
+            existing_compound_id = existing[0][0]
+            logger.info(f"BcpvsRegCompound: batch for regno={regno} jpage={jpage} "
+                        f"already exists with compound_id={existing_compound_id}, "
+                        f"skipping duplicate registration.")
+            self.finish(b'compound_id')
             return
 
+        if not inchi_key:
+            # Older row (pre-migration or backfill not yet run). Compute
+            # standardization once here and persist the inchi_key for
+            # future calls.
+            std = standardizeMolecule(molfile, identifier=f'regno={regno} jpage={jpage}')
+            if not std.ok:
+                self.set_status(500)
+                self.finish(f'RDKit standardization failed for regno {regno}: {std.error}'.encode())
+                return
+            inchi_key = std.inchi_key
+            std_smiles = std.std_smiles
+            std_molfile = std.std_molfile
+            cur.execute(f'UPDATE {chemregDB}.chem_info SET inchi_key = %s WHERE regno = %s',
+                        (inchi_key, regno))
+        else:
+            # ChemRegAddMol already standardized; we trust the persisted
+            # inchi_key. We still need the std_smiles + std_molfile for
+            # the bcpvs.compound row if we end up creating it.
+            std = standardizeMolecule(molfile, identifier=f'regno={regno} jpage={jpage}')
+            if not std.ok:
+                self.set_status(500)
+                self.finish(f'RDKit standardization failed for regno {regno}: {std.error}'.encode())
+                return
+            std_smiles = std.std_smiles
+            std_molfile = std.std_molfile
+
+        (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, errorMessage) = \
+            getMoleculeProperties(self, molfile, chemregDB)
+
         if compound_id in ('', None):
-
-            mols = checkUniqueStructure(stdSMILES, bcpvsDB)
-            if mols == False:
-                logger.error(f'Error in molfile for regno {self.regno}')
-                return False
-
-            if len(mols) != 0:
+            mols = checkUniqueStructure(inchi_key, bcpvsDB)
+            if mols:
                 compound_id = mols[0][0]
-                compound_id_numeric = compound_id[3:]
             else:
                 # Register a new compound
                 compound_id_numeric = getNewCompoundId(bcpvsDB)
-
                 compound_id = registerNewCompound(bcpvsDB,
                                                   compound_id_numeric,
-                                                  molfile,
-                                                  stdSMILES,
+                                                  std_molfile,
+                                                  std_smiles,
+                                                  inchi_key,
                                                   C_MF,
                                                   C_MONOISO,
                                                   ip_rights,
-                                                  compound_name = '')
-                # Is the moldepict on the next line the solution to stereo problems?
-                #sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}',
-                #                                                      'cistrans'),
-                #                                                      'smiles')))'''
-                #sSql = f'''select bin2mol(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles'))'''
-                #cur.execute(sSql)
-                #strippedMolfile = cur.fetchall()[0][0].decode("utf-8")
-                strippedMolfile = molfile
+                                                  compound_name='')
                 addStructure(f"{bcpvsDB}.JCMOL_MOLTABLE",
-                             strippedMolfile,
+                             std_molfile,
                              compound_id,
                              'compound_id')
-        sSql = f'''update {chemregDB}.chem_info
-                   set compound_id='{compound_id}'
-                   where regno = {regno}'''
-        cur.execute(sSql)
+
+        cur.execute(f'UPDATE {chemregDB}.chem_info SET compound_id = %s WHERE regno = %s',
+                    (compound_id, regno))
+
         registerNewBatch(bcpvsDB,
                          compound_id,
                          regno,
@@ -1057,15 +1122,15 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
                          saSalts,
                          chemist,
                          project,
-                         source,         #  Supplier
+                         source,
                          c_mw,
                          library_id,
                          compound_type,
                          product,
                          external_id,
                          supplier_batch,
-                         restriction_comment = '',
-                         purity = -1)
+                         restriction_comment='',
+                         purity=-1)
         self.finish(b'compound_id')
 
 
@@ -1083,15 +1148,13 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         product = self.get_body_argument('product')
         library_id = self.get_body_argument('library_id')
         sLib = re.search(r"(Lib-\d\d\d\d)", library_id)
-        library_id = sLib.group()
+        # library_id is required by the schema but the user does not
+        # always supply one; fall back to the catch-all "Compound
+        # collection" library Lib-3002.
+        library_id = sLib.group() if sLib else 'Lib-3002'
 
-        jpage = re.sub(r"\s+", "", jpage) # Remove any whitespace from batch_id (Excel pasting)
-        
-        if library_id.startswith("Lib"):
-            pass
-        else:
-            # If the library is blank set it to Compound collection lib
-            library_id = 'Lib-3002'
+        jpage = re.sub(r"\s+", "", jpage)
+
         external_id = self.get_body_argument('external_id')
         supplier_batch = self.get_body_argument('supplier_batch')
         purity = self.get_body_argument('purity')
@@ -1103,131 +1166,81 @@ class ChemRegAddMol(tornado.web.RequestHandler):
             self.finish(f'Nostruct for jpage: {jpage}')
             return
 
-        try:
-            l1, l2= cleanStructureRDKit(molfile)
-            if l1 == False:
-                self.set_status(500)
-                self.finish(f'RDKit failed to convert Molfile for: {jpage}')
-                return                
-        except:
+        # ---------- Standardize ONCE ----------
+        std = standardizeMolecule(molfile, identifier=f'jpage={jpage}')
+        if not std.ok:
             self.set_status(500)
-            self.finish(f'RDKit failed to convert Molfile for: {jpage}')
+            self.finish(f'RDKit failed to convert Molfile for: {jpage} ({std.error})')
             return
-                        
-        (C_MF,
-         C_MW,
-         C_MONOISO,
-         C_CHNS,
-         saSalts,
-         errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
-        if saSalts == None:
+
+        # ---------- Validate BEFORE any INSERT ----------
+        is_match, orig_smiles, mismatch_details = checkStructureIdentity(molfile, std.std_smiles)
+        if not is_match:
+            logger.error(f"ChemRegAddMol: Structure identity FAILED for jpage {jpage}: "
+                         f"{mismatch_details}")
+            self.set_status(500)
+            self.finish(f'Structure mismatch for {jpage}: original={orig_smiles}, '
+                        f'standardized={std.std_smiles}')
+            return
+
+        (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, errorMessage) = \
+            getMoleculeProperties(self, molfile, chemregDB)
+        if saSalts is None:
             saSalts = ''
-        if C_MF == False:
+        if C_MF is False:
             self.set_status(500)
             self.finish(f'Molfile failed {external_id} {errorMessage}')
             logger.error(f'Molfile failed {external_id} {errorMessage}')
             return
-        if saSalts == False:
+        if saSalts is False:
             self.set_status(500)
             self.finish(f'Unknown salt in molfile for {external_id} {errorMessage}')
             logger.error(f'Unknown salt in molfile for {external_id} {errorMessage}')
             return
 
-        ########################
-        # Do exact match with molecule against the CBK database
-
-        #sSql = f'''select bin2mol(moldepict(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'), 'smiles')))'''
-        #cur.execute(sSql)
-        #strip = cur.fetchall()[0][0].decode("utf-8")
-
-        molfileRdkit, stdSMILES = cleanStructureRDKit(molfile, identifier=f'jpage={jpage}')
-
-        # Check if standardization changed the molecular connectivity
-        is_match, orig_smiles, mismatch_details = checkStructureIdentity(molfile, stdSMILES)
-        structureMismatch = False
-        if not is_match:
-            structureMismatch = True
-            logger.error(f"ChemRegAddMol: Structure identity FAILED for jpage {jpage}: {mismatch_details}")
-
-        mols = checkUniqueStructure(stdSMILES, bcpvsDB)
-        #mols = checkUniqueStructure(strip, bcpvsDB)
-        #mols = checkUniqueStructure(molfile, bcpvsDB)
-        if mols == False:
-            return False
-        sStatus = 'oldMolecule'
-        if len(mols) == 0:
+        # ---------- Compound lookup by InChIKey ----------
+        mols = checkUniqueStructure(std.inchi_key, bcpvsDB)
+        if mols:
+            sStatus = 'oldMolecule'
+            compound_id = mols[0][0]
+        else:
             sStatus = 'newMolecule'
             compound_id = ''
-        else:
-            compound_id = mols[0][0]
 
-        ########################
-        # Get new regno and add nmolecule to chem_info
-        newRegno = getNewRegno(chemregDB)
         if purity == '':
             purity = -1
-        sSql = f"""
-        insert into {chemregDB}.chem_info (
-        regno,
-        jpage,
-        compound_id,
-        rdate,
-        chemist,
-        compound_type,
-        project,
-        source,
-        solvent,
-        product,
-        library_id,
-        external_id,
-        supplier_batch,
-        purity,
-        ip_rights,
-        C_CHNS,
-        C_MF,
-        C_MW,
-        C_MONOISO,
-        SUFFIX,
-        sdfile_sequence,
-        molfile)
-        values (
-        '{newRegno}',
-        '{jpage}',
-        '{compound_id}',
-        now(),
-        '{chemist}',
-        '{compound_type}',
-        '{project}',
-        '{source}',
-        '{solvent}',
-        '{product}',
-        '{library_id}',
-        '{external_id}',
-        '{supplier_batch}',
-        {purity},
-        '{ip_rights}',
-        '{C_CHNS}',
-        '{C_MF}',
-        {C_MW},
-        {C_MONOISO},
-        '{saSalts}',
-        {sdfile_sequence},
-        '{molfile}'
-        )
-        """
-        cur.execute(sSql)
+
+        newRegno = getNewRegno(chemregDB)
+
+        # NOTE: chem_info.MOLFILE intentionally stores the SUPPLIER's
+        # original molfile (not std.std_molfile). The standardized form
+        # used for matching is captured by chem_info.inchi_key.
+        cur.execute(f"""INSERT INTO {chemregDB}.chem_info (
+            regno, jpage, compound_id, rdate, chemist, compound_type, project,
+            source, solvent, product, library_id, external_id, supplier_batch,
+            purity, ip_rights, C_CHNS, C_MF, C_MW, C_MONOISO, SUFFIX,
+            sdfile_sequence, molfile, inchi_key)
+            VALUES (%s, %s, %s, now(), %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                    (newRegno, jpage, compound_id, chemist, compound_type, project,
+                     source, solvent, product, library_id, external_id, supplier_batch,
+                     purity, ip_rights, C_CHNS, C_MF, C_MW, C_MONOISO, saSalts,
+                     sdfile_sequence, molfile, std.inchi_key))
+
         if saSalts == '':
-            sNULL = 'NULL'
-            sSql = f"""update {chemregDB}.chem_info set
-            suffix = {sNULL}
-            where regno = {newRegno}"""
-            cur.execute(sSql)
+            cur.execute(f"UPDATE {chemregDB}.chem_info SET suffix = NULL WHERE regno = %s",
+                        (newRegno,))
 
-        addStructure(f"{chemregDB}.CHEM", molfile, newRegno, 'regno')
+        # CHEM structure tables get the standardized molfile so molcart
+        # indexing is consistent across re-registrations.
+        addStructure(f"{chemregDB}.CHEM", std.std_molfile, newRegno, 'regno')
 
-        if structureMismatch:
-            self.set_status(500)
-            self.finish(f'Structure mismatch for {jpage}: original={orig_smiles}, standardized={stdSMILES}')
+        # Surface tautomer warnings to the client UI without failing the
+        # registration (registration succeeded, but the user should
+        # review the structure).
+        if std.tautomer_warning:
+            self.set_header('X-Tautomer-Warning', std.tautomer_warning[:512])
+            self.finish(f'{sStatus};warning={std.tautomer_warning}')
             return
 
         self.finish(sStatus)
