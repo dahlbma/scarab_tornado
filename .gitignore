@@ -8,6 +8,7 @@ mols/
 error_msg.txt
 log_chemreg.txt
 chemRegSqlError.txt
+.venv/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
