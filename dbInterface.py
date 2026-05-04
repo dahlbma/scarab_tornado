@@ -23,6 +23,7 @@ import mydb
 import chembl_export
 import zipfile
 import random
+import textwrap
 
 logger = logging.getLogger(__name__)
 
@@ -84,18 +85,59 @@ def getNewCompoundId(bcpvsDB):
     cur.execute(sSql)
     return pkey
 
+
 def getAtomicComposition(saComp):
-    sComp = f""
-    for atom in saComp:
-        sComp += f'{atom[0]} {round(atom[3] * 100, 2)}% '
-    return sComp
+    sComp = ""
+    
+    # Check if saComp is yielding string symbols (dictionary-like behavior)
+    if len(saComp) > 0 and isinstance(next(iter(saComp)), str):
+        for symbol in saComp:
+            # Use the string symbol to fetch the actual data object
+            data = saComp[symbol]
+            
+            # Extract fraction (handles both object attributes and old-style tuples)
+            frac = data.fraction if hasattr(data, 'fraction') else data[3]
+            sComp += f'{symbol} {round(frac * 100, 2)}% '
+            
+    else:
+        # Fallback just in case it yields objects or tuples directly
+        for atom in saComp:
+            if hasattr(atom, 'symbol') and hasattr(atom, 'fraction'):
+                sComp += f'{atom.symbol} {round(atom.fraction * 100, 2)}% '
+            elif isinstance(atom, (tuple, list)) and len(atom) >= 4:
+                sComp += f'{atom[0]} {round(atom[3] * 100, 2)}% '
+                
+    return sComp.strip()
+
 
 def createPngFromMolfile(regno, molfile):
+    # 1. Strip the uniform leading indentation added by the frontend/API
+    molfile = textwrap.dedent(molfile)
+    
+    # 2. Add the mandatory blank Title line if missing
+    lines = molfile.splitlines()
+    if len(lines) > 0 and "Mrv" in lines[0]:
+        molfile = "\n" + molfile
+        
+    # 3. Parse the molecule
     m = Chem.MolFromMolBlock(molfile, removeHs=False, sanitize=True)
+    
+    # 4. Check for success
+    if m is None:
+        logger.error(f"regno {regno} is nostruct (RDKit failed to parse the molblock)")
+        return
+
+    # 5. Ensure the directory exists, then draw and save
     try:
-        Draw.MolToFile(m, f'mols/{regno}.png', kekulize=True, size=(280, 280))
-    except:
-        logger.error(f"regno {regno} is nostruct")
+        os.makedirs('mols', exist_ok=True)  # <--- This creates the mols/ folder if it doesn't exist
+        
+        filepath = f'mols/{regno}.png'
+        Draw.MolToFile(m, filepath, kekulize=True, size=(280, 280))
+        
+    except Exception as e:
+        # If it fails here, it will actually tell you WHY (e.g. Permission denied)
+        logger.error(f"Failed to draw/save regno {regno}: {e}")
+        
 
 def updateCtrlCompSequence(self, iCtrlComp):
     chemregDB, bcpvsDB = getDatabase(self)
@@ -122,13 +164,28 @@ def isItNewStructure(self, molfile):
 
 def _getInchiKey(mol):
     """Helper to get InChI key for a mol object, or None on failure."""
+    inchi, _ = _getInchi(mol)
+    if inchi:
+        try:
+            return InchiToInchiKey(inchi)
+        except:
+            pass
+    return None
+
+
+def _getInchi(mol):
+    """Helper to get (InChI string, InChIKey) for a mol object.
+    Returns (None, None) on failure."""
     try:
         inchi = MolToInchi(mol, options='-w')
         if inchi:
-            return InchiToInchiKey(inchi)
+            try:
+                return inchi, InchiToInchiKey(inchi)
+            except:
+                return inchi, None
     except:
         pass
-    return None
+    return None, None
 
 
 class StandardizedMolecule:
@@ -142,14 +199,15 @@ class StandardizedMolecule:
     TautomerEnumerator.Canonicalize() is not deterministic across calls
     in RDKit 2022.3 for some scaffolds).
     """
-    __slots__ = ('ok', 'std_molfile', 'std_smiles', 'inchi_key',
+    __slots__ = ('ok', 'std_molfile', 'std_smiles', 'inchi', 'inchi_key',
                  'tautomer_warning', 'error')
 
     def __init__(self, ok=False, std_molfile=None, std_smiles=None,
-                 inchi_key=None, tautomer_warning='', error=''):
+                 inchi=None, inchi_key=None, tautomer_warning='', error=''):
         self.ok = ok
         self.std_molfile = std_molfile
         self.std_smiles = std_smiles
+        self.inchi = inchi
         self.inchi_key = inchi_key
         self.tautomer_warning = tautomer_warning
         self.error = error
@@ -202,9 +260,9 @@ def standardizeMolecule(molfile, identifier=''):
 
     uncharged_mol = rdMolStandardize.Uncharger().uncharge(parent_mol)
 
-    # InChIKey BEFORE tautomer canonicalization. InChI is the stable
+    # InChI(Key) BEFORE tautomer canonicalization. InChI is the stable
     # tautomer-aware identity used for de-duplication.
-    pre_taut_key = _getInchiKey(uncharged_mol)
+    pre_taut_inchi, pre_taut_key = _getInchi(uncharged_mol)
 
     try:
         taut_mol = rdMolStandardize.TautomerEnumerator(params).Canonicalize(uncharged_mol)
@@ -212,7 +270,7 @@ def standardizeMolecule(molfile, identifier=''):
         logger.error(f"{tag}TautomerEnumerator failed: {e}")
         return StandardizedMolecule(error=f'{tag}TautomerEnumerator failed')
 
-    post_taut_key = _getInchiKey(taut_mol)
+    post_taut_inchi, post_taut_key = _getInchi(taut_mol)
 
     tautomer_warning = ''
     if pre_taut_key and post_taut_key and pre_taut_key[:14] != post_taut_key[:14]:
@@ -235,29 +293,45 @@ def standardizeMolecule(molfile, identifier=''):
         logger.warning(tautomer_warning)
 
     std_smiles = Chem.MolToSmiles(taut_mol)
-    smiles_for_sql = std_smiles.replace('\\', '\\\\')
 
     # molcart roundtrip so the molfile we store matches what its
     # cartridge will index for substructure / similarity searches.
-    cur.execute(f"select CONVERT(bin2mol(mol2bin(%s, 'smiles')) USING UTF8)",
-                (smiles_for_sql,))
+    # NOTE: pass std_smiles directly as a parameter; the MySQL driver
+    # handles escaping. Pre-doubling backslashes here would mangle
+    # E/Z stereo SMILES (e.g. C/C=C\C) and make molcart fail to parse
+    # them, which surfaced to users as a bogus "RDKit failed to convert
+    # Molfile" error.
+    cur.execute("select CONVERT(bin2mol(mol2bin(%s, 'smiles')) USING UTF8)",
+                (std_smiles,))
     saRes = cur.fetchall()
     if len(saRes) != 1 or saRes[0][0] is None:
-        return StandardizedMolecule(error=f'{tag}molcart roundtrip failed')
+        # Fall back to the RDKit-generated molblock so registration is
+        # not blocked by molcart's stricter SMILES parser. Log the
+        # offending SMILES so we can investigate the cartridge issue.
+        logger.error(f"{tag}molcart roundtrip failed for SMILES: {std_smiles!r}; "
+                     f"falling back to RDKit MolToMolBlock")
+        try:
+            std_molfile = Chem.MolToMolBlock(taut_mol)
+        except Exception as e:
+            return StandardizedMolecule(
+                error=f'{tag}molcart roundtrip failed and RDKit MolToMolBlock '
+                      f'fallback failed: {e}')
+    else:
+        std_molfile = saRes[0][0]
+        if isinstance(std_molfile, bytes):
+            std_molfile = std_molfile.decode('utf-8', errors='replace')
 
-    std_molfile = saRes[0][0]
-    if isinstance(std_molfile, bytes):
-        std_molfile = std_molfile.decode('utf-8', errors='replace')
-
-    # Use the pre-tautomer InChIKey as the canonical identity, NOT
+    # Use the pre-tautomer InChI(Key) as the canonical identity, NOT
     # the post-tautomer one (the latter is what made registration
     # non-deterministic).
+    inchi = pre_taut_inchi or post_taut_inchi
     inchi_key = pre_taut_key or post_taut_key
 
     return StandardizedMolecule(
         ok=True,
         std_molfile=std_molfile,
         std_smiles=std_smiles,
+        inchi=inchi,
         inchi_key=inchi_key,
         tautomer_warning=tautomer_warning,
     )
@@ -380,7 +454,8 @@ def registerNewCompound(bcpvsDB,
                         mf,
                         sep_mol_monoiso_mass,
                         ip_rights='',
-                        compound_name=''):
+                        compound_name='',
+                        inchi=''):
     compound_id = f'CBK{compound_id_numeric}'
     sSql = f'''INSERT INTO {bcpvsDB}.compound (
         compound_id,
@@ -391,8 +466,9 @@ def registerNewCompound(bcpvsDB,
         sep_mol_monoiso_mass,
         smiles_std,
         smiles_std_string,
+        inchi,
         inchi_key)
-        VALUES (%s, %s, now(), %s, %s, %s, %s, %s, %s)'''
+        VALUES (%s, %s, now(), %s, %s, %s, %s, %s, %s, %s)'''
     cur.execute(sSql, (compound_id,
                        compound_id_numeric,
                        mf,
@@ -400,6 +476,7 @@ def registerNewCompound(bcpvsDB,
                        sep_mol_monoiso_mass,
                        stdSmiles,
                        stdSmiles,
+                       inchi,
                        inchiKey))
     return compound_id
 
@@ -1106,7 +1183,8 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
                                                   C_MF,
                                                   C_MONOISO,
                                                   ip_rights,
-                                                  compound_name='')
+                                                  compound_name='',
+                                                  inchi=std.inchi or '')
                 addStructure(f"{bcpvsDB}.JCMOL_MOLTABLE",
                              std_molfile,
                              compound_id,
@@ -1412,6 +1490,7 @@ class LoadMolfile(tornado.web.RequestHandler):
          saSalts,
          errorMessage) = getMoleculeProperties(self, molfile, chemregDB)
         if C_MF == False:
+            logger.error('Error getMoleculeProperties' + str(errorMessage))
             self.set_status(500)
             self.finish(f'Molfile failed {regno} {errorMessage}')
             return
@@ -1422,6 +1501,7 @@ class LoadMolfile(tornado.web.RequestHandler):
             logger.error(f'failed on regno {regno}')
             return
         compound_id = isItNewStructure(self, molfile)
+        '''
         sSql = f"""update {chemregDB}.chem_info set
                    `molfile` = '{molfile}',
                     compound_id = '{compound_id}',
@@ -1432,7 +1512,16 @@ class LoadMolfile(tornado.web.RequestHandler):
                     suffix = '{saSalts}'
                   where regno = {regno}"""
         cur.execute(sSql)
+        '''
+        
+        sSql = f"""UPDATE {chemregDB}.chem_info SET
+           molfile = %s, compound_id = %s, C_MF = %s, C_MW = %s,
+           C_MONOISO = %s, C_CHNS = %s, suffix = %s
+           WHERE regno = %s"""
 
+        # Pass the variables as a tuple to the execute command safely
+        cur.execute(sSql, (molfile, compound_id, C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, regno))
+        
         if saSalts == '':
             sNULL = 'NULL'
             sSql = f"""update {chemregDB}.chem_info set
