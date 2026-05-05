@@ -187,7 +187,10 @@ class LoadSDF(QDialog):
                 return ""
             line = sFile.readline()
             line = line.replace(b'\r\n', b'\n')
-            line = line.replace(b"'", b"")
+            # NOTE: do not strip apostrophes from supplier data here.
+            # SQL injection is now prevented server-side via
+            # parameterized queries, and stripping apostrophes silently
+            # corrupted supplier identifiers (e.g. names containing "'").
 
             # RDKit can't handle empty first line in molfile
             if iCount == 1:
@@ -377,6 +380,19 @@ class LoadSDF(QDialog):
                                                               self.token)
             if sMessage == b'newMolecule':
                 iNewMols += 1
+            # Server may report a tautomer warning while still
+            # registering the row successfully (status 200, body of
+            # the form b"newMolecule;warning=..."). Capture these so
+            # the user can review without aborting the upload.
+            try:
+                sMessageText = sMessage.decode('utf-8', errors='replace') if isinstance(sMessage, bytes) else str(sMessage)
+            except Exception:
+                sMessageText = ''
+            if lStatus is True and ';warning=' in sMessageText:
+                f_err_msg.write(f"{str(dTags['external_id'])} WARNING {sMessageText}\n")
+                f_err_msg.flush()
+                if sMessageText.split(';warning=', 1)[0] == 'newMolecule':
+                    pass  # already counted above
             if lStatus != True:
                 iErrorMols += 1
                 f_err.write(sMol)
