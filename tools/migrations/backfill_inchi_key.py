@@ -50,25 +50,29 @@ def _standardize_no_tautomer(mol):
     return rdMolStandardize.Uncharger().uncharge(parent_mol)
 
 
-def _inchi_key_from_mol(mol):
+def _inchi_and_key_from_mol(mol):
     if mol is None:
-        return None
+        return None, None
     inchi = MolToInchi(mol, options='-w')
     if not inchi:
-        return None
+        return None, None
     key = InchiToInchiKey(inchi)
-    return key or None
+    return inchi, (key or None)
 
 
-def inchi_key_from_smiles(smiles):
+def _inchi_key_from_mol(mol):
+    return _inchi_and_key_from_mol(mol)[1]
+
+
+def inchi_and_key_from_smiles(smiles):
     if not smiles:
-        return None
+        return None, None
     try:
         mol = Chem.MolFromSmiles(smiles)
-        return _inchi_key_from_mol(_standardize_no_tautomer(mol))
+        return _inchi_and_key_from_mol(_standardize_no_tautomer(mol))
     except Exception as e:
         logger.warning(f"smiles failed: {smiles[:80]}... {e}")
-        return None
+        return None, None
 
 
 def inchi_key_from_molfile(molfile):
@@ -83,20 +87,34 @@ def inchi_key_from_molfile(molfile):
 
 
 def backfill_compound(cur, db, apply_changes):
-    cur.execute(f"""SELECT compound_id, smiles_std FROM {db}.compound
-                    WHERE inchi_key IS NULL OR inchi_key = ''""")
+    cur.execute(f"""SELECT compound_id, smiles_std, inchi, inchi_key FROM {db}.compound
+                    WHERE inchi_key IS NULL OR inchi_key = ''
+                       OR inchi     IS NULL OR inchi     = ''""")
     rows = cur.fetchall()
-    logger.info(f"{db}.compound: {len(rows)} rows missing inchi_key")
+    logger.info(f"{db}.compound: {len(rows)} rows missing inchi and/or inchi_key")
     updated = 0
     failed = 0
-    for compound_id, smiles in rows:
-        key = inchi_key_from_smiles(smiles)
-        if not key:
+    for compound_id, smiles, cur_inchi, cur_key in rows:
+        inchi, key = inchi_and_key_from_smiles(smiles)
+        if not key or not inchi:
             failed += 1
             continue
+        sets = []
+        params = []
+        if not cur_key:
+            sets.append('inchi_key = %s')
+            params.append(key)
+        if not cur_inchi:
+            sets.append('inchi = %s')
+            params.append(inchi)
+        if not sets:
+            continue
+        params.append(compound_id)
         if apply_changes:
-            cur.execute(f"UPDATE {db}.compound SET inchi_key = %s WHERE compound_id = %s",
-                        (key, compound_id))
+            cur.execute(
+                f"UPDATE {db}.compound SET {', '.join(sets)} WHERE compound_id = %s",
+                params,
+            )
         updated += 1
     logger.info(f"{db}.compound: {updated} backfilled, {failed} failed")
 
