@@ -1948,6 +1948,7 @@ class UploadBinary(tornado.web.RequestHandler):
             self.write({'message': 'OS not supported'})
             return
 
+        os.makedirs(os.path.dirname(bin_file), exist_ok=True)
         output_file = open(bin_file, 'wb')
         output_file.write(file1['body'])
         output_file.close()
