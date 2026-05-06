@@ -2,11 +2,11 @@ Backend for chemical registration application is using rdkit for chemical functi
 Frontend in python using pyqt5.
 
 ## Requirements
-The frontend currently only builds on `Python 3.8`, with required package versions listed in `requirements.txt`. Install the required versions with your favourite package manager.
+The frontend currently only builds on `Python 3.10` or newer, with required package versions listed in `requirements.txt`. Install the required versions with your favourite package manager.
 
 ## Frontend
 ### PyInstaller How-To
-Currently only builds on `Python 3.8`, with required package versions listed in `requirements.txt`.
+Currently only builds on `Python 3.10` or newer, with required package versions listed in `requirements.txt`.
 With `chemreg` as current directory, build the main ChemReg executable with:
 
     <pyinstaller> main.spec
@@ -41,8 +41,6 @@ If you have built the main executable and launcher from the /frontend directory 
 
 Invoking this prompts a login verification from the server, after which the files are sent to the server.
 
-<b>Remember to substitute `python3` with your appropriate `Python 3.8` command.
-</b>
 
 ## Backend
 The backend needs a config file config.py with content:
