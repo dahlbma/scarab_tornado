@@ -1742,7 +1742,6 @@ class GetRegnoFromCompound(tornado.web.RequestHandler):
     def get(self):
         chemregDB, bcpvsDB = getDatabase(self)
         sCmpId = self.get_argument("compound_id")
-        #if sCmpId.startswith('CBK6'):
         if sCmpId > 'CBK6':
             sSql = f"""select regno from {chemregDB}.chem_info
                        where compound_id = '{sCmpId}'"""
