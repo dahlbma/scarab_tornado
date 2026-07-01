@@ -13,6 +13,7 @@ from rdkit.Chem import Descriptors
 from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem.MolStandardize import rdMolStandardize
 from rdkit.Chem.inchi import MolToInchi, InchiToInchiKey
+from rdkit.Chem import AllChem
 from molmass import Formula
 from io import StringIO
 import sys
@@ -121,7 +122,10 @@ def createPngFromMolfile(regno, molfile):
         
     # 3. Parse the molecule
     m = Chem.MolFromMolBlock(molfile, removeHs=False, sanitize=True)
-    
+
+    if m is not None:
+        AllChem.Compute2DCoords(m)
+        
     # 4. Check for success
     if m is None:
         logger.error(f"regno {regno} is nostruct (RDKit failed to parse the molblock)")
@@ -1738,7 +1742,8 @@ class GetRegnoFromCompound(tornado.web.RequestHandler):
     def get(self):
         chemregDB, bcpvsDB = getDatabase(self)
         sCmpId = self.get_argument("compound_id")
-        if sCmpId.startswith('CBK6'):
+        #if sCmpId.startswith('CBK6'):
+        if sCmpId > 'CBK6':
             sSql = f"""select regno from {chemregDB}.chem_info
                        where compound_id = '{sCmpId}'"""
         else:
