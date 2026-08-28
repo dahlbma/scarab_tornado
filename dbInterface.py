@@ -217,7 +217,7 @@ class StandardizedMolecule:
         self.error = error
 
 
-def standardizeMolecule(molfile, identifier=''):
+def standardizeMolecule(molfile, identifier='', structure_type='molfile'):
     """Run the canonical standardization pipeline ONCE and return a
     `StandardizedMolecule` describing the result.
 
@@ -242,9 +242,16 @@ def standardizeMolecule(molfile, identifier=''):
     """
     tag = f"[{identifier}] " if identifier else ''
 
-    mol = Chem.MolFromMolBlock(molfile, removeHs=False, sanitize=True)
+    if structure_type == 'smiles':
+        structure_label = 'SMILES'
+        mol = Chem.MolFromSmiles(molfile, sanitize=True)
+    elif structure_type == 'molfile':
+        structure_label = 'molfile'
+        mol = Chem.MolFromMolBlock(molfile, removeHs=False, sanitize=True)
+    else:
+        return StandardizedMolecule(error=f'{tag}Unsupported structure type')
     if mol is None:
-        return StandardizedMolecule(error=f'{tag}RDKit could not parse molfile')
+        return StandardizedMolecule(error=f'{tag}RDKit could not parse {structure_label}')
 
     params = rdMolStandardize.CleanupParameters()
     params.tautomerRemoveSp3Stereo = False
@@ -339,6 +346,12 @@ def standardizeMolecule(molfile, identifier=''):
         inchi_key=inchi_key,
         tautomer_warning=tautomer_warning,
     )
+
+
+def standardizeSmiles(smiles, identifier=''):
+    return standardizeMolecule(smiles,
+                               identifier=identifier,
+                               structure_type='smiles')
 
 
 def cleanStructureRDKit(molfile, identifier=''):
@@ -629,14 +642,21 @@ def registerNewBatch_old(bcpvsDB,
         cur.execute(sSql)
 
 
-def getMoleculeProperties(self, molfile, chemregDB):
+def getMoleculeProperties(self, structure, chemregDB, structure_type='molfile'):
+    if structure_type == 'smiles':
+        molcart_type = 'smiles'
+        molecular_weight_expression = "MolWeight(mol2bin(%s, 'smiles'))"
+    else:
+        molcart_type = 'mol'
+        molecular_weight_expression = "MolWeight(mol2bin(UNIQUEKEY(%s, 'cistrans')))"
+
     sSql = f'''select
-    bin2smiles(mol2bin('{molfile}'), 'mol') smiles,
-    MolFormula(mol2bin('{molfile}', 'mol')),
-    MolWeight(mol2bin(UNIQUEKEY('{molfile}', 'cistrans'))),
-    MolNofMol(mol2bin('{molfile}', 'mol'))
+    bin2smiles(mol2bin(%s, '{molcart_type}'), 'mol') smiles,
+    MolFormula(mol2bin(%s, '{molcart_type}')),
+    {molecular_weight_expression},
+    MolNofMol(mol2bin(%s, '{molcart_type}'))
     '''
-    cur.execute(sSql)
+    cur.execute(sSql, (structure, structure, structure, structure))
     res = cur.fetchall()
     try:
         sSmiles = (res[0][0]).decode()
@@ -653,7 +673,7 @@ def getMoleculeProperties(self, molfile, chemregDB):
         return (False, False, False, False, False, f'{str(e)}')
 
     if sSmiles == '':
-        return (False, False, False, False, False, 'Empty molfile')
+        return (False, False, False, False, False, f'Empty {structure_type}')
     if iNrOfFragments > 1:
         saSmileFragments = sSmiles.split('.')
     else:
@@ -662,8 +682,8 @@ def getMoleculeProperties(self, molfile, chemregDB):
     if len(saSmileFragments) > 1 and iNrOfFragments == len(saSmileFragments):
         iFragPosition = 0
         for fragment in saSmileFragments:
-            sSql = f'''select MolWeight(mol2bin(UNIQUEKEY('{fragment}', 'cistrans')))'''
-            cur.execute(sSql)
+            sSql = "select MolWeight(mol2bin(UNIQUEKEY(%s, 'cistrans')))"
+            cur.execute(sSql, (fragment,))
             res = cur.fetchall()
             if res[0][0] == mainFragMolWeight:
                 if iFragPosition != 0:
@@ -679,10 +699,10 @@ def getMoleculeProperties(self, molfile, chemregDB):
         mainMolSmile = saSmileFragments[0]
         saltSmile = '.'.join(saSmileFragments[1:])
 
-    cur.execute(f"""select
-    MolWeight(mol2bin('{sSmiles}', 'smiles')),
-    MolWeight(mol2bin('{mainMolSmile}', 'smiles'))
-    """)
+    cur.execute("""select
+    MolWeight(mol2bin(%s, 'smiles')),
+    MolWeight(mol2bin(%s, 'smiles'))
+    """, (sSmiles, mainMolSmile))
     resMolcart = cur.fetchall()
     C_MW = Formula(C_MF).mass
     C_MONOISO = resMolcart[0][1]
@@ -1097,7 +1117,7 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
         chemregDB, bcpvsDB = getDatabase(self)
         regno = self.get_argument("regno")
         cur.execute(f'''SELECT regno, compound_id, c_mf, ip_rights, c_monoiso,
-                              molfile, jpage, suffix, chemist, project, source,
+                      molfile, smiles, jpage, suffix, chemist, project, source,
                               c_mw, library_id, compound_type, product,
                               external_id, supplier_batch, purity, inchi_key
                        FROM {chemregDB}.chem_info WHERE regno = %s''',
@@ -1113,6 +1133,7 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
          ip_rights,
          c_monoiso,
          molfile,
+         smiles,
          jpage,
          suffix,
          chemist,
@@ -1126,6 +1147,17 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
          supplier_batch,
          purity,
          inchi_key) = row[0]
+
+        if smiles is not None and str(smiles).strip():
+            structure = smiles.strip()
+            structure_type = 'smiles'
+        elif molfile is not None and str(molfile).strip():
+            structure = molfile
+            structure_type = 'molfile'
+        else:
+            self.set_status(500)
+            self.finish(f'No structure stored for regno {regno}'.encode())
+            return
 
         # Idempotency: if a batch already exists for this regno + jpage,
         # do not create a duplicate batch row. (The retry path in the
@@ -1147,7 +1179,9 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
             # Older row (pre-migration or backfill not yet run). Compute
             # standardization once here and persist the inchi_key for
             # future calls.
-            std = standardizeMolecule(molfile, identifier=f'regno={regno} jpage={jpage}')
+            std = standardizeMolecule(structure,
+                                      identifier=f'regno={regno} jpage={jpage}',
+                                      structure_type=structure_type)
             if not std.ok:
                 self.set_status(500)
                 self.finish(f'RDKit standardization failed for regno {regno}: {std.error}'.encode())
@@ -1161,7 +1195,9 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
             # ChemRegAddMol already standardized; we trust the persisted
             # inchi_key. We still need the std_smiles + std_molfile for
             # the bcpvs.compound row if we end up creating it.
-            std = standardizeMolecule(molfile, identifier=f'regno={regno} jpage={jpage}')
+            std = standardizeMolecule(structure,
+                                      identifier=f'regno={regno} jpage={jpage}',
+                                      structure_type=structure_type)
             if not std.ok:
                 self.set_status(500)
                 self.finish(f'RDKit standardization failed for regno {regno}: {std.error}'.encode())
@@ -1170,7 +1206,10 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
             std_molfile = std.std_molfile
 
         (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, errorMessage) = \
-            getMoleculeProperties(self, molfile, chemregDB)
+            getMoleculeProperties(self,
+                                  structure,
+                                  chemregDB,
+                                  structure_type=structure_type)
 
         if compound_id in ('', None):
             mols = checkUniqueStructure(inchi_key, bcpvsDB)
@@ -1220,7 +1259,27 @@ class BcpvsRegCompound(tornado.web.RequestHandler):
 class ChemRegAddMol(tornado.web.RequestHandler):
     def post(self):
         chemregDB, bcpvsDB = getDatabase(self)
-        molfile = self.get_body_argument('molfile')
+        molfile = self.get_body_argument('molfile', default=None)
+        smiles = self.get_body_argument('smiles', default=None)
+        if (molfile is None) == (smiles is None):
+            self.set_status(400)
+            self.finish(b'Provide exactly one of molfile or smiles')
+            return
+
+        if smiles is not None:
+            structure = smiles.strip()
+            structure_type = 'smiles'
+            structure_label = 'SMILES'
+        else:
+            structure = molfile
+            structure_type = 'molfile'
+            structure_label = 'Molfile'
+
+        if not structure:
+            self.set_status(400)
+            self.finish(f'{structure_label} is empty'.encode())
+            return
+
         jpage = self.get_body_argument('jpage')
         chemist = self.get_body_argument('chemist')
         compound_type = self.get_body_argument('compound_type')
@@ -1243,41 +1302,48 @@ class ChemRegAddMol(tornado.web.RequestHandler):
         ip_rights = self.get_body_argument('ip_rights')
         sdfile_sequence = self.get_body_argument('sdfile_sequence')
 
-        if "0  0  0     0  0            999 V2" in molfile:
+        if structure_type == 'molfile' and "0  0  0     0  0            999 V2" in structure:
             self.set_status(500)
             self.finish(f'Nostruct for jpage: {jpage}')
             return
 
         # ---------- Standardize ONCE ----------
-        std = standardizeMolecule(molfile, identifier=f'jpage={jpage}')
+        std = standardizeMolecule(structure,
+                                  identifier=f'jpage={jpage}',
+                                  structure_type=structure_type)
         if not std.ok:
             self.set_status(500)
-            self.finish(f'RDKit failed to convert Molfile for: {jpage} ({std.error})')
+            self.finish(f'RDKit failed to convert {structure_label} for: {jpage} ({std.error})')
             return
 
         # ---------- Validate BEFORE any INSERT ----------
-        is_match, orig_smiles, mismatch_details = checkStructureIdentity(molfile, std.std_smiles)
-        if not is_match:
-            logger.error(f"ChemRegAddMol: Structure identity FAILED for jpage {jpage}: "
-                         f"{mismatch_details}")
-            self.set_status(500)
-            self.finish(f'Structure mismatch for {jpage}: original={orig_smiles}, '
-                        f'standardized={std.std_smiles}')
-            return
+        if structure_type == 'molfile':
+            is_match, orig_smiles, mismatch_details = checkStructureIdentity(
+                structure, std.std_smiles)
+            if not is_match:
+                logger.error(f"ChemRegAddMol: Structure identity FAILED for jpage {jpage}: "
+                             f"{mismatch_details}")
+                self.set_status(500)
+                self.finish(f'Structure mismatch for {jpage}: original={orig_smiles}, '
+                            f'standardized={std.std_smiles}')
+                return
 
         (C_MF, C_MW, C_MONOISO, C_CHNS, saSalts, errorMessage) = \
-            getMoleculeProperties(self, molfile, chemregDB)
+            getMoleculeProperties(self,
+                                  structure,
+                                  chemregDB,
+                                  structure_type=structure_type)
         if saSalts is None:
             saSalts = ''
         if C_MF is False:
             self.set_status(500)
-            self.finish(f'Molfile failed {external_id} {errorMessage}')
-            logger.error(f'Molfile failed {external_id} {errorMessage}')
+            self.finish(f'{structure_label} failed {external_id} {errorMessage}')
+            logger.error(f'{structure_label} failed {external_id} {errorMessage}')
             return
         if saSalts is False:
             self.set_status(500)
-            self.finish(f'Unknown salt in molfile for {external_id} {errorMessage}')
-            logger.error(f'Unknown salt in molfile for {external_id} {errorMessage}')
+            self.finish(f'Unknown salt in {structure_label} for {external_id} {errorMessage}')
+            logger.error(f'Unknown salt in {structure_label} for {external_id} {errorMessage}')
             return
 
         # ---------- Compound lookup by InChIKey ----------
@@ -1294,20 +1360,19 @@ class ChemRegAddMol(tornado.web.RequestHandler):
 
         newRegno = getNewRegno(chemregDB)
 
-        # NOTE: chem_info.MOLFILE intentionally stores the SUPPLIER's
-        # original molfile (not std.std_molfile). The standardized form
-        # used for matching is captured by chem_info.inchi_key.
+        stored_molfile = structure if structure_type == 'molfile' else None
+        stored_smiles = structure if structure_type == 'smiles' else None
         cur.execute(f"""INSERT INTO {chemregDB}.chem_info (
             regno, jpage, compound_id, rdate, chemist, compound_type, project,
             source, solvent, product, library_id, external_id, supplier_batch,
             purity, ip_rights, C_CHNS, C_MF, C_MW, C_MONOISO, SUFFIX,
-            sdfile_sequence, molfile, inchi_key)
+            sdfile_sequence, molfile, smiles, inchi_key)
             VALUES (%s, %s, %s, now(), %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                     (newRegno, jpage, compound_id, chemist, compound_type, project,
                      source, solvent, product, library_id, external_id, supplier_batch,
                      purity, ip_rights, C_CHNS, C_MF, C_MW, C_MONOISO, saSalts,
-                     sdfile_sequence, molfile, std.inchi_key))
+                 sdfile_sequence, stored_molfile, stored_smiles, std.inchi_key))
 
         if saSalts == '':
             cur.execute(f"UPDATE {chemregDB}.chem_info SET suffix = NULL WHERE regno = %s",
@@ -1437,15 +1502,17 @@ class CreateMolImage(tornado.web.RequestHandler):
     def get(self):
         chemregDB, bcpvsDB = getDatabase(self)
         regno = self.get_argument("regno")
-        sSql = f"""select molfile from {chemregDB}.chem_info
-                   where regno = '{regno}'"""
-        cur.execute(sSql)
+        sSql = f"""select COALESCE(NULLIF(ci.molfile, ''), chem.mol)
+                   from {chemregDB}.chem_info ci
+                   left join {chemregDB}.CHEM chem on chem.regno = ci.regno
+                   where ci.regno = %s"""
+        cur.execute(sSql, (regno,))
         molfile = cur.fetchall()
 
         if len(molfile) == 0:
-            sSql = f"""select molfile from chemspec.chem_info
-            where regno = '{regno}'"""
-            cur.execute(sSql)
+            sSql = """select molfile from chemspec.chem_info
+            where regno = %s"""
+            cur.execute(sSql, (regno,))
             molfile = cur.fetchall()
 
         if len(molfile) > 0 and molfile[0][0] != None:
@@ -1654,19 +1721,21 @@ class GetMolfile(tornado.web.RequestHandler):
     def get(self):
         chemregDB, bcpvsDB = getDatabase(self)
         regno = self.get_argument("regno")
-        sSql = f"""select molfile from {chemregDB}.chem_info
-                   where regno = '{regno}'"""
-        cur.execute(sSql)
+        sSql = f"""select COALESCE(NULLIF(ci.molfile, ''), chem.mol)
+                   from {chemregDB}.chem_info ci
+                   left join {chemregDB}.CHEM chem on chem.regno = ci.regno
+                   where ci.regno = %s"""
+        cur.execute(sSql, (regno,))
         res = cur.fetchall()
-        if len(res) > 0:
+        if len(res) > 0 and res[0][0] is not None:
             self.write(res[0][0])
             return
 
-        sSql = f"""select molfile from chemspec.chem_info
-                   where regno = '{regno}'"""
-        cur.execute(sSql)
+        sSql = """select molfile from chemspec.chem_info
+                   where regno = %s"""
+        cur.execute(sSql, (regno,))
         res = cur.fetchall()
-        if len(res) > 0:
+        if len(res) > 0 and res[0][0] is not None:
             self.write(res[0][0])
 
 

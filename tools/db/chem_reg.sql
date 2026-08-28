@@ -105,6 +105,7 @@ CREATE TABLE `chem_info` (
   `C_MONOISO` double DEFAULT NULL,
   `C_CHNS` mediumtext,
   `MOLFILE` mediumtext,
+  `SMILES` mediumtext,
   `CHROM_TEXT` mediumtext,
   `NMR_TEXT` mediumtext,
   `MS_TEXT` mediumtext,

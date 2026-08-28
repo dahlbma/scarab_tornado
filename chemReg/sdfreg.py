@@ -7,6 +7,7 @@ from chemreglib import *
 import chardet
 from bs4 import UnicodeDammit
 import openpyxl
+import pandas as pd
 
 ip_rights_list = [None, 'External rights', 'LCBKI', 'Commercial']
 
@@ -17,6 +18,8 @@ class LoadSDF(QDialog):
         self.mod_name = "sdfreg"
         logger = logging.getLogger(self.mod_name)
         self.sdfilename = None
+        self.excelfilename = None
+        self.df = None
         self.nostruct_name = None
         self.nostructs = None
         self.iMolCount = 0
@@ -68,6 +71,7 @@ class LoadSDF(QDialog):
         self.upload_btn.setEnabled(False)
         self.upload_btn.clicked.connect(self.uploadSDFile)
         self.selectsdf_btn.clicked.connect(self.getSDFile)
+        self.selectSmiles_btn.clicked.connect(self.getExcelSmileFile)
         self.nostruct_btn.clicked.connect(self.getNostructFile)
         self.cancel_btn.clicked.connect(self.closeWindow)
 
@@ -103,43 +107,25 @@ class LoadSDF(QDialog):
                 self.ElnIdsOK = False
                 self.iFreeElnSpace = 0
 
-        # Check if we have an SDF file (not nostruct)
-        if self.sdfilename != None and self.nostruct_name == None:
-            if self.submitter_cb.currentText() == '' or \
-               self.compoundtype_cb.currentText() == '' or \
-               self.project_cb.currentText() == '' or \
-               self.supplier_cb.currentText() == '' or \
-               self.solvent_cb.currentText() == '' or \
-               self.producttype_cb.currentText() == '' or \
-               self.library_cb.currentText() in ('', ' ') or \
-               self.ElnIdsOK == False or \
-               self.ip_rights_cb.currentText() == '' or \
-               (not is_ctrl_compound and self.iMolCount >= self.iFreeElnSpace):
-                print(f'disable2 {self.ElnIdsOK} {self.iMolCount} {self.iFreeElnSpace}')
-                self.upload_btn.setEnabled(False)
-            else:
-                self.upload_btn.setEnabled(True)
+        has_sdf = self.sdfilename is not None
+        has_smiles = self.excelfilename is not None and self.df is not None
+        has_nostruct = self.nostruct_name is not None and self.nostructs is not None
 
-        # Check if we have a nostruct file (not SDF)
-        elif self.nostruct_name != None and self.sdfilename == None:
-            if self.submitter_cb.currentText() == '' or \
-               self.compoundtype_cb.currentText() == '' or \
-               self.project_cb.currentText() == '' or \
-               self.supplier_cb.currentText() == '' or \
-               self.solvent_cb.currentText() == '' or \
-               self.producttype_cb.currentText() == '' or \
-               self.library_cb.currentText() in ('', ' ') or \
-               self.ElnIdsOK == False or \
-               self.ip_rights_cb.currentText() == '' or \
-               (not is_ctrl_compound and self.iMolCount >= self.iFreeElnSpace):
-                print(f'disable {self.ElnIdsOK} {self.iMolCount} {self.iFreeElnSpace}')
-                self.upload_btn.setEnabled(False)            
-            else:
-                self.upload_btn.setEnabled(True)
-        
-        # Both files selected or no file selected - disable
-        else:
-            self.upload_btn.setEnabled(False)            
+        if sum((has_sdf, has_smiles, has_nostruct)) != 1:
+            self.upload_btn.setEnabled(False)
+            return
+
+        fields_are_valid = self.submitter_cb.currentText() != '' and \
+                           self.compoundtype_cb.currentText() != '' and \
+                           self.project_cb.currentText() != '' and \
+                           self.supplier_cb.currentText() != '' and \
+                           self.solvent_cb.currentText() != '' and \
+                           self.producttype_cb.currentText() != '' and \
+                           self.library_cb.currentText() not in ('', ' ') and \
+                           self.ElnIdsOK and \
+                           self.ip_rights_cb.currentText() != ''
+        enough_eln_space = is_ctrl_compound or self.iMolCount < self.iFreeElnSpace
+        self.upload_btn.setEnabled(fields_are_valid and enough_eln_space)
 
 
 
@@ -232,6 +218,32 @@ class LoadSDF(QDialog):
                 dValues['purity'] = i[1]
         return dValues
 
+    def getExcelValuePairs(self, row):
+        dValues = {
+            "external_id": '',
+            "supplier_batch": '',
+            "purity": -1
+        }
+
+        for field_name, value_key in (
+                (self.cmpidfield_cb.currentText(), 'external_id'),
+                (self.batchfield_cb.currentText(), 'supplier_batch'),
+                (self.purity_cb.currentText(), 'purity')):
+            if not field_name:
+                continue
+            value = row[field_name]
+            if pd.isna(value):
+                continue
+            if value_key == 'purity':
+                try:
+                    numeric_value = float(value)
+                    if numeric_value.is_integer():
+                        value = int(numeric_value)
+                except (TypeError, ValueError):
+                    pass
+            dValues[value_key] = str(value)
+        return dValues
+
 
     def getTags(self, external_id, supplier_batch, mw, restriction_comment):
         if restriction_comment == None:
@@ -304,21 +316,26 @@ class LoadSDF(QDialog):
 
         
     def uploadSDFile(self):
-        
         if self.nostruct_name != None and self.nostructs != None:
             self.uploadNostructs()
             return
 
-        mol_info = {'external_id': self.cmpidfield_cb.currentText()}
-        f = open(self.sdfilename, "rb")
+        is_smiles_upload = self.excelfilename is not None and self.df is not None
+        if is_smiles_upload:
+            excel_rows = iter(self.df.to_dict(orient='records'))
+            f = None
+        else:
+            excel_rows = None
+            f = open(self.sdfilename, "rb")
         currtime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        f_err_path = f"error_{currtime}.sdf"
+        error_extension = 'smi' if is_smiles_upload else 'sdf'
+        f_err_path = f"error_{currtime}.{error_extension}"
         f_err_msg_path = f"error_msg_{currtime}.log"
         f_err = open(f_err_path, "wb")
         f_err_msg = open(f_err_msg_path, "w")
         lError = False
         iTickCount = 0
-        iTicks = int(self.iMolCount / 97)
+        iTicks = max(1, int(self.iMolCount / 97))
         progress = 0
         iElnId = 0
         iNewMols = 0
@@ -340,13 +357,28 @@ class LoadSDF(QDialog):
                 progress += 1
                 iTickCount = 0
                 self.pbar.setValue(progress)
-            sMol = self.getNextMolecule(f)
-            sMol = self.to_bytes(sMol)
-            lTags = self.getMolfileTags(sMol)
-            #if lTags == [] or sMol == "":
-            if len(sMol) < 4:
-                break
-            dTags = self.getValuePairs(lTags)
+            if is_smiles_upload:
+                try:
+                    row = next(excel_rows)
+                except StopIteration:
+                    break
+                raw_structure = row.get('Smile')
+                sStructure = '' if pd.isna(raw_structure) else str(raw_structure).strip()
+                dTags = self.getExcelValuePairs(row)
+                if not sStructure or sStructure.lower() == 'nan':
+                    iErrorMols += 1
+                    f_err_msg.write(f"{dTags['external_id']} Empty Smile\n")
+                    f_err_msg.flush()
+                    lError = True
+                    continue
+            else:
+                sMol = self.getNextMolecule(f)
+                sMol = self.to_bytes(sMol)
+                lTags = self.getMolfileTags(sMol)
+                if len(sMol) < 4:
+                    break
+                dTags = self.getValuePairs(lTags)
+                sStructure = sMol
 
             try:
                 iSlask = int(dTags['purity']) + 1
@@ -365,7 +397,10 @@ class LoadSDF(QDialog):
                     iBatchCount = 1
 
             dTags['jpage'] = sCurrentEln + str(iBatchCount).zfill(3)
-            dTags['molfile'] = sMol.decode('latin-1')
+            if is_smiles_upload:
+                dTags['smiles'] = sStructure
+            else:
+                dTags['molfile'] = sStructure.decode('latin-1')
             dTags['chemist'] = self.submitter_cb.currentText()
             dTags['compound_type'] = self.compoundtype_cb.currentText()
             dTags['project'] = self.project_cb.currentText()
@@ -378,8 +413,6 @@ class LoadSDF(QDialog):
 
             lStatus, sMessage = dbInterface.chemRegAddMolFile(dTags,
                                                               self.token)
-            if sMessage == b'newMolecule':
-                iNewMols += 1
             # Server may report a tautomer warning while still
             # registering the row successfully (status 200, body of
             # the form b"newMolecule;warning=..."). Capture these so
@@ -388,6 +421,8 @@ class LoadSDF(QDialog):
                 sMessageText = sMessage.decode('utf-8', errors='replace') if isinstance(sMessage, bytes) else str(sMessage)
             except Exception:
                 sMessageText = ''
+            if sMessageText.split(';warning=', 1)[0] == 'newMolecule':
+                iNewMols += 1
             if lStatus is True and ';warning=' in sMessageText:
                 f_err_msg.write(f"{str(dTags['external_id'])} WARNING {sMessageText}\n")
                 f_err_msg.flush()
@@ -395,7 +430,10 @@ class LoadSDF(QDialog):
                     pass  # already counted above
             if lStatus != True:
                 iErrorMols += 1
-                f_err.write(sMol)
+                if is_smiles_upload:
+                    f_err.write(sStructure.encode('utf-8') + b'\n')
+                else:
+                    f_err.write(sStructure)
                 f_err_msg.write(f"{str(dTags['external_id'])} {str(sMessage)}\n")
                 f_err_msg.flush()
                 lError = True
@@ -419,7 +457,8 @@ class LoadSDF(QDialog):
         QApplication.restoreOverrideCursor()
 
         if lError == False:
-            send_msg("SDFile upload done", f'''Uploaded {self.iMolCount} compounds,
+            upload_type = 'SMILES' if is_smiles_upload else 'SDFile'
+            send_msg(f"{upload_type} upload done", f'''Uploaded {self.iMolCount} compounds,
  {iNewMols} new compounds, {self.iMolCount - iNewMols} old compounds''')
             # remove error files
             f_err.close()
@@ -447,6 +486,10 @@ class LoadSDF(QDialog):
         if fname[0] == '':
             return
 
+        self.excelfilename = None
+        self.df = None
+        self.nostruct_name = None
+        self.nostructs = None
         f = open(fname[0], "rb")
         iMolCount = 0
         for line in f:
@@ -479,6 +522,54 @@ class LoadSDF(QDialog):
         else:
             self.sdfname_lab.setText(self.sdfilename)
 
+    def getExcelSmileFile(self):
+        fname = QFileDialog.getOpenFileName(
+            self, "Open file", ".", "Excel Files (*.xlsx *.xls)"
+        )
+        if not fname[0]:
+            return
+
+        df = pd.read_excel(fname[0])
+        if 'Smile' not in df.columns:
+            send_msg("Format error", 'The Excel file must contain a column named "Smile".')
+            return
+
+        self.sdfilename = None
+        self.nostruct_name = None
+        self.nostructs = None
+        df.columns = [str(column) for column in df.columns]
+
+        # Calculate row count and ELN batch splits
+        iMolCount = len(df)
+        self.iMolCount = iMolCount
+        self.compoundcount_lab.setText(str(iMolCount))
+        self.iNrElnIds = int((iMolCount / 999) + 1)
+        self.nrofelnids_lab.setText(str(self.iNrElnIds))
+
+        # Extract dynamic column names and prepend empty mapping option
+        columns = list(df.columns)
+        columns.insert(0, "")
+
+        # Populate mapping dropdowns
+        self.cmpidfield_cb.clear()
+        self.cmpidfield_cb.addItems(columns)
+        self.batchfield_cb.clear()
+        self.batchfield_cb.addItems(columns)
+        self.purity_cb.clear()
+        self.purity_cb.addItems(columns)
+
+        # Store file path and update label string truncation
+        self.excelfilename = fname[0]
+        if len(self.excelfilename) > 40:
+            self.smilesname_lab.setText(
+                self.excelfilename[:5] + "..." + self.excelfilename[-15:]
+            )
+        else:
+            self.smilesname_lab.setText(self.excelfilename)
+
+        # Store DataFrame reference for downstream downstream processing/parsing
+        self.df = df
+        self.check_fields()
 
     def getNostructFile(self):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 
@@ -486,6 +577,10 @@ class LoadSDF(QDialog):
         if fname[0] == '':
             return
 
+        self.sdfilename = None
+        self.excelfilename = None
+        self.df = None
+        self.nostructs = None
         #f = open(fname[0], "rb")
         iMolCount = 0
         self.nostruct_name = fname[0]
