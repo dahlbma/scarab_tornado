@@ -425,20 +425,26 @@ def checkStructureIdentity(molfile, stdSMILES):
         logger.error(f"checkStructureIdentity error: {str(e)}")
         return True, '', f'Error in structure identity check: {str(e)}'
 
+def _execute_structure_sql(sql, params):
+    result = cur.execute(sql, params)
+    if result == -1:
+        raise RuntimeError('Database structure write failed')
+
+
 def addStructure(database, molfile, newRegno, idColumnName):
     #####
     # Add the molecule to the structure tables
-    cur.execute(
+    _execute_structure_sql(
         f"INSERT INTO {database} (mol, {idColumnName}) VALUES (%s, %s)",
         (molfile, newRegno),
     )
 
-    cur.execute(
+    _execute_structure_sql(
         f"INSERT INTO {database}_MOL (mol, {idColumnName}) VALUES (mol2bin(%s, 'mol'), %s)",
         (molfile, newRegno),
     )
 
-    cur.execute(
+    _execute_structure_sql(
         f"""INSERT INTO {database}_ukey
             SELECT {idColumnName}, uniquekey(mol) AS molkey,
                    uniquekey(`mol`,'nostereo') AS molkeyns,
@@ -447,14 +453,14 @@ def addStructure(database, molfile, newRegno, idColumnName):
         (newRegno,),
     )
 
-    cur.execute(
+    _execute_structure_sql(
         f"""INSERT INTO {database}_MOL_keysim
             SELECT {idColumnName}, fp(mol, 'sim') AS molkey
             FROM {database}_MOL WHERE {idColumnName} = %s""",
         (newRegno,),
     )
 
-    cur.execute(
+    _execute_structure_sql(
         f"""INSERT INTO {database}_MOL_key
             SELECT {idColumnName}, fp(mol, 'sss') AS molkey
             FROM {database}_MOL WHERE {idColumnName} = %s""",
@@ -1362,17 +1368,22 @@ class ChemRegAddMol(tornado.web.RequestHandler):
 
         stored_molfile = structure if structure_type == 'molfile' else None
         stored_smiles = structure if structure_type == 'smiles' else None
-        cur.execute(f"""INSERT INTO {chemregDB}.chem_info (
+        insert_result = cur.execute(f"""INSERT INTO {chemregDB}.chem_info (
             regno, jpage, compound_id, rdate, chemist, compound_type, project,
             source, solvent, product, library_id, external_id, supplier_batch,
             purity, ip_rights, C_CHNS, C_MF, C_MW, C_MONOISO, SUFFIX,
             sdfile_sequence, molfile, smiles, inchi_key)
             VALUES (%s, %s, %s, now(), %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                     (newRegno, jpage, compound_id, chemist, compound_type, project,
                      source, solvent, product, library_id, external_id, supplier_batch,
                      purity, ip_rights, C_CHNS, C_MF, C_MW, C_MONOISO, saSalts,
                  sdfile_sequence, stored_molfile, stored_smiles, std.inchi_key))
+
+        if insert_result == -1:
+            self.set_status(500)
+            self.finish(f'Failed to store {structure_label} for {jpage}'.encode())
+            return
 
         if saSalts == '':
             cur.execute(f"UPDATE {chemregDB}.chem_info SET suffix = NULL WHERE regno = %s",
@@ -1380,7 +1391,13 @@ class ChemRegAddMol(tornado.web.RequestHandler):
 
         # CHEM structure tables get the standardized molfile so molcart
         # indexing is consistent across re-registrations.
-        addStructure(f"{chemregDB}.CHEM", std.std_molfile, newRegno, 'regno')
+        try:
+            addStructure(f"{chemregDB}.CHEM", std.std_molfile, newRegno, 'regno')
+        except Exception as e:
+            logger.error(f"ChemRegAddMol: structure write failed for {jpage}: {e}")
+            self.set_status(500)
+            self.finish(f'Failed to store standardized structure for {jpage}'.encode())
+            return
 
         # Surface tautomer warnings to the client UI without failing the
         # registration (registration succeeded, but the user should

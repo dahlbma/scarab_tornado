@@ -340,6 +340,7 @@ class LoadSDF(QDialog):
         iElnId = 0
         iNewMols = 0
         iErrorMols = 0
+        iPostedMols = 0
         self.pbar.show()
         self.pbar.setValue(progress)
         QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
@@ -413,6 +414,8 @@ class LoadSDF(QDialog):
 
             lStatus, sMessage = dbInterface.chemRegAddMolFile(dTags,
                                                               self.token)
+            if lStatus is True:
+                iPostedMols += 1
             # Server may report a tautomer warning while still
             # registering the row successfully (status 200, body of
             # the form b"newMolecule;warning=..."). Capture these so
@@ -439,6 +442,13 @@ class LoadSDF(QDialog):
                 lError = True
         saRegnos = dbInterface.getRegnosFromSdfSequence(self.token,
                                                         iSdfSequence)
+        if len(saRegnos) != iPostedMols:
+            iErrorMols += 1
+            f_err_msg.write(
+                f"Expected {iPostedMols} registered rows for sequence "
+                f"{iSdfSequence}, found {len(saRegnos)}\n")
+            f_err_msg.flush()
+            lError = True
         self.event_lab.setText('Register in Compound database')
         iTickCount = 0
         progress = 0
@@ -449,8 +459,13 @@ class LoadSDF(QDialog):
                 iTickCount = 0
                 self.pbar.setValue(progress)
             QApplication.processEvents()
-            dbInterface.bcpvsRegCompound(self.token,
-                                         sReg)
+            bcpvs_status, bcpvs_message = dbInterface.bcpvsRegCompound(
+                self.token, sReg, return_status=True)
+            if not bcpvs_status:
+                iErrorMols += 1
+                f_err_msg.write(f"{sReg} {str(bcpvs_message)}\n")
+                f_err_msg.flush()
+                lError = True
         self.event_lab.setText('')
         QApplication.processEvents()
         self.pbar.hide()

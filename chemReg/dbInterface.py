@@ -243,14 +243,21 @@ def getRegnosFromSdfSequence(token, iSequence):
                      params={'sdfile_sequence': iSequence},
                      headers={'token': token},
                      verify=False)
+    if r.status_code != 200:
+        return []
     res = listify(r, False)
-    return res
+    return [regno for regno in res if regno is not None]
 
-def bcpvsRegCompound(token, sReg):
+def bcpvsRegCompound(token, sReg, return_status=False):
+    if sReg is None:
+        result = False, b'Missing regno'
+        return result if return_status else result[1]
     r = requests.put(f'{baseUrl}api/bcpvsRegCompound',
                      params={'regno': sReg},
                      headers={'token': token},
                      verify=False)
+    if return_status:
+        return r.status_code == 200, r.content
     return r.content
 
 def uploadBinary(token, os_name, file):
