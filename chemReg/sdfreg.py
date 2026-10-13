@@ -1,4 +1,4 @@
-import dbInterface, os, datetime, re, codecs, logging
+import dbInterface, os, datetime, re, codecs, logging, math
 from PyQt5.uic import loadUi
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QDialog, QApplication
@@ -10,6 +10,7 @@ import openpyxl
 import pandas as pd
 
 ip_rights_list = [None, 'External rights', 'LCBKI', 'Commercial']
+NOSTRUCT_COLUMNS = ('External ID', 'External Batch', 'MW', 'restriction_comment')
 
 class LoadSDF(QDialog):
     def __init__(self, token):
@@ -268,6 +269,90 @@ class LoadSDF(QDialog):
         dTags['sdfile_sequence'] = 0
         return dTags
 
+    def validateNostructData(self, rows):
+        errors = []
+        validated_rows = []
+
+        if not rows:
+            return ["The workbook must contain at least one data row."], []
+
+        for row_number, row in enumerate(rows, start=2):
+            if len(row) != len(NOSTRUCT_COLUMNS):
+                errors.append(
+                    f"Row {row_number}: expected {len(NOSTRUCT_COLUMNS)} "
+                    f"values, found {len(row)}."
+                )
+                continue
+
+            external_id, supplier_batch, mw, restriction_comment = row
+            row_errors = []
+            external_id = '' if external_id is None else str(external_id).strip()
+            supplier_batch = '' if supplier_batch is None else str(supplier_batch).strip()
+
+            if not external_id:
+                row_errors.append(f"Row {row_number}: External ID is required.")
+            elif len(external_id) > 200:
+                row_errors.append(
+                    f"Row {row_number}: External ID must be at most 200 characters."
+                )
+
+            if not supplier_batch:
+                row_errors.append(f"Row {row_number}: External Batch is required.")
+            elif len(supplier_batch) > 100:
+                row_errors.append(
+                    f"Row {row_number}: External Batch must be at most 100 characters."
+                )
+
+            if mw is None or (isinstance(mw, str) and not mw.strip()):
+                mw = 0.0
+            else:
+                try:
+                    mw = float(mw)
+                except (TypeError, ValueError):
+                    row_errors.append(f"Row {row_number}: MW must be a number.")
+                else:
+                    if not math.isfinite(mw):
+                        row_errors.append(
+                            f"Row {row_number}: MW must be a finite number."
+                        )
+
+            restriction_comment = '' if restriction_comment is None else str(
+                restriction_comment
+            ).strip()
+
+            if row_errors:
+                errors.extend(row_errors)
+                continue
+
+            validated_rows.append([
+                external_id,
+                supplier_batch,
+                mw,
+                restriction_comment
+            ])
+
+        return errors, validated_rows
+
+    def showNostructValidationError(self, errors):
+        max_errors = 20
+        error_text = '\n'.join(errors[:max_errors])
+        if len(errors) > max_errors:
+            error_text += f"\n... and {len(errors) - max_errors} more errors."
+        send_msg(
+            "Nostruct file format error",
+            "Expected columns in this exact order:\n"
+            + ", ".join(NOSTRUCT_COLUMNS)
+            + "\n\n"
+            "Row requirements:\n"
+            "- External ID: non-empty text, at most 200 characters\n"
+            "- External Batch: non-empty text, at most 100 characters\n"
+            "- MW: a finite number; blank is treated as 0\n"
+            "- restriction_comment: text; blank is allowed\n\n"
+            "Problems found:\n"
+            + error_text,
+            QMessageBox.Warning
+        )
+
 
     def uploadControls(self):
         print('Uploading controls')
@@ -288,6 +373,12 @@ class LoadSDF(QDialog):
 
 
     def uploadNostructs(self):
+        validation_errors, validated_rows = self.validateNostructData(self.nostructs)
+        if validation_errors:
+            self.showNostructValidationError(validation_errors)
+            return
+        self.nostructs = validated_rows
+
         iElnId = 0
         sCurrentEln = self.saElnIds[iElnId]
 
@@ -596,57 +687,68 @@ class LoadSDF(QDialog):
         self.excelfilename = None
         self.df = None
         self.nostructs = None
-        #f = open(fname[0], "rb")
-        iMolCount = 0
-        self.nostruct_name = fname[0]
-        if len(self.nostruct_name) > 40:
-            self.nostructName_lab.setText(self.nostruct_name[:5] + "..." + self.nostruct_name[-19:])
-        else:
-            self.nostructName_lab.setText(self.nostruct_name)
+        self.nostruct_name = None
+        self.nostructName_lab.setText(' ')
+        self.iMolCount = 0
+        self.iNrElnIds = None
+        self.compoundcount_lab.setText('0')
+        self.nrofelnids_lab.setText('0')
+        self.check_fields()
 
+        iMolCount = 0
         try:
             workbook = openpyxl.load_workbook(fname[0])
             sheet = workbook.active  # Get the active sheet
             header_row = [cell.value for cell in sheet[1]]  # Read the first row (header)
-            expected_columns = ['External ID', 'External Batch', 'MW', 'restriction_comment']
-
-            if not all(col in header_row for col in expected_columns) or len(expected_columns) != len(header_row):
-                missing_cols = set(expected_columns) - set(header_row)
-                extra_cols = set(header_row) - set(expected_columns)
-                sError = ''
-                if missing_cols:
-                    sError = f'''Error: Missing columns: {missing_cols}\nName columns: 'External ID', 'External Batch', 'MW', 'restriction_comment'  '''
-                if extra_cols:
-                    sError = f'''Error: Unexpected columns: {extra_cols}\nName columns: 'External ID', 'External Batch', 'MW', 'restriction_comment' '''
-                if len(expected_columns) != len(header_row):
-                    sError = f'''Error: Incorrect number of columns. Expected {len(expected_columns)}, found {len(header_row)}\n\
-Name columns: 'External ID', 'External Batch', 'MW', 'restriction_comment' '''
-
-                send_msg("Format error", sError)
+            if header_row != list(NOSTRUCT_COLUMNS):
+                self.showNostructValidationError([
+                    "Header row does not match the required columns in the "
+                    "required order.",
+                    f"Found: {header_row}"
+                ])
                 return None  # Return None if the columns are not found
 
-            data = []
-            iMolCount = 0
-            for row in sheet.iter_rows(min_row=2):  # Iterate from the second row (skipping the header)
-                iMolCount += 1
-                self.iMolCount = iMolCount
-                self.compoundcount_lab.setText(str(iMolCount))
-                self.iNrElnIds = int((iMolCount / 999) + 1)
-                self.nrofelnids_lab.setText(str(self.iNrElnIds))
-                row_values = [cell.value for cell in row]
-                data.append(row_values)
+            data = [
+                [cell.value for cell in row]
+                for row in sheet.iter_rows(min_row=2)
+            ]
+            validation_errors, validated_rows = self.validateNostructData(data)
+            if validation_errors:
+                self.showNostructValidationError(validation_errors)
+                return None
 
-            self.nostructs = data
+            self.nostructs = validated_rows
+            self.nostruct_name = fname[0]
+            if len(self.nostruct_name) > 40:
+                self.nostructName_lab.setText(self.nostruct_name[:5] + "..." + self.nostruct_name[-19:])
+            else:
+                self.nostructName_lab.setText(self.nostruct_name)
+            self.iMolCount = len(self.nostructs)
+            self.compoundcount_lab.setText(str(self.iMolCount))
+            self.iNrElnIds = int((self.iMolCount / 999) + 1)
+            self.nrofelnids_lab.setText(str(self.iNrElnIds))
             # Trigger check_fields to re-evaluate button state with the loaded file
             self.check_fields()
 
         except FileNotFoundError:
-            print(f"Error: File not found: {filepath}")
+            send_msg(
+                "File error",
+                f"Could not find the selected file: {fname[0]}",
+                QMessageBox.Warning
+            )
             return None
         except openpyxl.utils.exceptions.InvalidFileException:
-            #print(f"Error: Invalid Excel file: {filepath}")
+            send_msg(
+                "Format error",
+                "The selected file is not a valid Excel workbook.",
+                QMessageBox.Warning
+            )
             return None
         except Exception as e:
-            print(f"An unexpected error occurred: {e}")
+            send_msg(
+                "File error",
+                f"Could not read the selected workbook:\n{e}",
+                QMessageBox.Warning
+            )
             return None
 
