@@ -4,6 +4,7 @@ Windows/
 ver.dat
 mols/
 *.sdf
+*.smi
 *.mol
 error_msg.txt
 log_chemreg.txt
