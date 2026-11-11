@@ -6,16 +6,18 @@ import {
   ChevronRight,
   CircleAlert,
   Database,
-  FlaskConical,
   KeyRound,
   LoaderCircle,
   LogOut,
+  Moon,
   Pencil,
   RotateCcw,
   ScanSearch,
   Search,
+  Sun,
   UserRound
 } from "lucide-react";
+import cbcsLogo from "../CBCS_line_highres.webp";
 import {
   ApiError,
   createMolImageUrl,
@@ -50,12 +52,34 @@ function errorText(error: unknown): string {
   return error instanceof Error ? error.message : "The request could not be completed.";
 }
 
+type ThemeMode = "light" | "dark";
+
+function getInitialTheme(): ThemeMode {
+  try {
+    const storedTheme = window.localStorage.getItem("chemreg-theme");
+    if (storedTheme === "light" || storedTheme === "dark") return storedTheme;
+  } catch {
+    return "light";
+  }
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
 export default function App() {
   const [databases, setDatabases] = useState(["Test", "Live"]);
   const [backendStatus, setBackendStatus] = useState<"checking" | "ready" | "offline">("checking");
+  const [theme, setTheme] = useState<ThemeMode>(getInitialTheme);
   const [session, setSession] = useState<Session | null>(null);
   const [loginError, setLoginError] = useState("");
   const [loginBusy, setLoginBusy] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try {
+      window.localStorage.setItem("chemreg-theme", theme);
+    } catch {
+      // Theme still applies for this session when storage is unavailable.
+    }
+  }, [theme]);
 
   useEffect(() => {
     let active = true;
@@ -89,6 +113,9 @@ export default function App() {
     setSession(null);
     setLoginError(message);
   }, []);
+  const toggleTheme = useCallback(() => {
+    setTheme((current) => current === "light" ? "dark" : "light");
+  }, []);
 
   if (!session) {
     return (
@@ -97,12 +124,14 @@ export default function App() {
         backendStatus={backendStatus}
         busy={loginBusy}
         error={loginError}
+        onToggleTheme={toggleTheme}
+        theme={theme}
         onLogin={handleLogin}
       />
     );
   }
 
-  return <Workspace session={session} onLogout={handleLogout} />;
+  return <Workspace session={session} onLogout={handleLogout} onToggleTheme={toggleTheme} theme={theme} />;
 }
 
 interface LoginScreenProps {
@@ -110,10 +139,12 @@ interface LoginScreenProps {
   backendStatus: "checking" | "ready" | "offline";
   busy: boolean;
   error: string;
+  theme: ThemeMode;
+  onToggleTheme: () => void;
   onLogin: (username: string, password: string, database: string) => Promise<void>;
 }
 
-function LoginScreen({ databases, backendStatus, busy, error, onLogin }: LoginScreenProps) {
+function LoginScreen({ databases, backendStatus, busy, error, onLogin, onToggleTheme, theme }: LoginScreenProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [database, setDatabase] = useState("Test");
@@ -134,25 +165,25 @@ function LoginScreen({ databases, backendStatus, busy, error, onLogin }: LoginSc
   return (
     <main className="auth-page">
       <div className="auth-grid" aria-hidden="true" />
+      <ThemeToggle className="auth-theme-toggle" onToggle={onToggleTheme} theme={theme} />
       <section className="auth-frame" aria-label="ChemReg sign in">
         <aside className="auth-identity">
-          <div className="brand-lockup">
-            <span className="brand-mark"><FlaskConical size={21} strokeWidth={1.8} /></span>
-            <span>ChemReg</span>
-          </div>
           <div className="identity-title">
             <span className="eyebrow">CHEMISTRY / REGISTRATION</span>
             <h1>Structure records<br />&amp; metadata</h1>
             <div className="identity-rule"><i /><i /><i /></div>
           </div>
           <div className="identity-foot">
-            <span>SCILIFELAB</span>
+            <span>CBCS</span>
             <span className="identity-dot" />
             <span>REGISTRY WORKSPACE</span>
           </div>
         </aside>
 
         <div className="auth-content">
+          <div className="auth-logo-wrap">
+            <img className="cbcs-logo auth-logo" src={cbcsLogo} alt="CBCS Chemical Biology Consortium Sweden" />
+          </div>
           <div className="auth-heading">
             <span className="eyebrow">SECURE ACCESS</span>
             <h2>Sign in</h2>
@@ -233,10 +264,12 @@ function LoginScreen({ databases, backendStatus, busy, error, onLogin }: LoginSc
 
 interface WorkspaceProps {
   session: Session;
+  theme: ThemeMode;
+  onToggleTheme: () => void;
   onLogout: (message?: string) => void;
 }
 
-function Workspace({ session, onLogout }: WorkspaceProps) {
+function Workspace({ session, onLogout, onToggleTheme, theme }: WorkspaceProps) {
   const [activeView, setActiveView] = useState<"search" | "registration" | "metadata" | "bulk">("search");
   const [requestedRegno, setRequestedRegno] = useState<string | null>(null);
   const [mode, setMode] = useState<SearchMode>("regno");
@@ -362,9 +395,8 @@ function Workspace({ session, onLogout }: WorkspaceProps) {
   return (
     <main className="workspace">
       <header className="topbar">
-        <div className="brand-lockup topbar-brand">
-          <span className="brand-mark"><FlaskConical size={19} strokeWidth={1.8} /></span>
-          <span>ChemReg</span>
+        <div className="topbar-brand">
+          <img className="cbcs-logo app-logo" src={cbcsLogo} alt="CBCS Chemical Biology Consortium Sweden" />
         </div>
         <nav className="workspace-nav" aria-label="Primary navigation">
           <button
@@ -398,6 +430,7 @@ function Workspace({ session, onLogout }: WorkspaceProps) {
         <div className="topbar-actions">
           <span className="database-badge"><Database size={14} />{session.database}</span>
           <span className="user-badge"><UserRound size={15} />{session.username}</span>
+          <ThemeToggle onToggle={onToggleTheme} theme={theme} />
           <button className="icon-button logout-button" onClick={() => onLogout()} title="Sign out" type="button">
             <LogOut size={17} />
             <span>Sign out</span>
@@ -703,5 +736,30 @@ function MetadataField({ label, value, mono = false }: { label: string; value: s
       <dt>{label}</dt>
       <dd className={mono ? "mono-value" : undefined}>{value || "-"}</dd>
     </div>
+  );
+}
+
+function ThemeToggle({
+  className = "",
+  onToggle,
+  theme
+}: {
+  className?: string;
+  onToggle: () => void;
+  theme: ThemeMode;
+}) {
+  const nextTheme = theme === "dark" ? "light" : "dark";
+  const Icon = theme === "dark" ? Sun : Moon;
+  return (
+    <button
+      aria-label={`Switch to ${nextTheme} mode`}
+      aria-pressed={theme === "dark"}
+      className={`icon-button theme-toggle ${className}`}
+      onClick={onToggle}
+      title={`Switch to ${nextTheme} mode`}
+      type="button"
+    >
+      <Icon size={17} />
+    </button>
   );
 }

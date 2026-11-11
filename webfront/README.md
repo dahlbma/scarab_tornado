@@ -1,6 +1,6 @@
 # ChemReg Web Frontend
 
-The React client is kept separate from Tornado. During development, Vite serves the UI on port `8082` and proxies API and molecule-image requests to the existing HTTPS ChemReg endpoint at `https://esox3.scilifelab.se/chemreg/`.
+The React client is kept separate from Tornado. During development, Vite serves the UI on port `8082` and proxies API and molecule-image requests to the existing ChemReg HTTPS endpoint configured in `vite.config.ts`.
 
 Current screens cover sign-in, compound search and details, manual registration/editing, supplier/library/salt maintenance, and bulk registration. Bulk import accepts SDF files, `.xlsx`/`.xls` workbooks with a `Smile` column, and workbooks with the exact no-structure columns from the desktop workflow. The app keeps the existing Tornado API and database as the system of record.
 

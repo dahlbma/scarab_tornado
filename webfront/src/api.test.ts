@@ -59,6 +59,24 @@ describe("legacy API response parsing", () => {
     expect(new Headers(options.headers).get("token")).toBe(tokenHeader);
   });
 
+  it("searches compound IDs with the same column key as the desktop client", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response('[["70001"]]', { status: 200 })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const hits = await searchCompounds("compoundId", "CBK621542", {
+      username: "chemist",
+      database: "Test",
+      tokenHeader: '{"token": "signed-token", "database": "Test"}'
+    });
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      "/api/search?column=COMPOUND_ID&value=CBK621542"
+    );
+    expect(hits).toEqual(["70001"]);
+  });
+
   it("creates a draft through next-regno then create-regno", async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(new Response('"70001"', { status: 200 }))
