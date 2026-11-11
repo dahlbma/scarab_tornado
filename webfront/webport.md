@@ -9,15 +9,27 @@ Use React with TypeScript and Vite for the browser UI. Keep Python, Tornado, RDK
 - The desktop client is PyQt5. Its main workflows are sign-in, search and record browsing, compound registration/editing, bulk import, and metadata maintenance. See [the login screen](../chemReg/loginscreen.py), [search screen](../chemReg/searchscreen.py), [registration screen](../chemReg/regscreen.py), [bulk loader](../chemReg/sdfreg.py), and [metadata dialog](../chemReg/addmetatags.py).
 - The existing HTTP client is [chemReg/dbInterface.py](../chemReg/dbInterface.py); Tornado registers its endpoints in [angular.py](../angular.py), with handlers in [dbInterface.py](../dbInterface.py).
 - Useful existing endpoints include `/getDatabase`, `/login`, `/api/search`, `/api/getTextColumn`, `/api/getColComboData`, `/api/getMolfile`, `/api/loadMolfile`, `/api/createRegno`, `/api/update`, `/api/updateRegnoBatch`, `/api/bcpvsRegCompound`, and the bulk-import endpoints.
-- Authentication has a legacy contract: `/login` returns JSON, and protected calls send that response body in a custom `token` header. Preserve this behind one frontend API adapter for phase 1; do not make UI components know about the format. The contract is implemented in [auth.py](../auth.py).
+- Authentication has a legacy contract: `/login` returns JSON, and protected calls send that response body in a custom `token` header. Preserve this behind one frontend API adapter for phase 1; do not make UI components know about the format. The contract is implemented in [auth.py](../auth.py). Keep remote development and production traffic on the existing HTTPS `/chemreg/` endpoint; use plain HTTP only for a loopback Tornado instance.
 - The Tornado server serves static files from `dist/`; the current [dist/index.html](../dist/index.html) is a launcher-download page. Do not overwrite it as part of local frontend development.
 - Existing Qt forms use a blue-to-white sign-in background, a pale blue search screen (`#D4EFF8`), and pale red registration/import screens (`#FFCCCC`). Carry these recognizable color cues and dense form layout into responsive browser screens rather than copying the fixed desktop dimensions. References: [sign-in UI](../chemReg/assets/welcomescreen.ui), [search UI](../chemReg/assets/searchchem.ui), and [registration UI](../chemReg/assets/regchem.ui).
+
+## Current Implementation
+
+The initial React client is implemented in this directory and runs independently of the Python client. It includes:
+
+- Sign-in using the legacy response-body `token` header contract, with session state kept in memory.
+- Search by registration number, submitter, compound ID, and batch; result navigation, record details, molecular properties, and structure preview.
+- Manual registration and editing using the existing draft, field-update, molfile-upload, and BCPVS endpoints.
+- Supplier, library, and salt maintenance using the existing metadata endpoints.
+- SDF, SMILES `.xlsx`/`.xls`, no-structure workbook, and CTRL compound import with field mapping, ELN allocation, progress, and a downloadable partial-results report.
+
+No Tornado routes, Python dependencies, chemistry logic, or database schema have been changed. Before relying on write workflows, verify them against the Test database with authorized credentials; only parser, API-contract, build, and mocked UI checks have been run here.
 
 ## Phase 1: React Client, Existing Backend
 
 1. **Confirm the first release scope.** Port sign-in, search/record details, manual registration/editing, bulk import, and metadata maintenance. Use the existing Test database for integration checks; do not test writes against Live.
 2. **Create the frontend project in `webfront/`.** Set up React, TypeScript, and Vite. Keep its source and build output inside `webfront/`; do not change Python dependencies or backend routes.
-3. **Add a single typed API client.** Match existing paths, query parameters, form-encoded requests, and multipart file uploads. Centralize response parsing for JSON, plain text, and non-200 responses. Configure Vite to proxy `/login`, `/getDatabase`, `/api/*`, and `/mols/*` to Tornado so browser requests are same-origin during development and no CORS change is needed.
+3. **Add a single typed API client.** Match existing paths, query parameters, form-encoded requests, and multipart file uploads. Centralize response parsing for JSON, plain text, and non-200 responses. Configure Vite to proxy `/login`, `/getDatabase`, `/api/*`, and `/mols/*` through the existing HTTPS `/chemreg/` endpoint so browser requests are same-origin during development and no CORS change is needed.
 4. **Implement sign-in and session state.** Load the Live/Test choices from `/getDatabase`, post credentials to `/login`, and keep the session in memory. The API client should preserve the exact login response text for the current `token` header contract, parse the response separately for display/state, and clear the session on logout or an authorization failure. Do not persist passwords or tokens in local storage.
 5. **Build the app shell and visual tokens.** Match the existing screen colors, labels, field density, and navigation. Make layouts responsive, keyboard accessible, and explicit about loading, empty, validation, and error states.
 6. **Port search and record browsing first.** Support the existing search fields (registration number, submitter, compound ID, and batch), hit count, previous/next navigation, record details, and molecule preview. Use existing endpoints and keep the initial slice read-oriented so it is easy to compare with the desktop client.
