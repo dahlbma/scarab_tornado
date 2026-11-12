@@ -331,15 +331,20 @@ export default function BulkImportScreen({ session, onSessionExpired }: BulkImpo
             const status = result.body.split(";warning=", 1)[0];
             if (status === "newMolecule") newCompounds += 1;
             if (result.body.includes(";warning=")) {
-              issues.push({
-                row: String(index + 1),
-                identifier: externalId,
-                kind: "warning",
-                message: result.body.split(";warning=", 2)[1] || "Structure warning"
-              });
+              const warning = result.body.split(";warning=", 2)[1] || "Structure warning";
+              if (!warning.includes("Tautomer canonicalization changed connectivity")) {
+                issues.push({
+                  row: String(index + 1),
+                  identifier: externalId,
+                  kind: "warning",
+                  message: warning
+                });
+              }
             }
           } else {
-            issues.push({ row: String(index + 1), identifier: externalId, kind: "error", message: result.body || `HTTP ${result.status}` });
+            const error = result.body || `HTTP ${result.status}`;
+            const message = fileData.kind === "smiles" ? `${error}\nSMILES: ${structure}` : error;
+            issues.push({ row: String(index + 1), identifier: externalId, kind: "error", message });
           }
           setProgress({ current: index + 1, total: fileData.rows.length });
         }
